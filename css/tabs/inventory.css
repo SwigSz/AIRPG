@@ -1,0 +1,63 @@
+/* ============================================
+   INVENTORY TAB
+   ============================================ */
+.inventory-layout {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 1.5rem;
+}
+
+.equipment-section,
+.inventory-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.equipment-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.equipment-slot {
+    height: 50px;
+    background-color: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+}
+
+.equipment-slot:hover {
+    border-color: #f59e0b;
+    border-style: solid;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.5rem;
+}
+
+.inventory-slot {
+    aspect-ratio: 1;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.inventory-slot.empty {
+    border-style: dashed;
+}
+
+.inventory-slot:hover {
+    border-color: #f59e0b;
+    transform: scale(1.05);
+}

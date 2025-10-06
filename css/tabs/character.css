@@ -1,0 +1,99 @@
+/* ============================================
+   CHARACTER TAB
+   ============================================ */
+.character-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+/* Skills & Abilities */
+.skills-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.skill-card {
+    aspect-ratio: 1;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.skill-card.empty {
+    border-style: dashed;
+}
+
+.skill-card:hover {
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+
+/* Character Stats & Traits */
+.stats-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.character-stats,
+.traits-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background-color: #0f172a;
+    border-radius: 4px;
+}
+
+.stat-label {
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.traits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.trait-item {
+    height: 60px;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+}
+
+.trait-item.empty {
+    border-style: dashed;
+}

@@ -1,0 +1,86 @@
+/* ============================================
+   Combat View Styles
+   ============================================ */
+.combat-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.combat-view.active {
+    display: flex;
+}
+
+.enemy-display {
+    flex: 1;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.enemy-placeholder {
+    font-size: 1.5rem;
+    color: #334155;
+    font-weight: 600;
+}
+
+.turn-order {
+    height: 80px;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.turn-order-label {
+    font-weight: 600;
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+
+.turn-order-slots {
+    flex: 1;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.turn-slot {
+    flex: 1;
+    height: 50px;
+    background-color: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 4px;
+}
+
+.combat-actions {
+    height: 100px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.action-btn {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background-color: #f59e0b;
+    color: #0f172a;
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}

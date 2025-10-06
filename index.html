@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI RPG - Game Framework</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components/topbar.css">
+    <link rel="stylesheet" href="css/components/sidebar.css">
+    <link rel="stylesheet" href="css/components/activity-log.css">
+    <link rel="stylesheet" href="css/components/quick-slots.css">
+    <link rel="stylesheet" href="css/components/modal.css">
+    <link rel="stylesheet" href="css/components/combat.css">
+    <link rel="stylesheet" href="css/tabs/character.css">
+    <link rel="stylesheet" href="css/tabs/settlement.css">
+    <link rel="stylesheet" href="css/tabs/map.css">
+    <link rel="stylesheet" href="css/tabs/inventory.css">
+    <link rel="stylesheet" href="css/tabs/crafting.css">
+</head>
+<body>
+    <!-- Main Container - 100vh x 100vw -->
+    <div id="main-container">
+
+        <!-- Top Bar - Fixed Height -->
+        <header id="top-bar">
+            <!-- Left Section: Character Info -->
+            <div class="top-bar-section" id="character-info">
+                <div class="character-portrait"></div>
+                <div class="character-details">
+                    <div class="character-name">Character Name</div>
+                    <div class="character-meta">
+                        <span class="generation">Gen: --</span>
+                        <span class="age">Age: --</span>
+                        <span class="level">Lvl: --</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Section: Status Bars -->
+            <div class="top-bar-section" id="status-bars">
+                <div class="status-bar-container">
+                    <label>Health</label>
+                    <div class="bar-wrapper">
+                        <div class="bar health-bar"></div>
+                    </div>
+                </div>
+                <div class="status-bar-container">
+                    <label>Mana</label>
+                    <div class="bar-wrapper">
+                        <div class="bar mana-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section: World Info -->
+            <div class="top-bar-section" id="world-info">
+                <div class="time-date">Time: -- | Date: --</div>
+                <div class="settlement-name">Settlement: --</div>
+                <div class="population">Population: --</div>
+            </div>
+        </header>
+
+        <!-- Content Area - Fills Remaining Space -->
+        <main id="content-area">
+
+            <!-- Left Sidebar - Fixed Width Navigation -->
+            <nav id="left-sidebar">
+                <button class="nav-button active" data-tab="character">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">Character</span>
+                </button>
+                <button class="nav-button" data-tab="settlement">
+                    <span class="nav-icon">🏛️</span>
+                    <span class="nav-label">Settlement</span>
+                </button>
+                <button class="nav-button" data-tab="map">
+                    <span class="nav-icon">🗺️</span>
+                    <span class="nav-label">Map</span>
+                </button>
+                <button class="nav-button" data-tab="inventory">
+                    <span class="nav-icon">🎒</span>
+                    <span class="nav-label">Inventory</span>
+                </button>
+                <button class="nav-button" data-tab="crafting">
+                    <span class="nav-icon">🔨</span>
+                    <span class="nav-label">Crafting</span>
+                </button>
+
+                <!-- Combat Toggle for Testing -->
+                <button id="combat-toggle" class="combat-toggle-btn">Toggle Combat (Demo)</button>
+            </nav>
+
+            <!-- Center Content - Fills Remaining Width -->
+            <section id="center-content">
+
+                <!-- Character Tab -->
+                <div class="tab-content active" id="character-tab">
+                    <div class="character-layout">
+                        <!-- Skills & Abilities Section -->
+                        <div class="skills-section">
+                            <h2>Skills & Abilities</h2>
+                            <div class="skills-grid">
+                                <div class="skill-card empty"></div>
+                                <div class="skill-card empty"></div>
+                                <div class="skill-card empty"></div>
+                                <div class="skill-card empty"></div>
+                                <div class="skill-card empty"></div>
+                                <div class="skill-card empty"></div>
+                                <div class="skill-card empty"></div>
+                                <div class="skill-card empty"></div>
+                            </div>
+                        </div>
+
+                        <!-- Character Stats & Traits Section -->
+                        <div class="stats-section">
+                            <div class="character-stats">
+                                <h2>Character Stats</h2>
+                                <div class="stats-list">
+                                    <div class="stat-item"><span class="stat-label">Strength:</span> <span class="stat-value">--</span></div>
+                                    <div class="stat-item"><span class="stat-label">Dexterity:</span> <span class="stat-value">--</span></div>
+                                    <div class="stat-item"><span class="stat-label">Constitution:</span> <span class="stat-value">--</span></div>
+                                    <div class="stat-item"><span class="stat-label">Intelligence:</span> <span class="stat-value">--</span></div>
+                                    <div class="stat-item"><span class="stat-label">Wisdom:</span> <span class="stat-value">--</span></div>
+                                    <div class="stat-item"><span class="stat-label">Charisma:</span> <span class="stat-value">--</span></div>
+                                </div>
+                            </div>
+                            <div class="traits-section">
+                                <h2>Traits & Perks</h2>
+                                <div class="traits-list">
+                                    <div class="trait-item empty"></div>
+                                    <div class="trait-item empty"></div>
+                                    <div class="trait-item empty"></div>
+                                    <div class="trait-item empty"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settlement Tab -->
+                <div class="tab-content" id="settlement-tab">
+                    <h2>Settlement Overview</h2>
+                    <div class="settlement-stats">
+                        <div class="stat-box">
+                            <div class="stat-box-label">Population</div>
+                            <div class="stat-box-value">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-label">Morale</div>
+                            <div class="stat-box-value">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-label">Resources</div>
+                            <div class="stat-box-value">--</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-label">Defense</div>
+                            <div class="stat-box-value">--</div>
+                        </div>
+                    </div>
+
+                    <div class="task-allocation">
+                        <h2>Task Allocation</h2>
+                        <div class="tasks-grid">
+                            <div class="task-card">
+                                <div class="task-name">Task Name</div>
+                                <input type="range" min="0" max="100" value="0" class="task-slider">
+                                <div class="task-workers">Workers: 0</div>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-name">Task Name</div>
+                                <input type="range" min="0" max="100" value="0" class="task-slider">
+                                <div class="task-workers">Workers: 0</div>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-name">Task Name</div>
+                                <input type="range" min="0" max="100" value="0" class="task-slider">
+                                <div class="task-workers">Workers: 0</div>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-name">Task Name</div>
+                                <input type="range" min="0" max="100" value="0" class="task-slider">
+                                <div class="task-workers">Workers: 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Tab -->
+                <div class="tab-content" id="map-tab">
+                    <!-- Normal Map View -->
+                    <div class="map-view active">
+                        <div class="map-placeholder">Map View</div>
+                    </div>
+
+                    <!-- Combat View -->
+                    <div class="combat-view">
+                        <div class="enemy-display">
+                            <div class="enemy-placeholder">Enemy Display Area</div>
+                        </div>
+                        <div class="turn-order">
+                            <div class="turn-order-label">Turn Order:</div>
+                            <div class="turn-order-slots">
+                                <div class="turn-slot"></div>
+                                <div class="turn-slot"></div>
+                                <div class="turn-slot"></div>
+                                <div class="turn-slot"></div>
+                            </div>
+                        </div>
+                        <div class="combat-actions">
+                            <button class="action-btn">Action 1</button>
+                            <button class="action-btn">Action 2</button>
+                            <button class="action-btn">Action 3</button>
+                            <button class="action-btn">Action 4</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Tab -->
+                <div class="tab-content" id="inventory-tab">
+                    <div class="inventory-layout">
+                        <!-- Equipment Slots -->
+                        <div class="equipment-section">
+                            <h2>Equipment</h2>
+                            <div class="equipment-slots">
+                                <div class="equipment-slot">Head</div>
+                                <div class="equipment-slot">Neck</div>
+                                <div class="equipment-slot">Chest</div>
+                                <div class="equipment-slot">Hands</div>
+                                <div class="equipment-slot">Legs</div>
+                                <div class="equipment-slot">Feet</div>
+                                <div class="equipment-slot">Main Hand</div>
+                                <div class="equipment-slot">Off Hand</div>
+                                <div class="equipment-slot">Ring 1</div>
+                                <div class="equipment-slot">Ring 2</div>
+                                <div class="equipment-slot">Cloak</div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Grid -->
+                        <div class="inventory-section">
+                            <h2>Inventory</h2>
+                            <div class="inventory-grid">
+                                <!-- 8x8 grid = 64 slots -->
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                                <div class="inventory-slot empty"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crafting Tab -->
+                <div class="tab-content" id="crafting-tab">
+                    <div class="crafting-layout">
+                        <!-- Categories -->
+                        <div class="categories-section">
+                            <h2>Categories</h2>
+                            <div class="categories-list">
+                                <button class="category-btn">Category 1</button>
+                                <button class="category-btn">Category 2</button>
+                                <button class="category-btn">Category 3</button>
+                                <button class="category-btn">Category 4</button>
+                                <button class="category-btn">Category 5</button>
+                            </div>
+                        </div>
+
+                        <!-- Recipes -->
+                        <div class="recipes-section">
+                            <h2>Recipes</h2>
+                            <div class="recipes-grid">
+                                <div class="recipe-card empty"></div>
+                                <div class="recipe-card empty"></div>
+                                <div class="recipe-card empty"></div>
+                                <div class="recipe-card empty"></div>
+                                <div class="recipe-card empty"></div>
+                                <div class="recipe-card empty"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Right Sidebar - Fixed Width -->
+            <aside id="right-sidebar">
+
+                <!-- Activity Log - Fills Available Space -->
+                <div class="activity-log">
+                    <h3>Activity Log</h3>
+                    <div class="log-content">
+                        <p class="log-placeholder">Activity log messages will appear here</p>
+                    </div>
+                </div>
+
+                <!-- Quick Slots - Fixed Height -->
+                <div class="quick-slots">
+                    <h3>Quick Slots</h3>
+                    <p class="quick-slots-instruction">Shift + Left Click any button to assign</p>
+                    <div class="quick-slots-container">
+                        <div class="quick-slot empty">Empty Slot 1</div>
+                        <div class="quick-slot empty">Empty Slot 2</div>
+                        <div class="quick-slot empty">Empty Slot 3</div>
+                        <div class="quick-slot empty">Empty Slot 4</div>
+                        <div class="quick-slot empty">Empty Slot 5</div>
+                    </div>
+                </div>
+
+            </aside>
+
+        </main>
+
+    </div>
+
+    <script src="js/ui/tab-manager.js"></script>
+    <script src="js/combat/combat-manager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

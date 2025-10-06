@@ -1,0 +1,62 @@
+/* ============================================
+   CRAFTING TAB
+   ============================================ */
+.crafting-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+}
+
+.categories-section,
+.recipes-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.categories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.category-btn {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 1rem;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.category-btn:hover {
+    background-color: #334155;
+    border-color: #f59e0b;
+}
+
+.recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.recipe-card {
+    aspect-ratio: 1;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.recipe-card.empty {
+    border-style: dashed;
+}
+
+.recipe-card:hover {
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}

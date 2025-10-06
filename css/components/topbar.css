@@ -1,0 +1,120 @@
+/* ============================================
+   Top Bar - Fixed Height
+   ============================================ */
+#top-bar {
+    height: 70px;
+    flex-shrink: 0;
+    background-color: #1e293b;
+    border-bottom: 3px solid #f59e0b;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    gap: 2rem;
+}
+
+.top-bar-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Character Info Section */
+#character-info {
+    min-width: 250px;
+}
+
+.character-portrait {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #334155;
+    border: 2px solid #f59e0b;
+    flex-shrink: 0;
+}
+
+.character-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.character-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.character-meta {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Status Bars Section */
+#status-bars {
+    flex: 1;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.status-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-bar-container label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 60px;
+    color: #cbd5e1;
+}
+
+.bar-wrapper {
+    flex: 1;
+    height: 20px;
+    background-color: #334155;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #475569;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.health-bar {
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+
+.mana-bar {
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+}
+
+/* World Info Section */
+#world-info {
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.time-date {
+    color: #cbd5e1;
+}
+
+.settlement-name {
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.population {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}

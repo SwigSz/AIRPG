@@ -1,0 +1,41 @@
+/* Quick Slots - Fixed Height */
+.quick-slots {
+    flex-shrink: 0;
+    padding: 1.5rem;
+}
+
+.quick-slots h3 {
+    margin-bottom: 0.5rem;
+}
+
+.quick-slots-instruction {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0 0 1rem 0;
+    font-style: italic;
+}
+
+.quick-slots-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.quick-slot {
+    height: 50px;
+    background-color: #0f172a;
+    border: 2px dashed #334155;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #64748b;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.quick-slot:hover {
+    border-color: #f59e0b;
+    border-style: solid;
+}

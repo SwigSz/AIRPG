@@ -1,0 +1,865 @@
+/* ============================================
+   CRITICAL: Full Screen Base Setup
+   ============================================ */
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #e2e8f0;
+    background-color: #0f172a;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* ============================================
+   Main Container - 100vh x 100vw
+   ============================================ */
+#main-container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ============================================
+   Top Bar - Fixed Height
+   ============================================ */
+#top-bar {
+    height: 70px;
+    flex-shrink: 0;
+    background-color: #1e293b;
+    border-bottom: 3px solid #f59e0b;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    gap: 2rem;
+}
+
+.top-bar-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Character Info Section */
+#character-info {
+    min-width: 250px;
+}
+
+.character-portrait {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #334155;
+    border: 2px solid #f59e0b;
+    flex-shrink: 0;
+}
+
+.character-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.character-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.character-meta {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Status Bars Section */
+#status-bars {
+    flex: 1;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.status-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-bar-container label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 60px;
+    color: #cbd5e1;
+}
+
+.bar-wrapper {
+    flex: 1;
+    height: 20px;
+    background-color: #334155;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #475569;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.health-bar {
+    background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+
+.mana-bar {
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+}
+
+/* World Info Section */
+#world-info {
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.time-date {
+    color: #cbd5e1;
+}
+
+.settlement-name {
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.population {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+/* ============================================
+   Content Area - Fills Remaining Space
+   ============================================ */
+#content-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ============================================
+   Left Sidebar - Fixed Width Navigation
+   ============================================ */
+#left-sidebar {
+    width: 80px;
+    flex-shrink: 0;
+    background-color: #1e293b;
+    border-right: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0;
+    gap: 0.5rem;
+}
+
+.nav-button {
+    background-color: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 1rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.nav-button:hover {
+    background-color: #334155;
+    color: #f59e0b;
+}
+
+.nav-button.active {
+    background-color: #f59e0b;
+    color: #0f172a;
+    border-left-color: #d97706;
+}
+
+.nav-icon {
+    font-size: 1.5rem;
+}
+
+.nav-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.combat-toggle-btn {
+    margin-top: auto;
+    background-color: #334155;
+    color: #e2e8f0;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: auto 0.5rem 0 0.5rem;
+}
+
+.combat-toggle-btn:hover {
+    background-color: #475569;
+}
+
+/* ============================================
+   Center Content - Fills Remaining Width
+   ============================================ */
+#center-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #0f172a;
+    padding: 1.5rem;
+    position: relative;
+}
+
+/* Hide inactive tabs */
+.tab-content {
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Common Heading Styles */
+h2 {
+    color: #f59e0b;
+    font-size: 1.3rem;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #334155;
+}
+
+h3 {
+    color: #f59e0b;
+    font-size: 1.1rem;
+    margin: 0 0 0.75rem 0;
+}
+
+/* ============================================
+   CHARACTER TAB
+   ============================================ */
+.character-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+/* Skills & Abilities */
+.skills-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.skill-card {
+    aspect-ratio: 1;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.skill-card.empty {
+    border-style: dashed;
+}
+
+.skill-card:hover {
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+
+/* Character Stats & Traits */
+.stats-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.character-stats,
+.traits-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background-color: #0f172a;
+    border-radius: 4px;
+}
+
+.stat-label {
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.traits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.trait-item {
+    height: 60px;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+}
+
+.trait-item.empty {
+    border-style: dashed;
+}
+
+/* ============================================
+   SETTLEMENT TAB
+   ============================================ */
+#settlement-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.settlement-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.stat-box {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-box-label {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+}
+
+.stat-box-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.task-allocation {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.task-card {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.task-name {
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+.task-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #334155;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.task-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f59e0b;
+    cursor: pointer;
+}
+
+.task-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f59e0b;
+    cursor: pointer;
+    border: none;
+}
+
+.task-workers {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+/* ============================================
+   MAP TAB
+   ============================================ */
+#map-tab {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Map View */
+.map-view {
+    display: none;
+    flex: 1;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.map-view.active {
+    display: flex;
+}
+
+.map-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #334155;
+    font-weight: 600;
+}
+
+/* Combat View */
+.combat-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.combat-view.active {
+    display: flex;
+}
+
+.enemy-display {
+    flex: 1;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.enemy-placeholder {
+    font-size: 1.5rem;
+    color: #334155;
+    font-weight: 600;
+}
+
+.turn-order {
+    height: 80px;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.turn-order-label {
+    font-weight: 600;
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+
+.turn-order-slots {
+    flex: 1;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.turn-slot {
+    flex: 1;
+    height: 50px;
+    background-color: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 4px;
+}
+
+.combat-actions {
+    height: 100px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.action-btn {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background-color: #f59e0b;
+    color: #0f172a;
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   INVENTORY TAB
+   ============================================ */
+.inventory-layout {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 1.5rem;
+}
+
+.equipment-section,
+.inventory-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.equipment-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.equipment-slot {
+    height: 50px;
+    background-color: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+}
+
+.equipment-slot:hover {
+    border-color: #f59e0b;
+    border-style: solid;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.5rem;
+}
+
+.inventory-slot {
+    aspect-ratio: 1;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.inventory-slot.empty {
+    border-style: dashed;
+}
+
+.inventory-slot:hover {
+    border-color: #f59e0b;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   CRAFTING TAB
+   ============================================ */
+.crafting-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+}
+
+.categories-section,
+.recipes-section {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.categories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.category-btn {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 1rem;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.category-btn:hover {
+    background-color: #334155;
+    border-color: #f59e0b;
+}
+
+.recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.recipe-card {
+    aspect-ratio: 1;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.recipe-card.empty {
+    border-style: dashed;
+}
+
+.recipe-card:hover {
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   Right Sidebar - Fixed Width
+   ============================================ */
+#right-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background-color: #1e293b;
+    border-left: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Activity Log - Fills Available Space */
+.activity-log {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    border-bottom: 1px solid #334155;
+    overflow: hidden;
+}
+
+.activity-log h3 {
+    margin-bottom: 1rem;
+}
+
+.log-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.log-placeholder {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Custom Scrollbar for Activity Log */
+.log-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-content::-webkit-scrollbar-track {
+    background: #1e293b;
+    border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Quick Slots - Fixed Height */
+.quick-slots {
+    flex-shrink: 0;
+    padding: 1.5rem;
+}
+
+.quick-slots h3 {
+    margin-bottom: 0.5rem;
+}
+
+.quick-slots-instruction {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0 0 1rem 0;
+    font-style: italic;
+}
+
+.quick-slots-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.quick-slot {
+    height: 50px;
+    background-color: #0f172a;
+    border: 2px dashed #334155;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #64748b;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.quick-slot:hover {
+    border-color: #f59e0b;
+    border-style: solid;
+}
+
+/* ============================================
+   Custom Scrollbar for Center Content
+   ============================================ */
+#center-content::-webkit-scrollbar {
+    width: 10px;
+}
+
+#center-content::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+#center-content::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 5px;
+}
+
+#center-content::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 1280px) {
+    .settlement-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .character-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .inventory-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .crafting-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 2560px) {
+    #top-bar {
+        height: 80px;
+        font-size: 1.1rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .skill-card,
+    .recipe-card {
+        min-height: 140px;
+    }
+}

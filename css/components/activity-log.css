@@ -1,0 +1,62 @@
+/* ============================================
+   Right Sidebar - Fixed Width
+   ============================================ */
+#right-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background-color: #1e293b;
+    border-left: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Activity Log - Fills Available Space */
+.activity-log {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    border-bottom: 1px solid #334155;
+    overflow: hidden;
+}
+
+.activity-log h3 {
+    margin-bottom: 1rem;
+}
+
+.log-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.log-placeholder {
+    color: #64748b;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Custom Scrollbar for Activity Log */
+.log-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-content::-webkit-scrollbar-track {
+    background: #1e293b;
+    border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
