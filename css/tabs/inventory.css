@@ -22,16 +22,19 @@
 }
 
 .equipment-slot {
-    height: 50px;
+    height: 60px;
     background-color: #0f172a;
     border: 1px dashed #334155;
     border-radius: 4px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 0.5rem;
     font-size: 0.9rem;
     color: #94a3b8;
     transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
 }
 
 .equipment-slot:hover {
@@ -39,26 +42,63 @@
     border-style: solid;
 }
 
-.inventory-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
+.equipment-slot.empty {
+    justify-content: center;
+}
+
+.equipment-slot.occupied {
+    border-color: #3b82f6;
+    border-style: solid;
+}
+
+.equipment-slot-content {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
+    flex: 1;
+}
+
+.equipment-slot-icon {
+    font-size: 1.5rem;
+}
+
+.equipment-slot-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.equipment-slot-name {
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+.equipment-slot-label {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.inventory-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .inventory-slot {
-    aspect-ratio: 1;
+    width: 110px;
+    height: 110px;
     background-color: #0f172a;
     border: 1px solid #334155;
     border-radius: 4px;
     transition: all 0.2s ease;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
+    justify-content: space-between;
+    font-size: 0.75rem;
     color: #cbd5e1;
     font-weight: 500;
     text-align: center;
-    padding: 0.25rem;
+    padding: 0.5rem;
     cursor: pointer;
     position: relative;
     user-select: none;
@@ -67,11 +107,104 @@
     -ms-user-select: none;
 }
 
-.inventory-slot.empty {
-    border-style: dashed;
-}
-
 .inventory-slot:hover {
     border-color: #f59e0b;
-    transform: scale(1.05);
+}
+
+.item-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    flex: 1;
+}
+
+.item-icon {
+    font-size: 2.5rem;
+}
+
+.item-name {
+    font-size: 0.75rem;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 2.4em;
+    line-height: 1.2em;
+}
+
+/* Item Action Buttons (positioned inside slots at bottom) */
+.item-actions {
+    display: none;
+    width: 100%;
+    gap: 3px;
+    justify-content: space-between;
+}
+
+.inventory-slot:hover .item-actions,
+.equipment-slot:hover .item-actions {
+    display: flex;
+}
+
+.item-action-btn {
+    flex: 1;
+    background-color: rgba(59, 130, 246, 0.9);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.65rem;
+    padding: 5px 3px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-transform: capitalize;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.item-action-btn:hover {
+    background-color: rgba(37, 99, 235, 1);
+}
+
+.item-action-btn.equip,
+.item-action-btn.unequip {
+    background-color: rgba(34, 197, 94, 0.9);
+}
+
+.item-action-btn.equip:hover,
+.item-action-btn.unequip:hover {
+    background-color: rgba(22, 163, 74, 1);
+}
+
+.item-action-btn.toss {
+    background-color: rgba(239, 68, 68, 0.9);
+}
+
+.item-action-btn.toss:hover {
+    background-color: rgba(220, 38, 38, 1);
+}
+
+.item-action-btn.info {
+    background-color: rgba(168, 85, 247, 0.9);
+}
+
+.item-action-btn.info:hover {
+    background-color: rgba(147, 51, 234, 1);
+}
+
+/* Equipment slot specific button sizing */
+.equipment-slot .item-actions {
+    gap: 3px;
+    justify-content: flex-end;
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    width: auto;
+}
+
+.equipment-slot .item-action-btn {
+    font-size: 0.55rem;
+    padding: 4px 6px;
+    flex: 0 0 auto;
+    min-width: 45px;
+    max-width: 45px;
 }

@@ -5,7 +5,8 @@
       "Bash(if not exist assets mkdir assets)",
       "Bash(if not exist css mkdir css)",
       "Bash(if not exist js mkdir js)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(if exist index.html echo \"Ready to test\")"
     ],
     "deny": [],
     "ask": []

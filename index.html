@@ -230,89 +230,25 @@
                         <div class="equipment-section">
                             <h2>Equipment</h2>
                             <div class="equipment-slots">
-                                <div class="equipment-slot">Head</div>
-                                <div class="equipment-slot">Neck</div>
-                                <div class="equipment-slot">Chest</div>
-                                <div class="equipment-slot">Hands</div>
-                                <div class="equipment-slot">Legs</div>
-                                <div class="equipment-slot">Feet</div>
-                                <div class="equipment-slot">Main Hand</div>
-                                <div class="equipment-slot">Off Hand</div>
-                                <div class="equipment-slot">Ring 1</div>
-                                <div class="equipment-slot">Ring 2</div>
-                                <div class="equipment-slot">Cloak</div>
+                                <div class="equipment-slot empty" data-slot="head">Head</div>
+                                <div class="equipment-slot empty" data-slot="neck">Neck</div>
+                                <div class="equipment-slot empty" data-slot="chest">Chest</div>
+                                <div class="equipment-slot empty" data-slot="hands">Hands</div>
+                                <div class="equipment-slot empty" data-slot="legs">Legs</div>
+                                <div class="equipment-slot empty" data-slot="feet">Feet</div>
+                                <div class="equipment-slot empty" data-slot="main_hand">Main Hand</div>
+                                <div class="equipment-slot empty" data-slot="off_hand">Off Hand</div>
+                                <div class="equipment-slot empty" data-slot="ring1">Ring 1</div>
+                                <div class="equipment-slot empty" data-slot="ring2">Ring 2</div>
+                                <div class="equipment-slot empty" data-slot="cloak">Cloak</div>
                             </div>
                         </div>
 
                         <!-- Inventory Grid -->
                         <div class="inventory-section">
                             <h2>Inventory</h2>
-                            <div class="inventory-grid">
-                                <!-- 8x8 grid = 64 slots -->
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
-                                <div class="inventory-slot empty"></div>
+                            <div class="inventory-grid" id="inventory-grid">
+                                <!-- 8x8 grid = 64 slots, populated dynamically -->
                             </div>
                         </div>
                     </div>
@@ -398,6 +334,8 @@
     <script src="js/character/character.js"></script>
     <script src="js/character/skills.js"></script>
     <script src="js/inventory/items.js"></script>
+    <script src="js/inventory/equipment.js"></script>
+    <script src="js/inventory/inventory.js"></script>
     <script src="js/ui/tab-manager.js"></script>
     <script src="js/combat/combat-manager.js"></script>
     <script src="js/main.js"></script>
