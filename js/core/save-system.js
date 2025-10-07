@@ -54,11 +54,105 @@ const SaveSystem = (() => {
         return localStorage.getItem(SAVE_KEY) !== null;
     }
 
+    function exportToFile() {
+        try {
+            const state = GameState.getState();
+            const saveData = {
+                version: '1.0.0',
+                timestamp: Date.now(),
+                state: state
+            };
+
+            // Convert to JSON string, then encode to base64
+            const jsonString = JSON.stringify(saveData);
+            const base64Data = btoa(jsonString);
+
+            // Create a blob and download
+            const blob = new Blob([base64Data], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-rpg-save-${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            console.log('Save exported successfully');
+            return true;
+        } catch (error) {
+            console.error('Failed to export save:', error);
+            return false;
+        }
+    }
+
+    function importFromFile(file) {
+        return new Promise((resolve, reject) => {
+            try {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    try {
+                        // Decode base64
+                        const base64Data = e.target.result;
+                        const jsonString = atob(base64Data);
+                        const saveData = JSON.parse(jsonString);
+
+                        // Validate save data structure
+                        if (!saveData.version || !saveData.state) {
+                            throw new Error('Invalid save file format');
+                        }
+
+                        // Load the state
+                        GameState.setState(saveData.state);
+
+                        // Also save to localStorage
+                        localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+
+                        console.log('Save imported successfully');
+                        resolve(saveData.state);
+                    } catch (error) {
+                        console.error('Failed to parse save file:', error);
+                        reject(error);
+                    }
+                };
+
+                reader.onerror = () => {
+                    reject(new Error('Failed to read file'));
+                };
+
+                reader.readAsText(file);
+            } catch (error) {
+                console.error('Failed to import save:', error);
+                reject(error);
+            }
+        });
+    }
+
+    function wipeData() {
+        try {
+            // Clear localStorage
+            localStorage.removeItem(SAVE_KEY);
+
+            // Reset game state
+            GameState.reset();
+
+            console.log('All save data wiped successfully');
+            return true;
+        } catch (error) {
+            console.error('Failed to wipe data:', error);
+            return false;
+        }
+    }
+
     return {
         save,
         load,
         deleteSave,
-        hasSave
+        hasSave,
+        exportToFile,
+        importFromFile,
+        wipeData
     };
 })();
 

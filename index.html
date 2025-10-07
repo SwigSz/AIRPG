@@ -58,6 +58,13 @@
                 <div class="settlement-name">Settlement: --</div>
                 <div class="population">Population: --</div>
             </div>
+
+            <!-- Save/Load Controls -->
+            <div class="top-bar-section" id="save-controls">
+                <button id="export-save-btn" class="save-control-btn" title="Export save to file">Export</button>
+                <button id="import-save-btn" class="save-control-btn" title="Import save from file">Import</button>
+                <button id="wipe-save-btn" class="save-control-btn danger" title="Wipe all save data">Wipe Data</button>
+            </div>
         </header>
 
         <!-- Content Area - Fills Remaining Space -->
@@ -373,6 +380,8 @@
 
     </div>
 
+    <script src="js/core/game-state.js"></script>
+    <script src="js/core/save-system.js"></script>
     <script src="js/ui/tab-manager.js"></script>
     <script src="js/combat/combat-manager.js"></script>
     <script src="js/main.js"></script>
