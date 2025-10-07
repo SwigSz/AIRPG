@@ -380,8 +380,24 @@
 
     </div>
 
+    <!-- Item Details Modal -->
+    <div id="item-details-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content item-details">
+            <button class="modal-close">&times;</button>
+            <h2 id="modal-item-name">Item Name</h2>
+            <p id="modal-item-description" class="item-description-text">Item description goes here</p>
+            <div id="modal-item-stats" class="item-stats-section">
+                <h3>Stats</h3>
+                <div id="modal-stats-content"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/core/game-state.js"></script>
     <script src="js/core/save-system.js"></script>
+    <script src="js/character/character.js"></script>
+    <script src="js/character/skills.js"></script>
+    <script src="js/inventory/items.js"></script>
     <script src="js/ui/tab-manager.js"></script>
     <script src="js/combat/combat-manager.js"></script>
     <script src="js/main.js"></script>
