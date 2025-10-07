@@ -6,12 +6,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('AI-RPG Game Framework Initialized');
 
-    // Initialize all systems
-    if (window.TabManager) {
-        window.TabManager.init();
+    // Initialize core systems
+    if (window.GameState) GameState.init();
+    if (window.EventSystem) EventSystem.init();
+    if (window.TimeManager) TimeManager.init();
+
+    // Initialize UI systems
+    if (window.UIManager) {
+        UIManager.init();
+    } else {
+        // Fallback to individual initialization
+        if (window.TabManager) TabManager.init();
+        if (window.CombatUI) CombatUI.init();
     }
 
-    if (window.CombatUI) {
-        window.CombatUI.init();
-    }
+    console.log('All systems initialized');
 });

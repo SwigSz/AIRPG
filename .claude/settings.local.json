@@ -4,7 +4,8 @@
       "Bash(mkdir:*)",
       "Bash(if not exist assets mkdir assets)",
       "Bash(if not exist css mkdir css)",
-      "Bash(if not exist js mkdir js)"
+      "Bash(if not exist js mkdir js)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
