@@ -18,7 +18,7 @@ const ActivityLog = (() => {
     function add(message, type = 'info') {
         const timestamp = new Date().toLocaleTimeString();
         const log = {
-            id: Utils.generateId(),
+            id: generateLogId(),
             message,
             type,
             timestamp
@@ -32,6 +32,14 @@ const ActivityLog = (() => {
         }
 
         render();
+    }
+
+    function generateLogId() {
+        return 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function addMessage(message, type = 'info') {
+        add(message, type);
     }
 
     function render() {
@@ -58,6 +66,7 @@ const ActivityLog = (() => {
     return {
         init,
         add,
+        addMessage,
         clear,
         getLogs
     };

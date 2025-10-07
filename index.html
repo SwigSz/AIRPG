@@ -202,23 +202,42 @@
 
                     <!-- Combat View -->
                     <div class="combat-view">
-                        <div class="enemy-display">
-                            <div class="enemy-placeholder">Enemy Display Area</div>
+                        <!-- Turn Counter and Combat Log Toggle -->
+                        <div class="combat-header">
+                            <div class="turn-counter">Combat Turn: 1</div>
+                            <button id="toggle-combat-log-btn" class="toggle-log-btn">Show Combat Log</button>
                         </div>
+
+                        <!-- Turn Order Bar -->
                         <div class="turn-order">
                             <div class="turn-order-label">Turn Order:</div>
                             <div class="turn-order-slots">
-                                <div class="turn-slot"></div>
-                                <div class="turn-slot"></div>
-                                <div class="turn-slot"></div>
-                                <div class="turn-slot"></div>
+                                <!-- Dynamically populated -->
                             </div>
                         </div>
+
+                        <!-- Combat Battlefield -->
+                        <div class="combat-battlefield">
+                            <!-- Enemy Display Area (Top Half) -->
+                            <div class="enemy-area">
+                                <div class="area-label">Enemies</div>
+                                <div class="enemy-display">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+
+                            <!-- Player Display Area (Bottom Half) -->
+                            <div class="player-area">
+                                <div class="area-label">Party</div>
+                                <div class="player-display">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Combat Actions -->
                         <div class="combat-actions">
-                            <button class="action-btn">Action 1</button>
-                            <button class="action-btn">Action 2</button>
-                            <button class="action-btn">Action 3</button>
-                            <button class="action-btn">Action 4</button>
+                            <div class="action-message">Waiting for combat to start...</div>
                         </div>
                     </div>
                 </div>
@@ -293,7 +312,9 @@
                 <div class="activity-log">
                     <h3>Activity Log</h3>
                     <div class="log-content">
-                        <p class="log-placeholder">Activity log messages will appear here</p>
+                        <div class="activity-feed">
+                            <p class="log-placeholder">Activity log messages will appear here</p>
+                        </div>
                     </div>
                 </div>
 
