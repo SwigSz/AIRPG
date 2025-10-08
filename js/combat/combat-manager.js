@@ -593,15 +593,21 @@ const CombatManager = (() => {
             defense: 5
         }, true);
 
-        const testDummy = createCombatant('Test Dummy', {
-            speed: 10,
-            hp: 50,
-            maxHp: 50,
-            attack: 5,
-            defense: 3
-        }, false);
+        // Create enemy from factory
+        const enemyInstance = EnemyFactory.createEnemy('test_dummy');
+        if (!enemyInstance) {
+            console.error('Failed to create enemy');
+            return;
+        }
 
-        startCombat([player], [testDummy]);
+        // Convert enemy instance to combatant format
+        const enemy = {
+            ...enemyInstance,
+            speed: 10,
+            attack: EnemyFactory.calculateEnemyAttack(enemyInstance)
+        };
+
+        startCombat([player], [enemy]);
     }
 
     return {
