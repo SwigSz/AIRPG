@@ -4,8 +4,6 @@
 
 // Initialize on DOM Load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('AI-RPG Game Framework Initialized');
-
     // Initialize core systems
     if (window.GameState) GameState.init();
     if (window.EventSystem) EventSystem.init();
@@ -23,10 +21,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
 
-    // Initialize test character
-    initializeTestCharacter();
+    // Try to load existing save data
+    if (SaveSystem.hasSave()) {
+        const savedState = SaveSystem.load();
+        if (savedState) {
+            GameState.setState(savedState);
+            displayCharacterData();
 
-    console.log('All systems initialized');
+            // Restore combat if it was active
+            if (window.CombatManager && savedState.combat && savedState.combat.isActive) {
+                CombatManager.restoreCombatState();
+            }
+        } else {
+            // Failed to load, create test character
+            initializeTestCharacter();
+        }
+    } else {
+        // No save data, create test character
+        initializeTestCharacter();
+    }
 });
 
 // Initialize Test Character with Test Data
@@ -44,7 +57,6 @@ function initializeTestCharacter() {
     // Create test character with proper inventory and equipment structure
     const testCharacter = Character.create('Test Hero', {
         age: 25,
-        level: 3,
         skills: [woodcuttingSkill],
         inventory: Inventory.create(),
         equipment: Equipment.create(),
@@ -69,13 +81,17 @@ function initializeTestCharacter() {
     // Display character data
     displayCharacterData();
 
-    console.log('Test character initialized:', testCharacter);
+    // Auto-save the initial character
+    SaveSystem.save();
 }
 
 // Display Character Data in UI
 function displayCharacterData() {
     const character = GameState.getState().character;
     if (!character) return;
+
+    // Update top bar
+    updateTopBar(character);
 
     // Display skills
     displaySkills(character.skills);
@@ -84,6 +100,39 @@ function displayCharacterData() {
     renderInventoryUI();
     renderEquipmentUI();
 }
+
+// Update Top Bar with Character Info
+function updateTopBar(character) {
+    // Update character name and meta info
+    const nameEl = document.querySelector('.character-name');
+    const genEl = document.querySelector('.generation');
+    const ageEl = document.querySelector('.age');
+    const levelEl = document.querySelector('.level');
+
+    if (nameEl) nameEl.textContent = character.name;
+    if (genEl) genEl.textContent = `Gen: --`;
+    if (ageEl) ageEl.textContent = `Age: --`;
+    if (levelEl) levelEl.textContent = `Lvl: ${character.level}`;
+
+    // Update XP bar in character tab
+    const xpProgress = Character.getXPProgress(character);
+    const characterLevelDisplay = document.getElementById('character-level-display');
+    const characterXpBar = document.getElementById('character-xp-bar');
+    const characterXpText = document.getElementById('character-xp-text');
+
+    if (characterLevelDisplay) {
+        characterLevelDisplay.textContent = character.level;
+    }
+    if (characterXpBar) {
+        characterXpBar.style.width = `${xpProgress.percentage}%`;
+    }
+    if (characterXpText) {
+        characterXpText.textContent = `${xpProgress.current} / ${xpProgress.needed} XP`;
+    }
+}
+
+// Make updateTopBar globally accessible
+window.updateTopBar = updateTopBar;
 
 // Display Skills in Character Tab
 function displaySkills(skills) {
@@ -254,6 +303,9 @@ function equipItemFromInventory(itemId) {
         // Update UI
         renderInventoryUI();
         renderEquipmentUI();
+
+        // Auto-save
+        SaveSystem.save();
     }
 }
 
@@ -267,6 +319,9 @@ function unequipItemToInventory(slot) {
         // Update UI
         renderInventoryUI();
         renderEquipmentUI();
+
+        // Auto-save
+        SaveSystem.save();
     }
 }
 
@@ -287,6 +342,9 @@ function discardItem(itemId, context, slot) {
     // Update UI
     renderInventoryUI();
     renderEquipmentUI();
+
+    // Auto-save
+    SaveSystem.save();
 }
 
 // Show Item Details Modal
@@ -386,12 +444,8 @@ function initializeSaveLoadControls() {
         wipeBtn.addEventListener('click', () => {
             const confirmed = confirm('Are you sure you want to wipe all save data? This action cannot be undone!');
             if (confirmed) {
-                if (SaveSystem.wipeData()) {
-                    alert('All save data has been wiped. The page will now reload.');
-                    location.reload();
-                } else {
-                    alert('Failed to wipe save data.');
-                }
+                SaveSystem.wipeData();
+                location.reload();
             }
         });
     }

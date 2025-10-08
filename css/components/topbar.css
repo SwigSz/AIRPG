@@ -96,6 +96,10 @@
     background: linear-gradient(90deg, #2563eb, #3b82f6);
 }
 
+.xp-bar {
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
 /* World Info Section */
 #world-info {
     min-width: 200px;

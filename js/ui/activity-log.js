@@ -5,14 +5,36 @@
 const ActivityLog = (() => {
     let logs = [];
     let maxLogs = GameConfig?.UI?.ACTIVITY_LOG_MAX || 100;
+    let filters = {
+        combat: true,
+        general: true,
+        events: true,
+        system: true
+    };
 
     function init() {
-        console.log('ActivityLog: Initializing...');
-
         // Listen to game events
         if (window.EventSystem) {
             EventSystem.on('log-message', add);
         }
+
+        // Initialize filter checkboxes
+        initFilters();
+    }
+
+    function initFilters() {
+        const filterCheckboxes = document.querySelectorAll('.log-filters input[type="checkbox"]:not([disabled])');
+        filterCheckboxes.forEach(checkbox => {
+            const filterType = checkbox.id.replace('filter-', '');
+            if (filterType && filters.hasOwnProperty(filterType)) {
+                checkbox.checked = filters[filterType];
+
+                checkbox.addEventListener('change', (e) => {
+                    filters[filterType] = e.target.checked;
+                    render();
+                });
+            }
+        });
     }
 
     function add(message, type = 'info') {
@@ -46,7 +68,17 @@ const ActivityLog = (() => {
         const logContainer = document.querySelector('.activity-feed');
         if (!logContainer) return;
 
-        logContainer.innerHTML = logs.map(log => `
+        // Filter logs based on active filters
+        const filteredLogs = logs.filter(log => {
+            return filters[log.type] || false;
+        });
+
+        if (filteredLogs.length === 0) {
+            logContainer.innerHTML = '<p class="log-placeholder">No messages to display</p>';
+            return;
+        }
+
+        logContainer.innerHTML = filteredLogs.map(log => `
             <div class="activity-item ${log.type}">
                 <span class="activity-time">${log.timestamp}</span>
                 <span class="activity-text">${log.message}</span>

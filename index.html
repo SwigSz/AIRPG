@@ -122,6 +122,15 @@
                         <div class="stats-section">
                             <div class="character-stats">
                                 <h2>Character Stats</h2>
+                                <div class="character-level-info">
+                                    <div class="level-display">Level <span id="character-level-display">1</span></div>
+                                    <div class="xp-progress">
+                                        <div class="xp-bar-container">
+                                            <div class="xp-bar-fill" id="character-xp-bar"></div>
+                                        </div>
+                                        <div class="xp-text" id="character-xp-text">0 / 0 XP</div>
+                                    </div>
+                                </div>
                                 <div class="stats-list">
                                     <div class="stat-item"><span class="stat-label">Strength:</span> <span class="stat-value">--</span></div>
                                     <div class="stat-item"><span class="stat-label">Dexterity:</span> <span class="stat-value">--</span></div>
@@ -202,10 +211,9 @@
 
                     <!-- Combat View -->
                     <div class="combat-view">
-                        <!-- Turn Counter and Combat Log Toggle -->
+                        <!-- Turn Counter -->
                         <div class="combat-header">
                             <div class="turn-counter">Combat Turn: 1</div>
-                            <button id="toggle-combat-log-btn" class="toggle-log-btn">Show Combat Log</button>
                         </div>
 
                         <!-- Turn Order Bar -->
@@ -311,6 +319,24 @@
                 <!-- Activity Log - Fills Available Space -->
                 <div class="activity-log">
                     <h3>Activity Log</h3>
+                    <div class="log-filters">
+                        <label class="log-filter-btn">
+                            <input type="checkbox" id="filter-combat" checked>
+                            <span>Combat</span>
+                        </label>
+                        <label class="log-filter-btn disabled">
+                            <input type="checkbox" disabled>
+                            <span>--</span>
+                        </label>
+                        <label class="log-filter-btn disabled">
+                            <input type="checkbox" disabled>
+                            <span>--</span>
+                        </label>
+                        <label class="log-filter-btn disabled">
+                            <input type="checkbox" disabled>
+                            <span>--</span>
+                        </label>
+                    </div>
                     <div class="log-content">
                         <div class="activity-feed">
                             <p class="log-placeholder">Activity log messages will appear here</p>

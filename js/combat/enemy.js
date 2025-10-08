@@ -25,7 +25,8 @@
 //             duration: 3
 //         }
 //     },
-//     biome: ["swamp", "plains"]  // Optional spawn biomes
+//     biome: ["swamp", "plains"],  // Optional spawn biomes
+//     xpReward: 10                 // XP awarded on death
 // }
 
 const EnemyDatabase = (() => {
@@ -43,7 +44,8 @@ const EnemyDatabase = (() => {
                 name: "bump",
                 kind: "blunt",
                 damage: "1~2"
-            }
+            },
+            xpReward: 10
         }
     };
 

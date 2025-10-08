@@ -4,7 +4,6 @@
 
 const CombatManager = (() => {
     let combatState = null;
-    let combatLogVisible = false;
     let pendingAction = null; // Store action waiting for target selection
 
     // Combat state structure
@@ -83,6 +82,9 @@ const CombatManager = (() => {
 
         // Render combat UI
         renderCombatUI();
+
+        // Save combat state
+        saveCombatState();
 
         // Process first turn
         processCurrentTurn();
@@ -183,6 +185,9 @@ const CombatManager = (() => {
             logCombat(`\n=== Turn ${combatState.turnNumber} ===`);
         }
 
+        // Save combat state after each turn
+        saveCombatState();
+
         processCurrentTurn();
     }
 
@@ -205,10 +210,35 @@ const CombatManager = (() => {
         if (!combatState) return;
 
         combatState.isActive = false;
+        clearCombatState();
 
         if (result === 'victory') {
             logCombat('\n=== VICTORY ===');
             logCombat('All enemies have been defeated!');
+
+            // Award XP to all living players
+            const deadEnemies = combatState.combatants.filter(c => !c.isPlayer && !c.isAlive);
+            const totalXP = deadEnemies.reduce((sum, enemy) => sum + (enemy.xpReward || 0), 0);
+
+            if (totalXP > 0) {
+                combatState.combatants.forEach(player => {
+                    if (player.isPlayer && player.isAlive) {
+                        const leveled = Character.addXP(player, totalXP);
+                        logCombat(`${player.name} gained ${totalXP} XP!`);
+                        if (leveled) {
+                            logCombat(`${player.name} leveled up to level ${player.level}!`);
+                        }
+
+                        // Sync XP and level back to GameState character
+                        const character = GameState.getState().character;
+                        if (character && character.id === player.id) {
+                            character.xp = player.xp;
+                            character.level = player.level;
+                            character.totalXP = player.totalXP;
+                        }
+                    }
+                });
+            }
         } else if (result === 'defeat') {
             logCombat('\n=== DEFEAT ===');
             logCombat('Your party has been defeated...');
@@ -223,23 +253,26 @@ const CombatManager = (() => {
             toggleCombatView(false);
             logCombat('Returning to map...');
             pendingAction = null; // Clear any pending actions
+
+            // Update top bar to reflect XP/level changes
+            if (window.updateTopBar && GameState) {
+                const character = GameState.getState().character;
+                if (character) {
+                    updateTopBar(character);
+                }
+            }
+
+            // Auto-save after combat
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
         }, 2000);
     }
 
     // Combat logging
     function logCombat(message) {
-        console.log(message);
-        if (window.ActivityLog && combatLogVisible) {
+        if (window.ActivityLog) {
             window.ActivityLog.addMessage(message, 'combat');
-        }
-    }
-
-    // Toggle combat log visibility
-    function toggleCombatLog() {
-        combatLogVisible = !combatLogVisible;
-        const btn = document.getElementById('toggle-combat-log-btn');
-        if (btn) {
-            btn.textContent = combatLogVisible ? 'Hide Combat Log' : 'Show Combat Log';
         }
     }
 
@@ -568,13 +601,6 @@ const CombatManager = (() => {
             });
         }
 
-        // Initialize combat log toggle button
-        const logToggleBtn = document.getElementById('toggle-combat-log-btn');
-        if (logToggleBtn) {
-            logToggleBtn.addEventListener('click', () => {
-                toggleCombatLog();
-            });
-        }
     }
 
     // Initialize test combat
@@ -585,13 +611,18 @@ const CombatManager = (() => {
             return;
         }
 
-        const player = createCombatant(character.name, {
-            speed: 15,
+        // Use the actual character object as the player combatant
+        const player = {
+            ...character,
+            isPlayer: true,
+            isAlive: true,
             hp: 100,
             maxHp: 100,
             attack: 15,
-            defense: 5
-        }, true);
+            defense: 5,
+            speed: 15,
+            initiative: 0
+        };
 
         // Create enemy from factory
         const enemyInstance = EnemyFactory.createEnemy('test_dummy');
@@ -610,11 +641,55 @@ const CombatManager = (() => {
         startCombat([player], [enemy]);
     }
 
+    // Save combat state to GameState
+    function saveCombatState() {
+        if (combatState && combatState.isActive) {
+            GameState.updateProperty('combat', {
+                ...combatState,
+                pendingAction
+            });
+            SaveSystem.save();
+        }
+    }
+
+    // Restore combat state from GameState
+    function restoreCombatState() {
+        const savedCombat = GameState.getState().combat;
+        if (savedCombat && savedCombat.isActive) {
+            combatState = savedCombat;
+            pendingAction = savedCombat.pendingAction;
+
+            // Show combat view
+            toggleCombatView(true);
+
+            // Render combat UI
+            renderCombatUI();
+
+            // Resume processing current turn
+            const current = getCurrentCombatant();
+            if (current && current.isPlayer && current.isAlive) {
+                // Player's turn - show action menu
+                renderCombatUI();
+            } else if (current && !current.isPlayer && current.isAlive) {
+                // Enemy's turn - process AI action
+                processCurrentTurn();
+            }
+        }
+    }
+
+    // Clear combat state
+    function clearCombatState() {
+        combatState = null;
+        pendingAction = null;
+        GameState.updateProperty('combat', null);
+        SaveSystem.save();
+    }
+
     return {
         init,
         startCombat,
+        restoreCombatState,
         getCurrentCombatant,
-        toggleCombatLog,
         getCombatState: () => combatState
     };
 })();

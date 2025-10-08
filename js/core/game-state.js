@@ -12,11 +12,11 @@ const GameState = (() => {
         world: null,
         inventory: null,
         quests: [],
-        achievements: []
+        achievements: [],
+        combat: null
     };
 
     function init() {
-        console.log('GameState: Initializing...');
         state.initialized = true;
         return state;
     }
@@ -51,7 +51,8 @@ const GameState = (() => {
             world: null,
             inventory: null,
             quests: [],
-            achievements: []
+            achievements: [],
+            combat: null
         };
     }
 

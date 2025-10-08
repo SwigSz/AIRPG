@@ -12,12 +12,10 @@ const Inventory = (() => {
 
     function addItem(inventory, item) {
         if (inventory.items.length >= inventory.capacity) {
-            console.error('Inventory is full!');
             return false;
         }
 
         inventory.items.push(item);
-        console.log(`Added ${item.name} to inventory`);
         return true;
     }
 
