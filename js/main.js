@@ -3,11 +3,14 @@
 // ============================================
 
 // Initialize on DOM Load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Initialize core systems
     if (window.GameState) GameState.init();
     if (window.EventSystem) EventSystem.init();
     if (window.TimeManager) TimeManager.init();
+
+    // Initialize data systems (load from JSON)
+    if (window.EnemyDatabase) await EnemyDatabase.init();
 
     // Initialize UI systems
     if (window.UIManager) {
@@ -19,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize crafting system
-    if (window.Crafting) Crafting.init();
+    if (window.Crafting) await Crafting.init();
 
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
@@ -159,6 +162,27 @@ function updateTopBar(character) {
     }
     if (characterXpText) {
         characterXpText.textContent = `${xpProgress.current} / ${xpProgress.needed} XP`;
+    }
+
+    // Update character stats in character tab
+    updateCharacterStats(character);
+}
+
+// Update character stats display in character tab
+function updateCharacterStats(character) {
+    const statsList = document.querySelector('.stats-list');
+    if (!statsList || !character.stats) return;
+
+    const stats = character.stats;
+    const statValues = statsList.querySelectorAll('.stat-value');
+
+    if (statValues.length >= 6) {
+        statValues[0].textContent = stats.strength || 0;
+        statValues[1].textContent = stats.dexterity || 0;
+        statValues[2].textContent = stats.constitution || 0;
+        statValues[3].textContent = stats.intelligence || 0;
+        statValues[4].textContent = stats.wisdom || 0;
+        statValues[5].textContent = stats.charisma || 0;
     }
 }
 

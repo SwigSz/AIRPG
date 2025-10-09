@@ -5,30 +5,25 @@
 const Crafting = (() => {
     let initialized = false;
     let discoveredRecipes = []; // Recipes the player has discovered
+    let recipes = []; // Recipe database loaded from JSON
 
-    // Recipe database
-    // REMINDER: When adding new craftable items, add a recipe entry here!
-    // New recipes will not be visible until the player discovers them by crafting.
-    const recipes = [
-        {
-            id: 'stone_axe',
-            name: 'Stone Axe',
-            icon: '🪓',
-            inputs: [
-                { name: 'Stick', count: 1 },
-                { name: 'Rock', count: 1 }
-            ],
-            output: {
-                name: 'Stone Axe',
-                icon: '🪓',
-                type: 'tool',
-                description: 'A crude axe made from a stick and a rock.'
-            }
+    async function loadRecipes() {
+        try {
+            const response = await fetch('data/recipes.json');
+            const data = await response.json();
+            recipes = data.recipes || [];
+            console.log('Loaded', recipes.length, 'recipes from JSON');
+        } catch (error) {
+            console.error('Failed to load recipes:', error);
+            recipes = [];
         }
-    ];
+    }
 
-    function init() {
+    async function init() {
         console.log('Crafting: Initializing...');
+
+        // Load recipes from JSON file
+        await loadRecipes();
 
         // Load discovered recipes from localStorage
         loadDiscoveredRecipes();

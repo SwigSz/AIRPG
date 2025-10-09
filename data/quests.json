@@ -1,3 +1,43 @@
 {
-  "quests": []
+  "quests": [
+    {
+      "id": "goblin_menace",
+      "name": "Goblin Menace",
+      "icon": "📜",
+      "description": "The local settlement is being harassed by goblins. Help eliminate the threat.",
+      "questGiver": "village_elder",
+      "unlockRequirements": {
+        "level": 1,
+        "completedQuests": []
+      },
+      "startLocation": "village_square",
+      "objectives": [
+        {
+          "id": "kill_goblins",
+          "type": "kill",
+          "target": "goblin",
+          "count": 5,
+          "currentCount": 0,
+          "description": "Defeat 5 goblins"
+        },
+        {
+          "id": "return_to_elder",
+          "type": "talk",
+          "target": "village_elder",
+          "description": "Return to the village elder"
+        }
+      ],
+      "rewards": {
+        "xp": 100,
+        "gold": 50,
+        "items": ["health_potion"],
+        "reputation": {
+          "faction": "village",
+          "amount": 10
+        }
+      },
+      "status": "available",
+      "repeatable": false
+    }
+  ]
 }

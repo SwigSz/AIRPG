@@ -1,3 +1,20 @@
 {
-  "achievements": []
+  "achievements": [
+    {
+      "id": "first_blood",
+      "name": "First Blood",
+      "icon": "🩸",
+      "description": "Defeat your first enemy in combat.",
+      "category": "combat",
+      "requirements": {
+        "type": "enemiesDefeated",
+        "count": 1
+      },
+      "rewards": {
+        "xp": 50
+      },
+      "hidden": false,
+      "obtained": false
+    }
+  ]
 }

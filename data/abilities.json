@@ -1,0 +1,45 @@
+{
+  "abilities": [
+    {
+      "id": "basic_attack",
+      "name": "Basic Attack",
+      "icon": "⚔️",
+      "description": "A standard melee attack.",
+      "type": "physical",
+      "cooldown": 0,
+      "manaCost": 0,
+      "damage": {
+        "base": 10,
+        "scaling": "strength"
+      }
+    },
+    {
+      "id": "power_strike",
+      "name": "Power Strike",
+      "icon": "💥",
+      "description": "A powerful strike that deals extra damage.",
+      "type": "physical",
+      "cooldown": 2,
+      "manaCost": 10,
+      "damage": {
+        "base": 20,
+        "scaling": "strength",
+        "multiplier": 1.5
+      }
+    },
+    {
+      "id": "defensive_stance",
+      "name": "Defensive Stance",
+      "icon": "🛡️",
+      "description": "Increases defense temporarily.",
+      "type": "buff",
+      "cooldown": 3,
+      "manaCost": 15,
+      "effect": {
+        "stat": "defense",
+        "modifier": 5,
+        "duration": 3
+      }
+    }
+  ]
+}

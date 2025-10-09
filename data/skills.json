@@ -1,3 +1,36 @@
 {
-  "skills": []
+  "skills": [
+    {
+      "id": "swordsmanship",
+      "name": "Swordsmanship",
+      "icon": "⚔️",
+      "description": "Proficiency with sword-type weapons. Increases damage and accuracy.",
+      "category": "combat",
+      "maxLevel": 100,
+      "effects": {
+        "damageBonus": 0.5,
+        "accuracyBonus": 0.2
+      },
+      "levelRequirements": {
+        "xpPerLevel": 100,
+        "scalingFactor": 1.5
+      }
+    },
+    {
+      "id": "herbalism",
+      "name": "Herbalism",
+      "icon": "🌿",
+      "description": "Knowledge of herbs and plants. Improves potion quality and gathering efficiency.",
+      "category": "crafting",
+      "maxLevel": 100,
+      "effects": {
+        "gatheringBonus": 0.3,
+        "potionQuality": 0.4
+      },
+      "levelRequirements": {
+        "xpPerLevel": 80,
+        "scalingFactor": 1.4
+      }
+    }
+  ]
 }

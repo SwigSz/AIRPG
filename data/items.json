@@ -1,3 +1,196 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "iron_helm",
+      "name": "Iron Helm",
+      "icon": "⛑️",
+      "description": "A sturdy iron helmet that provides basic head protection.",
+      "type": "head",
+      "slot": "head",
+      "rarity": "common",
+      "stats": {
+        "defense": 5,
+        "weight": 3
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 30
+    },
+    {
+      "id": "silver_amulet",
+      "name": "Silver Amulet",
+      "icon": "📿",
+      "description": "A mystical amulet that enhances magical abilities.",
+      "type": "neck",
+      "slot": "neck",
+      "rarity": "uncommon",
+      "stats": {
+        "magic": 3,
+        "charisma": 2
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 75
+    },
+    {
+      "id": "leather_armor",
+      "name": "Leather Armor",
+      "icon": "🦺",
+      "description": "Well-crafted leather armor offering good protection.",
+      "type": "chest",
+      "slot": "chest",
+      "rarity": "common",
+      "stats": {
+        "defense": 10,
+        "weight": 8
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 60
+    },
+    {
+      "id": "cloth_gloves",
+      "name": "Cloth Gloves",
+      "icon": "🧤",
+      "description": "Light gloves that allow nimble finger movements.",
+      "type": "hands",
+      "slot": "hands",
+      "rarity": "common",
+      "stats": {
+        "dexterity": 2,
+        "weight": 1
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 15
+    },
+    {
+      "id": "chain_leggings",
+      "name": "Chain Leggings",
+      "icon": "👖",
+      "description": "Chainmail leggings providing solid leg protection.",
+      "type": "legs",
+      "slot": "legs",
+      "rarity": "common",
+      "stats": {
+        "defense": 7,
+        "weight": 5
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 45
+    },
+    {
+      "id": "leather_boots",
+      "name": "Leather Boots",
+      "icon": "🥾",
+      "description": "Comfortable boots suitable for long journeys.",
+      "type": "feet",
+      "slot": "feet",
+      "rarity": "common",
+      "stats": {
+        "defense": 3,
+        "speed": 1
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 25
+    },
+    {
+      "id": "iron_sword",
+      "name": "Iron Sword",
+      "icon": "⚔️",
+      "description": "A well-balanced iron sword with a sharp edge.",
+      "type": "main_hand",
+      "slot": "main_hand",
+      "rarity": "common",
+      "stats": {
+        "damage": 15,
+        "weight": 4
+      },
+      "requirements": {
+        "strength": 8,
+        "level": 1
+      },
+      "stackable": false,
+      "value": 50
+    },
+    {
+      "id": "wooden_shield",
+      "name": "Wooden Shield",
+      "icon": "🛡️",
+      "description": "A sturdy wooden shield reinforced with metal bands.",
+      "type": "off_hand",
+      "slot": "off_hand",
+      "rarity": "common",
+      "stats": {
+        "defense": 8,
+        "weight": 6
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 35
+    },
+    {
+      "id": "gold_ring",
+      "name": "Gold Ring",
+      "icon": "💍",
+      "description": "A beautiful gold ring with intricate engravings.",
+      "type": "ring",
+      "slot": "ring",
+      "rarity": "uncommon",
+      "stats": {
+        "charisma": 3
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 100
+    },
+    {
+      "id": "ruby_ring",
+      "name": "Ruby Ring",
+      "icon": "💍",
+      "description": "A ring with a gleaming ruby that radiates power.",
+      "type": "ring",
+      "slot": "ring",
+      "rarity": "rare",
+      "stats": {
+        "strength": 2
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 150
+    },
+    {
+      "id": "travelers_cloak",
+      "name": "Traveler's Cloak",
+      "icon": "🧥",
+      "description": "A hooded cloak perfect for traveling incognito.",
+      "type": "cloak",
+      "slot": "cloak",
+      "rarity": "common",
+      "stats": {
+        "defense": 2,
+        "stealth": 3
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 40
+    },
+    {
+      "id": "health_potion",
+      "name": "Health Potion",
+      "icon": "🧪",
+      "description": "Restores 50 health points when consumed.",
+      "type": "consumable",
+      "slot": null,
+      "rarity": "common",
+      "effect": {
+        "type": "heal",
+        "amount": 50
+      },
+      "stackable": true,
+      "value": 20
+    }
+  ]
 }

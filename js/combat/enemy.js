@@ -30,24 +30,39 @@
 // }
 
 const EnemyDatabase = (() => {
-    // Enemy definitions database
-    const ENEMIES = {
-        "test_dummy": {
-            id: "test_dummy",
-            name: "Test Dummy",
-            level: 1,
-            kind: "construct",
-            flavor: "A training dummy. It doesn't fight back.",
-            hp: 50,
-            defense: 3,
-            attack: {
-                name: "bump",
-                kind: "blunt",
-                damage: "1~2"
-            },
-            xpReward: 10
+    // Enemy definitions database (loaded from JSON)
+    let ENEMIES = {};
+
+    // Load enemies from JSON file
+    async function loadEnemies() {
+        try {
+            const response = await fetch('data/enemies.json');
+            const data = await response.json();
+
+            // Convert array to object keyed by id
+            ENEMIES = {};
+            data.enemies.forEach(enemy => {
+                // Convert JSON format to internal format
+                ENEMIES[enemy.id] = {
+                    id: enemy.id,
+                    name: enemy.name,
+                    level: enemy.level,
+                    kind: enemy.kind,
+                    flavor: enemy.description,
+                    hp: enemy.stats.hp,
+                    defense: enemy.stats.defense,
+                    attack: enemy.attack,
+                    biome: enemy.biomes || [],
+                    xpReward: enemy.xpReward
+                };
+            });
+
+            console.log('Loaded', Object.keys(ENEMIES).length, 'enemies from JSON');
+        } catch (error) {
+            console.error('Failed to load enemies:', error);
+            ENEMIES = {};
         }
-    };
+    }
 
     // Get enemy template
     function getEnemyTemplate(enemyId) {
@@ -71,7 +86,13 @@ const EnemyDatabase = (() => {
         return true;
     }
 
+    // Initialize - load enemies
+    async function init() {
+        await loadEnemies();
+    }
+
     return {
+        init,
         getEnemyTemplate,
         getAllEnemyIds,
         addEnemy

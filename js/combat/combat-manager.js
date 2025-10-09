@@ -209,32 +209,46 @@ const CombatManager = (() => {
     function endCombat(result) {
         if (!combatState) return;
 
+        // Save references before clearing state
+        const combatants = combatState.combatants;
+
         combatState.isActive = false;
-        clearCombatState();
 
         if (result === 'victory') {
             logCombat('\n=== VICTORY ===');
             logCombat('All enemies have been defeated!');
 
             // Award XP to all living players
-            const deadEnemies = combatState.combatants.filter(c => !c.isPlayer && !c.isAlive);
+            const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
             const totalXP = deadEnemies.reduce((sum, enemy) => sum + (enemy.xpReward || 0), 0);
 
-            if (totalXP > 0) {
-                combatState.combatants.forEach(player => {
-                    if (player.isPlayer && player.isAlive) {
-                        const leveled = Character.addXP(player, totalXP);
-                        logCombat(`${player.name} gained ${totalXP} XP!`);
-                        if (leveled) {
-                            logCombat(`${player.name} leveled up to level ${player.level}!`);
-                        }
+            console.log('Dead enemies:', deadEnemies);
+            console.log('Total XP to award:', totalXP);
 
-                        // Sync XP and level back to GameState character
+            if (totalXP > 0) {
+                combatants.forEach(player => {
+                    if (player.isPlayer && player.isAlive) {
+                        // Get the actual GameState character
                         const character = GameState.getState().character;
-                        if (character && character.id === player.id) {
-                            character.xp = player.xp;
-                            character.level = player.level;
-                            character.totalXP = player.totalXP;
+                        console.log('Character before XP:', character);
+                        if (character) {
+                            // Add XP directly to the GameState character
+                            const leveled = Character.addXP(character, totalXP);
+                            console.log('Character after XP:', character);
+                            logCombat(`${player.name} gained ${totalXP} XP!`);
+                            if (leveled) {
+                                logCombat(`${player.name} leveled up to level ${character.level}!`);
+                            }
+
+                            // Immediately update UI to show XP changes
+                            if (window.updateTopBar) {
+                                updateTopBar(character);
+                            }
+
+                            // Immediately save the game state
+                            if (window.SaveSystem) {
+                                SaveSystem.save();
+                            }
                         }
                     }
                 });
@@ -245,6 +259,9 @@ const CombatManager = (() => {
         } else if (result === 'flee') {
             logCombat('\n=== FLED FROM COMBAT ===');
         }
+
+        // Clear combat state after processing rewards
+        clearCombatState();
 
         renderCombatUI();
 
@@ -624,8 +641,19 @@ const CombatManager = (() => {
             initiative: 0
         };
 
-        // Create enemy from factory
-        const enemyInstance = EnemyFactory.createEnemy('test_dummy');
+        // Get all available enemy IDs from the database
+        const availableEnemies = EnemyDatabase.getAllEnemyIds();
+        if (!availableEnemies || availableEnemies.length === 0) {
+            console.error('No enemies available in database');
+            return;
+        }
+
+        // Randomly select an enemy
+        const randomEnemyId = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
+        console.log(`Random encounter: ${randomEnemyId}`);
+
+        // Create enemy from factory using random selection
+        const enemyInstance = EnemyFactory.createEnemy(randomEnemyId);
         if (!enemyInstance) {
             console.error('Failed to create enemy');
             return;
@@ -635,7 +663,8 @@ const CombatManager = (() => {
         const enemy = {
             ...enemyInstance,
             speed: 10,
-            attack: EnemyFactory.calculateEnemyAttack(enemyInstance)
+            attack: EnemyFactory.calculateEnemyAttack(enemyInstance),
+            xpReward: enemyInstance.xpReward || 0
         };
 
         startCombat([player], [enemy]);
