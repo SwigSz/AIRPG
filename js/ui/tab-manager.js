@@ -25,6 +25,9 @@ const TabManager = (() => {
         // Update current tab state
         currentTab = tabName;
 
+        // Save to localStorage
+        localStorage.setItem('lastActiveTab', tabName);
+
         // Remove active class from all nav buttons
         const navButtons = document.querySelectorAll('.nav-button');
         navButtons.forEach(btn => btn.classList.remove('active'));
@@ -51,8 +54,15 @@ const TabManager = (() => {
     }
 
     function setInitialTab() {
-        // Set character tab as default on page load
-        switchTab('character');
+        // Try to restore last active tab from localStorage
+        const lastActiveTab = localStorage.getItem('lastActiveTab');
+
+        // If a tab was saved and it exists, switch to it; otherwise default to character
+        if (lastActiveTab && document.getElementById(`${lastActiveTab}-tab`)) {
+            switchTab(lastActiveTab);
+        } else {
+            switchTab('character');
+        }
     }
 
     function getCurrentTab() {

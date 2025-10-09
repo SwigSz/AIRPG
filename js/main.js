@@ -81,23 +81,19 @@ function initializeTestCharacter() {
     // Add crafting test items (individual items that will stack in the UI)
     const stick1 = Items.createItem('Stick', Items.ITEM_TYPES.MATERIAL, {
         description: 'A sturdy stick.',
-        icon: '🪵',
-        stackable: true
+        icon: '🪵'
     });
     const stick2 = Items.createItem('Stick', Items.ITEM_TYPES.MATERIAL, {
         description: 'A sturdy stick.',
-        icon: '🪵',
-        stackable: true
+        icon: '🪵'
     });
     const rock1 = Items.createItem('Rock', Items.ITEM_TYPES.MATERIAL, {
         description: 'A heavy rock.',
-        icon: '🪨',
-        stackable: true
+        icon: '🪨'
     });
     const rock2 = Items.createItem('Rock', Items.ITEM_TYPES.MATERIAL, {
         description: 'A heavy rock.',
-        icon: '🪨',
-        stackable: true
+        icon: '🪨'
     });
 
     Inventory.addItem(testCharacter.inventory, stick1);

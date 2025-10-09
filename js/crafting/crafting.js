@@ -7,6 +7,8 @@ const Crafting = (() => {
     let discoveredRecipes = []; // Recipes the player has discovered
 
     // Recipe database
+    // REMINDER: When adding new craftable items, add a recipe entry here!
+    // New recipes will not be visible until the player discovers them by crafting.
     const recipes = [
         {
             id: 'stone_axe',
@@ -17,7 +19,6 @@ const Crafting = (() => {
                 { name: 'Rock', count: 1 }
             ],
             output: {
-                id: 'stone_axe_item',
                 name: 'Stone Axe',
                 icon: '🪓',
                 type: 'tool',
@@ -29,10 +30,14 @@ const Crafting = (() => {
     function init() {
         console.log('Crafting: Initializing...');
 
+        // Load discovered recipes from localStorage
+        loadDiscoveredRecipes();
+
         // Initialize on DOM ready with a small delay
         setTimeout(() => {
             renderMiniInventory();
             initializeCraftingSlots();
+            renderRecipeList();
         }, 100);
 
         // Initialize mini inventory when tab manager is ready
@@ -51,6 +56,27 @@ const Crafting = (() => {
                 }
             };
         }
+    }
+
+    function loadDiscoveredRecipes() {
+        const saved = localStorage.getItem('discoveredRecipes');
+        if (saved) {
+            try {
+                const recipeIds = JSON.parse(saved);
+                discoveredRecipes = recipeIds.map(id => recipes.find(r => r.id === id)).filter(r => r);
+                console.log('Loaded', discoveredRecipes.length, 'discovered recipes');
+            } catch (error) {
+                console.error('Failed to load discovered recipes:', error);
+                discoveredRecipes = [];
+            }
+        } else {
+            discoveredRecipes = [];
+        }
+    }
+
+    function saveDiscoveredRecipes() {
+        const recipeIds = discoveredRecipes.map(r => r.id);
+        localStorage.setItem('discoveredRecipes', JSON.stringify(recipeIds));
     }
 
     function renderMiniInventory() {
@@ -240,10 +266,14 @@ const Crafting = (() => {
         // Get items in crafting slots
         const inputSlots = document.querySelectorAll('.input-slot');
         const craftingItems = [];
+        const craftingItemIds = [];
 
         inputSlots.forEach(slot => {
             if (!slot.classList.contains('empty') && slot.dataset.itemName) {
                 craftingItems.push(slot.dataset.itemName);
+                if (slot.dataset.itemId) {
+                    craftingItemIds.push(slot.dataset.itemId);
+                }
             }
         });
 
@@ -257,8 +287,33 @@ const Crafting = (() => {
 
         if (matchedRecipe) {
             console.log('Recipe matched:', matchedRecipe.name);
-            // Show output in center slot
+
+            const character = GameState.getState().character;
+
+            // Check if there's already an item in the output slot
             const outputSlot = document.querySelector('.output-slot');
+            if (!outputSlot.classList.contains('empty') && outputSlot.dataset.craftedItem) {
+                // Auto-collect the previous crafted item
+                const previousItemTemplate = JSON.parse(outputSlot.dataset.craftedItem);
+                const previousItem = Items.createItem(previousItemTemplate.name, previousItemTemplate.type, {
+                    description: previousItemTemplate.description,
+                    icon: previousItemTemplate.icon,
+                    slot: previousItemTemplate.slot || null,
+                    stats: previousItemTemplate.stats || {}
+                });
+                Inventory.addItem(character.inventory, previousItem);
+                console.log('Auto-collected previous crafted item:', previousItem.name);
+            }
+
+            // Remove items from inventory immediately
+            craftingItemIds.forEach(itemId => {
+                Inventory.removeItem(character.inventory, itemId);
+            });
+
+            // Clear all input slots immediately
+            clearAllSlots();
+
+            // Show output in center slot
             outputSlot.innerHTML = `
                 <div class="item-card">
                     <span class="item-name">${matchedRecipe.output.name}</span>
@@ -267,9 +322,21 @@ const Crafting = (() => {
             outputSlot.classList.remove('empty');
             outputSlot.dataset.craftedItem = JSON.stringify(matchedRecipe.output);
 
+            // Update inventory displays
+            renderMiniInventory();
+            if (window.renderInventoryUI) {
+                renderInventoryUI();
+            }
+
+            // Save game
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
+
             // Add to discovered recipes if not already discovered
             if (!discoveredRecipes.find(r => r.id === matchedRecipe.id)) {
                 discoveredRecipes.push(matchedRecipe);
+                saveDiscoveredRecipes();
                 renderRecipeList();
             }
         } else {
@@ -316,22 +383,20 @@ const Crafting = (() => {
             return;
         }
 
-        const craftedItem = JSON.parse(outputSlot.dataset.craftedItem);
+        const craftedItemTemplate = JSON.parse(outputSlot.dataset.craftedItem);
         const character = GameState.getState().character;
 
-        // Remove items from inventory that were used in crafting
-        const inputSlots = document.querySelectorAll('.input-slot');
-        inputSlots.forEach(slot => {
-            if (!slot.classList.contains('empty') && slot.dataset.itemId) {
-                Inventory.removeItem(character.inventory, slot.dataset.itemId);
-            }
+        // Create a proper item with unique ID using Items.createItem
+        const craftedItem = Items.createItem(craftedItemTemplate.name, craftedItemTemplate.type, {
+            description: craftedItemTemplate.description,
+            icon: craftedItemTemplate.icon,
+            slot: craftedItemTemplate.slot || null,
+            stats: craftedItemTemplate.stats || {}
         });
 
-        // Add crafted item to inventory
+        // Items were already removed from inventory in attemptCraft()
+        // Just add the crafted item to inventory
         Inventory.addItem(character.inventory, craftedItem);
-
-        // Clear crafting grid
-        clearAllSlots();
 
         // Clear output slot
         outputSlot.innerHTML = '';
@@ -358,14 +423,49 @@ const Crafting = (() => {
 
         recipesGrid.innerHTML = '';
 
+        // Render each discovered recipe as a bar
         discoveredRecipes.forEach(recipe => {
-            const recipeCard = document.createElement('div');
-            recipeCard.className = 'recipe-card';
-            recipeCard.innerHTML = `
-                <div class="recipe-icon">${recipe.icon}</div>
-                <div class="recipe-name">${recipe.name}</div>
-            `;
-            recipesGrid.appendChild(recipeCard);
+            const recipeContainer = document.createElement('div');
+
+            const recipeBar = document.createElement('div');
+            recipeBar.className = 'recipe-bar';
+            recipeBar.dataset.recipeId = recipe.id;
+
+            const recipeName = document.createElement('span');
+            recipeName.textContent = recipe.name;
+
+            const arrow = document.createElement('span');
+            arrow.className = 'recipe-bar-arrow';
+            arrow.textContent = '▶';
+
+            recipeBar.appendChild(recipeName);
+            recipeBar.appendChild(arrow);
+
+            // Create dropdown
+            const dropdown = document.createElement('div');
+            dropdown.className = 'recipe-dropdown';
+
+            const ingredientsList = document.createElement('div');
+            ingredientsList.className = 'recipe-ingredients';
+
+            recipe.inputs.forEach(input => {
+                const ingredientItem = document.createElement('div');
+                ingredientItem.className = 'recipe-ingredient-item';
+                ingredientItem.textContent = `${input.name} x${input.count}`;
+                ingredientsList.appendChild(ingredientItem);
+            });
+
+            dropdown.appendChild(ingredientsList);
+
+            // Add click handler to toggle dropdown
+            recipeBar.addEventListener('click', () => {
+                recipeBar.classList.toggle('expanded');
+                dropdown.classList.toggle('open');
+            });
+
+            recipeContainer.appendChild(recipeBar);
+            recipeContainer.appendChild(dropdown);
+            recipesGrid.appendChild(recipeContainer);
         });
     }
 

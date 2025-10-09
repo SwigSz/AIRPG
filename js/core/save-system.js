@@ -131,8 +131,10 @@ const SaveSystem = (() => {
 
     function wipeData() {
         try {
-            // Clear localStorage
+            // Clear localStorage completely (including discovered recipes and last tab)
             localStorage.removeItem(SAVE_KEY);
+            localStorage.removeItem('discoveredRecipes');
+            localStorage.removeItem('lastActiveTab');
 
             // Reset game state
             GameState.reset();
