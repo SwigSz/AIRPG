@@ -93,6 +93,51 @@ const Inventory = (() => {
         return true;
     }
 
+    // Group stackable items by name and icon for display purposes
+    function getStackedItems(inventory) {
+        const stacks = [];
+        const processed = new Set();
+
+        inventory.items.forEach((item, index) => {
+            if (processed.has(index)) return;
+
+            if (item.stackable) {
+                // Find all items with the same name and icon
+                const stackItems = inventory.items.filter((otherItem, otherIndex) => {
+                    return !processed.has(otherIndex) &&
+                           otherItem.stackable &&
+                           otherItem.name === item.name &&
+                           otherItem.icon === item.icon;
+                });
+
+                // Mark all found items as processed
+                inventory.items.forEach((otherItem, otherIndex) => {
+                    if (stackItems.includes(otherItem)) {
+                        processed.add(otherIndex);
+                    }
+                });
+
+                // Create a stack representation
+                stacks.push({
+                    item: item, // First item in the stack
+                    items: stackItems, // All items in the stack
+                    quantity: stackItems.length,
+                    isStack: true
+                });
+            } else {
+                processed.add(index);
+                stacks.push({
+                    item: item,
+                    items: [item],
+                    quantity: 1,
+                    isStack: false
+                });
+            }
+        });
+
+        return stacks;
+    }
+
     function init() {
         console.log('Inventory: Initializing...');
     }
@@ -107,7 +152,8 @@ const Inventory = (() => {
         getItemCount,
         clear,
         equipItemFromInventory,
-        unequipItemToInventory
+        unequipItemToInventory,
+        getStackedItems
     };
 })();
 

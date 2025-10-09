@@ -273,7 +273,13 @@
 
                         <!-- Inventory Grid -->
                         <div class="inventory-section">
-                            <h2>Inventory</h2>
+                            <div class="inventory-header">
+                                <h2>Inventory</h2>
+                                <label class="toggle-container">
+                                    <input type="checkbox" id="confirm-toss-toggle" checked>
+                                    <span class="toggle-label">Confirm before tossing</span>
+                                </label>
+                            </div>
                             <div class="inventory-grid" id="inventory-grid">
                                 <!-- 8x8 grid = 64 slots, populated dynamically -->
                             </div>
@@ -300,12 +306,51 @@
                         <div class="recipes-section">
                             <h2>Recipes</h2>
                             <div class="recipes-grid">
-                                <div class="recipe-card empty"></div>
-                                <div class="recipe-card empty"></div>
-                                <div class="recipe-card empty"></div>
-                                <div class="recipe-card empty"></div>
-                                <div class="recipe-card empty"></div>
-                                <div class="recipe-card empty"></div>
+                                <!-- Recipe cards will be added dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crafting Station -->
+                    <div class="crafting-station">
+                        <div class="crafting-station-content">
+                            <!-- Mini Inventory Section -->
+                            <div class="crafting-mini-inventory">
+                                <h3>Inventory</h3>
+                                <div class="mini-inventory-grid" id="crafting-mini-inventory-grid">
+                                    <!-- Will be populated dynamically from player inventory -->
+                                </div>
+                            </div>
+
+                            <!-- Circular crafting wheel -->
+                            <div class="crafting-wheel">
+                                <!-- SVG for connecting pipes -->
+                                <svg class="crafting-pipes" viewBox="0 0 400 400">
+                                    <!-- Pipes from each input to center (200, 200) -->
+                                    <line class="pipe" x1="200" y1="60" x2="200" y2="200" />
+                                    <line class="pipe" x1="309.456" y1="112.711" x2="200" y2="200" />
+                                    <line class="pipe" x1="336.49" y1="231.152" x2="200" y2="200" />
+                                    <line class="pipe" x1="260.743" y1="326.136" x2="200" y2="200" />
+                                    <line class="pipe" x1="139.257" y1="326.136" x2="200" y2="200" />
+                                    <line class="pipe" x1="63.51" y1="231.152" x2="200" y2="200" />
+                                    <line class="pipe" x1="90.544" y1="112.711" x2="200" y2="200" />
+                                </svg>
+
+                                <!-- Input slots (7 slots in circle) -->
+                                <div class="crafting-slot input-slot" data-slot="0"></div>
+                                <div class="crafting-slot input-slot" data-slot="1"></div>
+                                <div class="crafting-slot input-slot" data-slot="2"></div>
+                                <div class="crafting-slot input-slot" data-slot="3"></div>
+                                <div class="crafting-slot input-slot" data-slot="4"></div>
+                                <div class="crafting-slot input-slot" data-slot="5"></div>
+                                <div class="crafting-slot input-slot" data-slot="6"></div>
+
+                                <!-- Central output slot -->
+                                <div class="crafting-slot output-slot"></div>
+
+                                <!-- Clear and Combine buttons -->
+                                <button class="clear-all-btn">Clear All</button>
+                                <button class="combine-btn">Combine</button>
                             </div>
                         </div>
                     </div>
@@ -384,6 +429,7 @@
     <script src="js/inventory/equipment.js"></script>
     <script src="js/inventory/inventory.js"></script>
     <script src="js/ui/tab-manager.js"></script>
+    <script src="js/crafting/crafting.js"></script>
     <script src="js/combat/enemy.js"></script>
     <script src="js/combat/enemy-factory.js"></script>
     <script src="js/combat/bestiary.js"></script>

@@ -1,6 +1,44 @@
 /* ============================================
    INVENTORY TAB
    ============================================ */
+
+/* Inventory Header with Toggle */
+.inventory-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.inventory-header h2 {
+    margin: 0;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+.toggle-label {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.toggle-container:hover .toggle-label {
+    color: #f59e0b;
+}
+
 .inventory-layout {
     display: grid;
     grid-template-columns: 1fr 3fr;

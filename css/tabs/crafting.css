@@ -60,3 +60,288 @@
     border-color: #f59e0b;
     transform: translateY(-2px);
 }
+
+/* ============================================
+   CRAFTING STATION
+   ============================================ */
+.crafting-station {
+    position: relative;
+    margin-top: 2rem;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding-bottom: 1rem;
+}
+
+.crafting-station-content {
+    position: relative;
+    height: 380px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    gap: 2rem;
+}
+
+/* Mini Inventory Section */
+.crafting-mini-inventory {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.crafting-mini-inventory h3 {
+    color: #e2e8f0;
+    font-size: 1rem;
+    margin: 0 0 0.75rem 0;
+}
+
+.mini-inventory-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(55px, 55px));
+    gap: 0.5rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.5rem;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    align-content: start;
+    justify-content: start;
+}
+
+.mini-inventory-slot {
+    aspect-ratio: 1;
+    width: 55px;
+    height: 55px;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem;
+}
+
+.mini-inventory-slot:hover {
+    border-color: #f59e0b;
+    background-color: #334155;
+}
+
+.mini-inventory-slot.used {
+    display: none;
+}
+
+.mini-inventory-slot .item-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.mini-inventory-slot .item-name {
+    font-size: 0.75rem;
+    color: #e2e8f0;
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+/* Crafting wheel container */
+.crafting-wheel {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    flex-shrink: 0;
+    margin-right: 2rem;
+}
+
+/* SVG Pipes */
+.crafting-pipes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.pipe {
+    stroke: #475569;
+    stroke-width: 3;
+    stroke-linecap: round;
+    opacity: 0.8;
+}
+
+/* Crafting slots */
+.crafting-slot {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background-color: #0f172a;
+    border: 2px solid #334155;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+}
+
+.crafting-slot.empty:hover {
+    border-color: #334155;
+    transform: none;
+}
+
+.crafting-slot:not(.empty):hover {
+    border-color: #f59e0b;
+    transform: scale(1.05);
+}
+
+.crafting-slot.empty::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px dashed #334155;
+    border-radius: 2px;
+}
+
+.crafting-slot .item-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.crafting-slot .item-name {
+    font-size: 0.65rem;
+    color: #e2e8f0;
+    text-align: center;
+    line-height: 1.1;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Input slots positioned in circle using trigonometry */
+.input-slot {
+    --radius: 140px;
+    --centerX: 200px;
+    --centerY: 200px;
+}
+
+.input-slot[data-slot="0"] {
+    left: calc(var(--centerX) + var(--radius) * 0 - 30px);
+    top: calc(var(--centerY) - var(--radius) * 1 - 30px);
+}
+
+.input-slot[data-slot="1"] {
+    left: calc(var(--centerX) + var(--radius) * 0.78183 - 30px);
+    top: calc(var(--centerY) - var(--radius) * 0.62349 - 30px);
+}
+
+.input-slot[data-slot="2"] {
+    left: calc(var(--centerX) + var(--radius) * 0.97493 - 30px);
+    top: calc(var(--centerY) + var(--radius) * 0.22252 - 30px);
+}
+
+.input-slot[data-slot="3"] {
+    left: calc(var(--centerX) + var(--radius) * 0.43388 - 30px);
+    top: calc(var(--centerY) + var(--radius) * 0.90097 - 30px);
+}
+
+.input-slot[data-slot="4"] {
+    left: calc(var(--centerX) - var(--radius) * 0.43388 - 30px);
+    top: calc(var(--centerY) + var(--radius) * 0.90097 - 30px);
+}
+
+.input-slot[data-slot="5"] {
+    left: calc(var(--centerX) - var(--radius) * 0.97493 - 30px);
+    top: calc(var(--centerY) + var(--radius) * 0.22252 - 30px);
+}
+
+.input-slot[data-slot="6"] {
+    left: calc(var(--centerX) - var(--radius) * 0.78183 - 30px);
+    top: calc(var(--centerY) - var(--radius) * 0.62349 - 30px);
+}
+
+/* Output slot (center) */
+.output-slot {
+    left: 170px;
+    top: 170px;
+    width: 60px;
+    height: 60px;
+    background-color: #0f172a;
+    border-color: #f59e0b;
+}
+
+.output-slot::before {
+    border-color: #f59e0b;
+}
+
+/* Clear All button */
+.clear-all-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 120px;
+    padding: 8px 16px;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-all-btn:hover {
+    background-color: #334155;
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+
+.clear-all-btn:active {
+    transform: translateY(0);
+}
+
+/* Combine button */
+.combine-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    padding: 8px 16px;
+    background-color: #3b82f6;
+    border: 1px solid #2563eb;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.combine-btn:hover {
+    background-color: #2563eb;
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+
+.combine-btn:active {
+    transform: translateY(0);
+}

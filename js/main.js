@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.CombatUI) CombatUI.init();
     }
 
+    // Initialize crafting system
+    if (window.Crafting) Crafting.init();
+
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
 
@@ -75,6 +78,33 @@ function initializeTestCharacter() {
         Inventory.addItem(testCharacter.inventory, item);
     });
 
+    // Add crafting test items (individual items that will stack in the UI)
+    const stick1 = Items.createItem('Stick', Items.ITEM_TYPES.MATERIAL, {
+        description: 'A sturdy stick.',
+        icon: '🪵',
+        stackable: true
+    });
+    const stick2 = Items.createItem('Stick', Items.ITEM_TYPES.MATERIAL, {
+        description: 'A sturdy stick.',
+        icon: '🪵',
+        stackable: true
+    });
+    const rock1 = Items.createItem('Rock', Items.ITEM_TYPES.MATERIAL, {
+        description: 'A heavy rock.',
+        icon: '🪨',
+        stackable: true
+    });
+    const rock2 = Items.createItem('Rock', Items.ITEM_TYPES.MATERIAL, {
+        description: 'A heavy rock.',
+        icon: '🪨',
+        stackable: true
+    });
+
+    Inventory.addItem(testCharacter.inventory, stick1);
+    Inventory.addItem(testCharacter.inventory, stick2);
+    Inventory.addItem(testCharacter.inventory, rock1);
+    Inventory.addItem(testCharacter.inventory, rock2);
+
     // Store in game state
     GameState.updateProperty('character', testCharacter);
 
@@ -99,6 +129,11 @@ function displayCharacterData() {
     // Display inventory and equipment
     renderInventoryUI();
     renderEquipmentUI();
+
+    // Render mini inventory if crafting module is available
+    if (window.Crafting) {
+        Crafting.renderMiniInventory();
+    }
 }
 
 // Update Top Bar with Character Info
@@ -165,15 +200,23 @@ function renderInventoryUI() {
     const inventoryGrid = document.getElementById('inventory-grid');
     inventoryGrid.innerHTML = '';
 
-    // Create slots only for items that exist
-    character.inventory.items.forEach((item, index) => {
+    // Get stacked items from inventory
+    const stacks = Inventory.getStackedItems(character.inventory);
+
+    // Create slots for each stack
+    stacks.forEach((stack, index) => {
         const slot = document.createElement('div');
         slot.className = 'inventory-slot';
         slot.dataset.slotIndex = index;
 
-        renderItemInSlot(slot, item, 'inventory');
+        renderItemInSlot(slot, stack.item, 'inventory', stack);
         inventoryGrid.appendChild(slot);
     });
+
+    // Always update mini inventory when inventory changes
+    if (window.Crafting) {
+        Crafting.renderMiniInventory();
+    }
 }
 
 // Render equipment slots
@@ -217,7 +260,7 @@ function renderEquipmentUI() {
 }
 
 // Render an item in a slot
-function renderItemInSlot(slotElement, item, context) {
+function renderItemInSlot(slotElement, item, context, stack = null) {
     slotElement.classList.remove('empty');
 
     if (context === 'equipment') {
@@ -242,12 +285,17 @@ function renderItemInSlot(slotElement, item, context) {
 
         // Attach event listeners to buttons
         const actionsDiv = slotElement.querySelector('.item-actions');
-        attachItemEventListeners(actionsDiv, item, context, item.slot);
+        attachItemEventListeners(actionsDiv, item, context, item.slot, stack);
     } else {
+        // Display quantity if it's a stack with multiple items
+        const displayName = stack && stack.quantity > 1
+            ? `${item.name} x${stack.quantity}`
+            : item.name;
+
         slotElement.innerHTML = `
             <div class="item-card">
                 <span class="item-icon">${item.icon}</span>
-                <span class="item-name">${item.name}</span>
+                <span class="item-name">${displayName}</span>
             </div>
             <div class="item-actions">
                 <button class="item-action-btn equip" data-action="equip">Equip</button>
@@ -256,17 +304,17 @@ function renderItemInSlot(slotElement, item, context) {
             </div>
         `;
 
-        // Store item ID in dataset
+        // Store item ID in dataset (use first item in stack)
         slotElement.dataset.itemId = item.id;
 
         // Attach event listeners to buttons
         const actionsDiv = slotElement.querySelector('.item-actions');
-        attachItemEventListeners(actionsDiv, item, context);
+        attachItemEventListeners(actionsDiv, item, context, null, stack);
     }
 }
 
 // Attach event listeners to item action buttons
-function attachItemEventListeners(actionsDiv, item, context, slot = null) {
+function attachItemEventListeners(actionsDiv, item, context, slot = null, stack = null) {
     // Get all action buttons
     const actionButtons = actionsDiv.querySelectorAll('.item-action-btn');
 
@@ -283,7 +331,7 @@ function attachItemEventListeners(actionsDiv, item, context, slot = null) {
                     unequipItemToInventory(slot);
                     break;
                 case 'toss':
-                    discardItem(item.id, context, slot);
+                    discardItem(item.id, context, slot, stack);
                     break;
                 case 'info':
                     showItemDetailsModal(item);
@@ -326,12 +374,24 @@ function unequipItemToInventory(slot) {
 }
 
 // Discard item (remove from game)
-function discardItem(itemId, context, slot) {
-    const confirmed = confirm('Are you sure you want to discard this item? This action cannot be undone.');
-    if (!confirmed) return;
-
+function discardItem(itemId, context, slot, stack = null) {
     const character = GameState.getState().character;
     if (!character) return;
+
+    // Check if confirmation is enabled
+    const confirmToggle = document.getElementById('confirm-toss-toggle');
+    const shouldConfirm = confirmToggle ? confirmToggle.checked : true;
+
+    if (shouldConfirm) {
+        // If it's a stack with multiple items, show quantity in confirmation
+        let confirmMessage = 'Are you sure you want to discard this item? This action cannot be undone.';
+        if (stack && stack.quantity > 1) {
+            confirmMessage = `Discard one ${stack.item.name}? (${stack.quantity - 1} will remain)`;
+        }
+
+        const confirmed = confirm(confirmMessage);
+        if (!confirmed) return;
+    }
 
     if (context === 'inventory') {
         Inventory.removeItem(character.inventory, itemId);
