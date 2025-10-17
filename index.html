@@ -155,49 +155,139 @@
 
                 <!-- Settlement Tab -->
                 <div class="tab-content" id="settlement-tab">
-                    <h2>Settlement Overview</h2>
-                    <div class="settlement-stats">
-                        <div class="stat-box">
-                            <div class="stat-box-label">Population</div>
-                            <div class="stat-box-value">--</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-box-label">Morale</div>
-                            <div class="stat-box-value">--</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-box-label">Resources</div>
-                            <div class="stat-box-value">--</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-box-label">Defense</div>
-                            <div class="stat-box-value">--</div>
+                    <!-- Settlement Header Bar -->
+                    <div class="settlement-header-bar">
+                        <div class="settlement-civ-name" id="settlement-civ-name">Civilization Name</div>
+                        <div class="settlement-header-stats">
+                            <div class="settlement-header-stat">
+                                <span class="stat-icon">👥</span>
+                                <span class="stat-label">Population:</span>
+                                <span class="stat-value" id="settlement-header-pop">0</span>
+                            </div>
+                            <div class="settlement-header-stat">
+                                <span class="stat-icon">😊</span>
+                                <span class="stat-label">Morale:</span>
+                                <span class="stat-value" id="settlement-header-morale">100%</span>
+                            </div>
+                            <div class="settlement-header-stat">
+                                <span class="stat-icon">🕐</span>
+                                <span class="stat-label">Day:</span>
+                                <span class="stat-value" id="settlement-header-day">1</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="task-allocation">
-                        <h2>Task Allocation</h2>
-                        <div class="tasks-grid">
-                            <div class="task-card">
-                                <div class="task-name">Task Name</div>
-                                <input type="range" min="0" max="100" value="0" class="task-slider">
-                                <div class="task-workers">Workers: 0</div>
+                    <!-- Settlement Top Navigation Tabs -->
+                    <div class="settlement-nav-tabs">
+                        <button class="settlement-nav-tab active" data-settlement-tab="buildings">
+                            <span class="tab-icon">🏗️</span>
+                            <span class="tab-label">Buildings</span>
+                        </button>
+                        <button class="settlement-nav-tab" data-settlement-tab="research">
+                            <span class="tab-icon">🔬</span>
+                            <span class="tab-label">Research</span>
+                        </button>
+                        <button class="settlement-nav-tab" data-settlement-tab="population">
+                            <span class="tab-icon">👥</span>
+                            <span class="tab-label">Population</span>
+                        </button>
+                        <button class="settlement-nav-tab" data-settlement-tab="trade">
+                            <span class="tab-icon">💰</span>
+                            <span class="tab-label">Trade</span>
+                        </button>
+                        <button class="settlement-nav-tab" data-settlement-tab="territory">
+                            <span class="tab-icon">🗺️</span>
+                            <span class="tab-label">Territory</span>
+                        </button>
+                    </div>
+
+                    <!-- Settlement Content Area with Right Panel -->
+                    <div class="settlement-main-layout">
+                        <!-- Left Content Area (Tab Content) -->
+                        <div class="settlement-content-area">
+
+                            <!-- Buildings Tab Content -->
+                            <div class="settlement-tab-content active" id="settlement-buildings-content">
+                                <div class="buildings-management">
+                                    <h3>Building Management</h3>
+                                    <p class="placeholder-text">Building system coming soon...</p>
+                                </div>
                             </div>
-                            <div class="task-card">
-                                <div class="task-name">Task Name</div>
-                                <input type="range" min="0" max="100" value="0" class="task-slider">
-                                <div class="task-workers">Workers: 0</div>
+
+                            <!-- Research Tab Content -->
+                            <div class="settlement-tab-content" id="settlement-research-content">
+                                <div class="research-tree">
+                                    <h3>Technology Tree</h3>
+                                    <p class="placeholder-text">Research system coming soon...</p>
+                                </div>
                             </div>
-                            <div class="task-card">
-                                <div class="task-name">Task Name</div>
-                                <input type="range" min="0" max="100" value="0" class="task-slider">
-                                <div class="task-workers">Workers: 0</div>
+
+                            <!-- Population Tab Content -->
+                            <div class="settlement-tab-content" id="settlement-population-content">
+                                <div class="population-management">
+                                    <h3>Population Management</h3>
+                                    <p class="placeholder-text">Population management coming soon...</p>
+                                </div>
                             </div>
-                            <div class="task-card">
-                                <div class="task-name">Task Name</div>
-                                <input type="range" min="0" max="100" value="0" class="task-slider">
-                                <div class="task-workers">Workers: 0</div>
+
+                            <!-- Trade Tab Content -->
+                            <div class="settlement-tab-content" id="settlement-trade-content">
+                                <div class="trade-routes">
+                                    <h3>Trade Routes & Markets</h3>
+                                    <p class="placeholder-text">Trade system coming soon...</p>
+                                </div>
                             </div>
+
+                            <!-- Territory Tab Content -->
+                            <div class="settlement-tab-content" id="settlement-territory-content">
+                                <div class="territory-map">
+                                    <h3>Territory & Exploration</h3>
+                                    <p class="placeholder-text">Territory system coming soon...</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Panel - Resources -->
+                        <div class="settlement-resources-panel">
+                            <h3>Resources</h3>
+
+                            <div class="resource-category">
+                                <div class="resource-category-header">Basic Materials</div>
+                                <div class="resource-item">
+                                    <div class="resource-icon">🪵</div>
+                                    <div class="resource-info">
+                                        <div class="resource-name">Wood</div>
+                                        <div class="resource-amount">
+                                            <span class="current">--</span>/<span class="max">--</span>
+                                        </div>
+                                        <div class="resource-production">--</div>
+                                    </div>
+                                </div>
+
+                                <div class="resource-item">
+                                    <div class="resource-icon">🪨</div>
+                                    <div class="resource-info">
+                                        <div class="resource-name">Stone</div>
+                                        <div class="resource-amount">
+                                            <span class="current">--</span>/<span class="max">--</span>
+                                        </div>
+                                        <div class="resource-production">--</div>
+                                    </div>
+                                </div>
+
+                                <div class="resource-item">
+                                    <div class="resource-icon">🌾</div>
+                                    <div class="resource-info">
+                                        <div class="resource-name">Food</div>
+                                        <div class="resource-amount">
+                                            <span class="current">--</span>/<span class="max">--</span>
+                                        </div>
+                                        <div class="resource-production">--</div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -430,6 +520,7 @@
     <script src="js/inventory/inventory.js"></script>
     <script src="js/ui/tab-manager.js"></script>
     <script src="js/crafting/crafting.js"></script>
+    <script src="js/settlement/settlement.js"></script>
     <script src="js/combat/enemy.js"></script>
     <script src="js/combat/enemy-factory.js"></script>
     <script src="js/combat/bestiary-tracker.js"></script>

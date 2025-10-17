@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize crafting system
     if (window.Crafting) await Crafting.init();
 
+    // Initialize settlement system
+    if (window.Settlement) Settlement.initializeUI();
+
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
 
@@ -107,6 +110,11 @@ function initializeTestCharacter() {
     // Store in game state
     GameState.updateProperty('character', testCharacter);
 
+    // Create test settlement
+    const testSettlement = Settlement.create('New Haven');
+    GameState.updateProperty('settlement', testSettlement);
+    Settlement.setSettlement(testSettlement);
+
     // Display character data
     displayCharacterData();
 
@@ -132,6 +140,13 @@ function displayCharacterData() {
     // Render mini inventory if crafting module is available
     if (window.Crafting) {
         Crafting.renderMiniInventory();
+    }
+
+    // Update settlement UI if settlement exists
+    const settlement = GameState.getState().settlement;
+    if (window.Settlement && settlement) {
+        Settlement.setSettlement(settlement);
+        Settlement.updateSettlementUI();
     }
 }
 
