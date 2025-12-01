@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.Crafting) await Crafting.init();
 
     // Initialize settlement system
-    if (window.Settlement) Settlement.initializeUI();
+    if (window.Settlement) await Settlement.init();
 
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
@@ -145,8 +145,7 @@ function displayCharacterData() {
     // Update settlement UI if settlement exists
     const settlement = GameState.getState().settlement;
     if (window.Settlement && settlement) {
-        Settlement.setSettlement(settlement);
-        Settlement.updateSettlementUI();
+        Settlement.setState(settlement);
     }
 }
 

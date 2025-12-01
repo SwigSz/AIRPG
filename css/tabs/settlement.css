@@ -354,3 +354,115 @@
 .territory-map {
     padding: 1rem;
 }
+
+/* ============================================
+   BUILDING SECTIONS
+   ============================================ */
+.building-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    color: #fbbf24;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    padding: 0.5rem 0.75rem;
+    background-color: rgba(251, 191, 36, 0.1);
+    border-left: 3px solid #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.building-card {
+    background-color: #334155;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: default;
+    position: relative;
+}
+
+.building-card:hover {
+    background-color: #3f4c63;
+    border-color: #64748b;
+}
+
+.building-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.building-icon {
+    font-size: 2rem;
+    min-width: 2rem;
+}
+
+.building-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.building-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    line-height: 1.2;
+}
+
+.building-count-display {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.building-count {
+    font-weight: 700;
+    color: #fbbf24;
+}
+
+.building-build-btn {
+    background-color: #fbbf24;
+    color: #1e293b;
+    border: none;
+    border-radius: 3px;
+    padding: 0.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.building-build-btn:hover {
+    background-color: #f59e0b;
+}
+
+.building-build-btn:active {
+    transform: scale(0.98);
+}
+
+/* Settlement-specific tooltip */
+.settlement-tooltip {
+    position: absolute;
+    background-color: #1e293b;
+    border: 2px solid #f59e0b;
+    border-radius: 6px;
+    padding: 0.75rem;
+    max-width: 250px;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}

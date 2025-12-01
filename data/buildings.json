@@ -1,0 +1,52 @@
+{
+  "buildings": [
+    {
+      "id": "woodGenerator",
+      "name": "Wood Generator",
+      "icon": "🪵",
+      "description": "A structure that produces wood over time.",
+      "category": "resource_production",
+      "cost": {
+        "wood": 1,
+        "stone": 1,
+        "food": 1
+      },
+      "production": {
+        "wood": 1
+      },
+      "productionRate": "per_second"
+    },
+    {
+      "id": "stoneGenerator",
+      "name": "Stone Generator",
+      "icon": "🪨",
+      "description": "A quarry that produces stone over time.",
+      "category": "resource_production",
+      "cost": {
+        "wood": 1,
+        "stone": 1,
+        "food": 1
+      },
+      "production": {
+        "stone": 1
+      },
+      "productionRate": "per_second"
+    },
+    {
+      "id": "foodGenerator",
+      "name": "Food Generator",
+      "icon": "🌾",
+      "description": "A farm that produces food over time.",
+      "category": "resource_production",
+      "cost": {
+        "wood": 1,
+        "stone": 1,
+        "food": 1
+      },
+      "production": {
+        "food": 1
+      },
+      "productionRate": "per_second"
+    }
+  ]
+}

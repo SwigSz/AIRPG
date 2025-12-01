@@ -1,82 +1,94 @@
 // ============================================
-// Settlement System - Evolve Idle Style
+// Settlement System
 // ============================================
 
 const Settlement = (() => {
     // Settlement state
-    let settlement = null;
-
-    // UI State
-    let currentTab = 'buildings';
-    let tooltipElement = null;
+    let state = {
+        settlement: null,
+        buildingsData: [],
+        currentTab: 'buildings'
+    };
 
     // ============================================
-    // INITIALIZATION
+    // INITIALIZATION & DATA LOADING
     // ============================================
+    async function init() {
+        // Load buildings data from JSON
+        try {
+            const response = await fetch('data/buildings.json');
+            const data = await response.json();
+            state.buildingsData = data.buildings;
+        } catch (error) {
+            console.error('Failed to load buildings.json:', error);
+            state.buildingsData = [];
+        }
+
+        // Initialize UI event listeners
+        initializeUI();
+
+        // Start resource generation loop
+        startResourceGeneration();
+    }
+
     function create(name) {
-        settlement = {
-            id: Utils.generateId(),
+        // Initialize buildings from loaded data
+        const buildings = {};
+        state.buildingsData.forEach(building => {
+            buildings[building.id] = { count: 0 };
+        });
+
+        state.settlement = {
+            id: generateId(),
             name,
-            population: GameConfig.SETTLEMENT.STARTING_POPULATION,
+            population: 10,
             morale: 100,
             day: 1,
             resources: {
-                wood: { current: 500, max: 1000, production: 2.5 },
-                stone: { current: 250, max: 500, production: 1.2 },
-                food: { current: 800, max: 2000, production: -0.5 },
-                iron: { current: 0, max: 100, production: 0 },
-                energy: { current: 10, max: 10, production: 0 }
+                wood: { current: 3, max: 100, production: 0 },
+                stone: { current: 3, max: 100, production: 0 },
+                food: { current: 3, max: 100, production: 0 }
             },
-            buildings: {
-                hut: { count: 0, workers: 0, maxWorkers: 0 },
-                lumberMill: { count: 0, workers: 0, maxWorkers: 0 }
-            },
-            upgrades: [],
-            research: []
+            buildings: buildings
         };
-        return settlement;
+
+        return state.settlement;
+    }
+
+    function generateId() {
+        return 'settlement_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
     // ============================================
     // UI INITIALIZATION
     // ============================================
     function initializeUI() {
-        // Initialize settlement tab navigation
-        const settlementTabs = document.querySelectorAll('.settlement-nav-tab');
-        settlementTabs.forEach(tab => {
+        // Tab switching
+        document.querySelectorAll('.settlement-nav-tab').forEach(tab => {
             tab.addEventListener('click', () => {
-                const tabName = tab.dataset.settlementTab;
-                switchSettlementTab(tabName);
+                switchTab(tab.dataset.settlementTab);
             });
         });
 
-        // Initialize category collapse/expand
-        const categoryHeaders = document.querySelectorAll('.category-header');
-        categoryHeaders.forEach(header => {
-            header.addEventListener('click', () => {
-                header.classList.toggle('collapsed');
-            });
+        // Building buttons (delegate to parent to handle dynamic content)
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('building-build-btn')) {
+                e.stopPropagation();
+                const card = e.target.closest('.building-card');
+                if (card) {
+                    const buildingType = card.dataset.buildingType;
+                    constructBuilding(buildingType);
+                }
+            }
         });
-
-        // Initialize tooltips
-        initializeTooltips();
-
-        // Update UI
-        updateSettlementUI();
     }
 
-    // ============================================
-    // TAB SWITCHING
-    // ============================================
-    function switchSettlementTab(tabName) {
-        currentTab = tabName;
+    function switchTab(tabName) {
+        state.currentTab = tabName;
 
         // Update tab buttons
         document.querySelectorAll('.settlement-nav-tab').forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.dataset.settlementTab === tabName) {
-                tab.classList.add('active');
-            }
+            tab.classList.toggle('active', tab.dataset.settlementTab === tabName);
         });
 
         // Update tab content
@@ -87,223 +99,151 @@ const Settlement = (() => {
     }
 
     // ============================================
-    // UI UPDATE FUNCTIONS
+    // UI UPDATES
     // ============================================
-    function updateSettlementUI() {
-        if (!settlement) return;
+    function updateUI() {
+        if (!state.settlement) return;
 
-        // Update header bar
         updateHeaderBar();
-
-        // Update resources panel
         updateResourcesPanel();
 
-        // Update current tab content
-        switch (currentTab) {
-            case 'buildings':
-                updateBuildingsTab();
-                break;
-            case 'research':
-                updateResearchTab();
-                break;
-            case 'population':
-                updatePopulationTab();
-                break;
-            case 'trade':
-                updateTradeTab();
-                break;
-            case 'territory':
-                updateTerritoryTab();
-                break;
+        if (state.currentTab === 'buildings') {
+            updateBuildingsTab();
         }
     }
 
     function updateHeaderBar() {
-        const civNameEl = document.getElementById('settlement-civ-name');
-        const popEl = document.getElementById('settlement-header-pop');
-        const moraleEl = document.getElementById('settlement-header-morale');
-        const dayEl = document.getElementById('settlement-header-day');
-
-        if (civNameEl) civNameEl.textContent = settlement.name || 'Civilization Name';
-        if (popEl) popEl.textContent = settlement.population || 0;
-        if (moraleEl) moraleEl.textContent = `${settlement.morale || 100}%`;
-        if (dayEl) dayEl.textContent = settlement.day || 1;
+        const s = state.settlement;
+        document.getElementById('settlement-civ-name').textContent = s.name;
+        document.getElementById('settlement-header-pop').textContent = s.population;
+        document.getElementById('settlement-header-morale').textContent = `${s.morale}%`;
+        document.getElementById('settlement-header-day').textContent = s.day;
     }
 
     function updateResourcesPanel() {
-        // Update wood
-        updateResourceDisplay('wood', '🪵', 'Wood', settlement.resources.wood);
-        updateResourceDisplay('stone', '🪨', 'Stone', settlement.resources.stone);
-        updateResourceDisplay('food', '🌾', 'Food', settlement.resources.food);
-        updateResourceDisplay('iron', '⚙️', 'Iron', settlement.resources.iron);
-        updateResourceDisplay('energy', '⚡', 'Energy', settlement.resources.energy);
+        updateResource('wood', state.settlement.resources.wood);
+        updateResource('stone', state.settlement.resources.stone);
+        updateResource('food', state.settlement.resources.food);
     }
 
-    function updateResourceDisplay(resourceId, icon, name, data) {
-        // For now, the resources are static in HTML
-        // In the future, we can dynamically generate resource items
-        // This function is a placeholder for when resources become dynamic
-    }
+    function updateResource(name, data) {
+        const items = document.querySelectorAll('.resource-item');
+        items.forEach(item => {
+            const nameEl = item.querySelector('.resource-name');
+            if (nameEl && nameEl.textContent.toLowerCase() === name) {
+                item.querySelector('.current').textContent = Math.floor(data.current);
+                item.querySelector('.max').textContent = data.max;
 
-    function updateBuildingsTab() {
-        // Building counts and worker assignments are updated here
-        // For now, this is handled by the static HTML
-        // Future: dynamically generate building items from data
-    }
-
-    function updateResearchTab() {
-        // Research tree updates
-    }
-
-    function updatePopulationTab() {
-        // Population management updates
-    }
-
-    function updateTradeTab() {
-        // Trade routes updates
-    }
-
-    function updateTerritoryTab() {
-        // Territory map updates
-    }
-
-    // ============================================
-    // TOOLTIPS
-    // ============================================
-    function initializeTooltips() {
-        // Create tooltip element
-        tooltipElement = document.createElement('div');
-        tooltipElement.className = 'tooltip';
-        tooltipElement.style.display = 'none';
-        document.body.appendChild(tooltipElement);
-
-        // Tooltips disabled for resource items (no listeners added)
-
-        // Add tooltip listeners to building items
-        document.querySelectorAll('.building-item').forEach(item => {
-            item.addEventListener('mouseenter', (e) => showBuildingTooltip(e, item));
-            item.addEventListener('mouseleave', hideTooltip);
-            item.addEventListener('mousemove', moveTooltip);
+                const prodEl = item.querySelector('.resource-production');
+                const prod = data.production.toFixed(1);
+                prodEl.textContent = data.production > 0 ? `+${prod}/s` : `${prod}/s`;
+                prodEl.className = 'resource-production ' + (data.production > 0 ? 'positive' : data.production < 0 ? 'negative' : 'stable');
+            }
         });
     }
 
-    function showResourceTooltip(e, element) {
-        const resourceName = element.querySelector('.resource-name')?.textContent || 'Resource';
-        const current = element.querySelector('.current')?.textContent || '0';
-        const max = element.querySelector('.max')?.textContent || '0';
-        const production = element.querySelector('.resource-production')?.textContent || '0/s';
-
-        tooltipElement.innerHTML = `
-            <div class="tooltip-title">${resourceName}</div>
-            <div class="tooltip-description">
-                Current: ${current} / ${max}<br>
-                Production: ${production}
-            </div>
-        `;
-        tooltipElement.style.display = 'block';
-        moveTooltip(e);
-    }
-
-    function showBuildingTooltip(e, element) {
-        const buildingName = element.querySelector('.building-name')?.textContent || 'Building';
-        const count = element.querySelector('.building-count span')?.textContent || '0';
-
-        tooltipElement.innerHTML = `
-            <div class="tooltip-title">${buildingName}</div>
-            <div class="tooltip-description">
-                You have ${count} of this building.<br>
-                Click to manage workers or build more.
-            </div>
-        `;
-        tooltipElement.style.display = 'block';
-        moveTooltip(e);
-    }
-
-    function moveTooltip(e) {
-        if (!tooltipElement) return;
-        const offset = 15;
-        tooltipElement.style.left = (e.pageX + offset) + 'px';
-        tooltipElement.style.top = (e.pageY + offset) + 'px';
-    }
-
-    function hideTooltip() {
-        if (tooltipElement) {
-            tooltipElement.style.display = 'none';
-        }
-    }
-
-    // ============================================
-    // WORKER ALLOCATION
-    // ============================================
-    function assignWorker(buildingId) {
-        if (!settlement.buildings[buildingId]) return;
-
-        const building = settlement.buildings[buildingId];
-        if (building.workers < building.maxWorkers) {
-            building.workers++;
-            updateSettlementUI();
-        }
-    }
-
-    function unassignWorker(buildingId) {
-        if (!settlement.buildings[buildingId]) return;
-
-        const building = settlement.buildings[buildingId];
-        if (building.workers > 0) {
-            building.workers--;
-            updateSettlementUI();
-        }
+    function updateBuildingsTab() {
+        const cards = document.querySelectorAll('.building-card');
+        cards.forEach(card => {
+            const type = card.dataset.buildingType;
+            if (type && state.settlement.buildings[type] !== undefined) {
+                const countEl = card.querySelector('.building-count');
+                if (countEl) {
+                    countEl.textContent = state.settlement.buildings[type].count;
+                }
+            }
+        });
     }
 
     // ============================================
     // BUILDING CONSTRUCTION
     // ============================================
-    function constructBuilding(buildingId) {
-        // Check if player has enough resources
-        // Deduct resources
-        // Increment building count
-        // Update max workers
-        if (!settlement.buildings[buildingId]) {
-            settlement.buildings[buildingId] = { count: 0, workers: 0, maxWorkers: 0 };
+    function constructBuilding(buildingType) {
+        if (!state.settlement || !state.settlement.buildings[buildingType]) {
+            return;
         }
 
-        settlement.buildings[buildingId].count++;
-        settlement.buildings[buildingId].maxWorkers += 5; // Each building can hold 5 workers
+        // Get building data
+        const buildingData = state.buildingsData.find(b => b.id === buildingType);
+        if (!buildingData) return;
 
-        updateSettlementUI();
+        // Check resources
+        const cost = buildingData.cost;
+        if (state.settlement.resources.wood.current < cost.wood ||
+            state.settlement.resources.stone.current < cost.stone ||
+            state.settlement.resources.food.current < cost.food) {
+            alert(`Not enough resources! Need: ${cost.wood} Wood, ${cost.stone} Stone, ${cost.food} Food`);
+            return;
+        }
+
+        // Deduct resources
+        state.settlement.resources.wood.current -= cost.wood;
+        state.settlement.resources.stone.current -= cost.stone;
+        state.settlement.resources.food.current -= cost.food;
+
+        // Increment building count
+        state.settlement.buildings[buildingType].count++;
+
+        // Update production
+        const production = buildingData.production;
+        for (const resource in production) {
+            if (state.settlement.resources[resource]) {
+                state.settlement.resources[resource].production += production[resource];
+            }
+        }
+
+        // Update UI and save
+        updateUI();
+
+        if (window.GameState) {
+            GameState.updateProperty('settlement', state.settlement);
+        }
+        if (window.SaveSystem) {
+            SaveSystem.save();
+        }
     }
 
     // ============================================
-    // RESOURCE PRODUCTION (Game Loop)
+    // RESOURCE GENERATION
     // ============================================
-    function updateResources(deltaTime) {
-        if (!settlement) return;
+    let lastUpdateTime = Date.now();
+    let updateInterval = null;
 
-        // Update each resource based on production rate
-        Object.keys(settlement.resources).forEach(resourceId => {
-            const resource = settlement.resources[resourceId];
-            const production = resource.production * (deltaTime / 1000); // per second
+    function startResourceGeneration() {
+        if (updateInterval) return;
 
-            resource.current += production;
-            resource.current = Math.max(0, Math.min(resource.current, resource.max));
-        });
+        lastUpdateTime = Date.now();
+        updateInterval = setInterval(() => {
+            if (!state.settlement) return;
 
-        updateResourcesPanel();
+            const now = Date.now();
+            const delta = (now - lastUpdateTime) / 1000; // Convert to seconds
+            lastUpdateTime = now;
+
+            // Update resources
+            for (const resource in state.settlement.resources) {
+                const r = state.settlement.resources[resource];
+                r.current += r.production * delta;
+                r.current = Math.max(0, Math.min(r.current, r.max));
+            }
+
+            // Update UI
+            updateResourcesPanel();
+        }, 100); // Update 10 times per second
     }
 
     // ============================================
     // PUBLIC API
     // ============================================
     return {
+        init,
         create,
-        initializeUI,
-        updateSettlementUI,
-        updateResources,
-        assignWorker,
-        unassignWorker,
-        constructBuilding,
-        getSettlement: () => settlement,
-        setSettlement: (s) => { settlement = s; }
+        updateUI,
+        getState: () => state.settlement,
+        setState: (s) => {
+            state.settlement = s;
+            updateUI();
+        }
     };
 })();
 
