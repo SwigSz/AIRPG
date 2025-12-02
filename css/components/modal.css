@@ -196,11 +196,19 @@
 
 @keyframes newItemSparkle {
     0%, 100% {
-        transform: scale(1) rotate(0deg);
+        transform: scale(1) rotate(-15deg);
         opacity: 1;
     }
+    25% {
+        transform: scale(1.1) rotate(15deg);
+        opacity: 0.9;
+    }
     50% {
-        transform: scale(1.2) rotate(180deg);
+        transform: scale(1.2) rotate(-15deg);
         opacity: 0.8;
+    }
+    75% {
+        transform: scale(1.1) rotate(15deg);
+        opacity: 0.9;
     }
 }

@@ -4,8 +4,10 @@
 
 const SaveSystem = (() => {
     const SAVE_KEY = 'ai_rpg_save';
+    let autosaveInterval = null;
+    let isAutosaveEnabled = true;
 
-    function save() {
+    function save(isAutosave = false) {
         try {
             const state = GameState.getState();
             const saveData = {
@@ -14,7 +16,11 @@ const SaveSystem = (() => {
                 state: state
             };
             localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-            console.log('Game saved successfully');
+            if (!isAutosave) {
+                console.log('Game saved successfully');
+            } else {
+                console.log('Game autosaved');
+            }
             return true;
         } catch (error) {
             console.error('Failed to save game:', error);
@@ -131,9 +137,10 @@ const SaveSystem = (() => {
 
     function wipeData() {
         try {
-            // Clear localStorage completely (including discovered recipes and last tab)
+            // Clear localStorage completely (including discovered recipes, crafted items, and last tab)
             localStorage.removeItem(SAVE_KEY);
             localStorage.removeItem('discoveredRecipes');
+            localStorage.removeItem('craftedItems');
             localStorage.removeItem('lastActiveTab');
 
             // Reset game state
@@ -147,6 +154,38 @@ const SaveSystem = (() => {
         }
     }
 
+    function startAutosave(intervalSeconds = 30) {
+        // Stop any existing autosave interval
+        stopAutosave();
+
+        // Start new autosave interval
+        autosaveInterval = setInterval(() => {
+            if (isAutosaveEnabled && GameState.getState().initialized) {
+                save(true); // Pass true to indicate this is an autosave
+            }
+        }, intervalSeconds * 1000);
+
+        console.log(`Autosave enabled (every ${intervalSeconds} seconds)`);
+    }
+
+    function stopAutosave() {
+        if (autosaveInterval) {
+            clearInterval(autosaveInterval);
+            autosaveInterval = null;
+            console.log('Autosave stopped');
+        }
+    }
+
+    function toggleAutosave() {
+        isAutosaveEnabled = !isAutosaveEnabled;
+        console.log(`Autosave ${isAutosaveEnabled ? 'enabled' : 'disabled'}`);
+        return isAutosaveEnabled;
+    }
+
+    function isAutosaveActive() {
+        return isAutosaveEnabled && autosaveInterval !== null;
+    }
+
     return {
         save,
         load,
@@ -154,7 +193,11 @@ const SaveSystem = (() => {
         hasSave,
         exportToFile,
         importFromFile,
-        wipeData
+        wipeData,
+        startAutosave,
+        stopAutosave,
+        toggleAutosave,
+        isAutosaveActive
     };
 })();
 

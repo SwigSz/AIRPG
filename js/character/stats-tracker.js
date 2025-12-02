@@ -35,7 +35,9 @@ const StatsTracker = (() => {
             stats = { ...defaultStats, ...state.playerStats };
         } else {
             stats = JSON.parse(JSON.stringify(defaultStats));
-            saveStats();
+            // Don't auto-save during init - this overwrites existing saves before they're loaded!
+            // Just update the game state property
+            GameState.updateProperty('playerStats', stats);
         }
         console.log('StatsTracker: Initialized', stats);
     }

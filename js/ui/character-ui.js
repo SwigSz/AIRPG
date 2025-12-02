@@ -314,23 +314,64 @@ const CharacterUI = (() => {
             `;
         }
 
-        // Render general stats
+        // Render general stats (character progression)
         const generalStatsList = document.getElementById('general-stats-list');
-        if (generalStatsList && stats.general) {
-            generalStatsList.innerHTML = `
-                <div class="stat-item">
-                    <span class="stat-label">Playtime:</span>
-                    <span class="stat-value">${formatPlaytime(stats.general.playtime || 0)}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Level Ups:</span>
-                    <span class="stat-value">${stats.general.levelUps || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">XP Gained:</span>
-                    <span class="stat-value">${stats.general.xpGained || 0}</span>
-                </div>
-            `;
+        if (generalStatsList) {
+            const character = window.GameState?.getState().character;
+            if (character) {
+                // Get XP progress
+                const xpProgress = window.Character?.getXPProgress(character) || { current: 0, needed: 100, percentage: 0 };
+
+                // Get character stats (if they exist)
+                const charStats = character.stats || {};
+
+                generalStatsList.innerHTML = `
+                    <!-- Character Level with XP Bar -->
+                    <div class="stat-item character-level">
+                        <div class="level-display-row">
+                            <span class="stat-label">Level:</span>
+                            <span class="stat-value level-value">${character.level || 1}</span>
+                        </div>
+                        <div class="xp-bar">
+                            <div class="xp-fill" style="width: ${xpProgress.percentage}%"></div>
+                        </div>
+                        <div class="xp-text">${xpProgress.current} / ${xpProgress.needed} XP</div>
+                    </div>
+
+                    <!-- Character Attributes -->
+                    <div class="stat-item attributes-section">
+                        <div class="stat-label">Attributes</div>
+                        <div class="attributes-list">
+                            <div class="attribute-item">
+                                <span class="attribute-name">⚔️ Strength:</span>
+                                <span class="attribute-value">${charStats.strength || 10}</span>
+                            </div>
+                            <div class="attribute-item">
+                                <span class="attribute-name">🎯 Dexterity:</span>
+                                <span class="attribute-value">${charStats.dexterity || 10}</span>
+                            </div>
+                            <div class="attribute-item">
+                                <span class="attribute-name">💪 Constitution:</span>
+                                <span class="attribute-value">${charStats.constitution || 10}</span>
+                            </div>
+                            <div class="attribute-item">
+                                <span class="attribute-name">🧠 Intelligence:</span>
+                                <span class="attribute-value">${charStats.intelligence || 10}</span>
+                            </div>
+                            <div class="attribute-item">
+                                <span class="attribute-name">🔮 Wisdom:</span>
+                                <span class="attribute-value">${charStats.wisdom || 10}</span>
+                            </div>
+                            <div class="attribute-item">
+                                <span class="attribute-name">✨ Charisma:</span>
+                                <span class="attribute-value">${charStats.charisma || 10}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                generalStatsList.innerHTML = '<p class="empty-message">No character data available</p>';
+            }
         }
     }
 

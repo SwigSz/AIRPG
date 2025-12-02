@@ -27,7 +27,8 @@ const GameState = (() => {
     }
 
     function setState(newState) {
-        state = { ...state, ...newState };
+        // Directly replace the entire state object
+        state = newState;
     }
 
     function updateProperty(key, value) {

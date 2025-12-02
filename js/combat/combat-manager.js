@@ -5,6 +5,7 @@
 const CombatManager = (() => {
     let combatState = null;
     let pendingAction = null; // Store action waiting for target selection
+    let isProcessingTurn = false; // Prevent multiple simultaneous turn processing
 
     // Combat state structure
     function createCombatState() {
@@ -98,13 +99,21 @@ const CombatManager = (() => {
 
     // Process current turn
     function processCurrentTurn() {
+        // Prevent multiple simultaneous turn processing
+        if (isProcessingTurn) return;
+        isProcessingTurn = true;
+
         const current = getCurrentCombatant();
 
-        if (!current) return;
+        if (!current) {
+            isProcessingTurn = false;
+            return;
+        }
 
         // Skip dead combatants
         if (!current.isAlive) {
             logCombat(`${current.name}'s turn is skipped (deceased)`);
+            isProcessingTurn = false;
             nextTurn();
             return;
         }
@@ -117,14 +126,26 @@ const CombatManager = (() => {
             setTimeout(() => {
                 enemyAI(current);
             }, 1000);
+        } else {
+            // Player's turn - unlock turn processing since we're waiting for player input
+            isProcessingTurn = false;
         }
         // Player turns are handled by button clicks
     }
 
     // Simple enemy AI
     function enemyAI(enemy) {
+        // Check if combat is still active
+        if (!combatState || !combatState.isActive) {
+            isProcessingTurn = false;
+            return;
+        }
+
         const alivePlayers = combatState.combatants.filter(c => c.isPlayer && c.isAlive);
-        if (alivePlayers.length === 0) return;
+        if (alivePlayers.length === 0) {
+            isProcessingTurn = false;
+            return;
+        }
 
         // Pick random player
         const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
@@ -132,7 +153,10 @@ const CombatManager = (() => {
         // Basic attack
         performAttack(enemy, target);
 
-        // End turn after short delay (only if combat is still active)
+        // Unlock turn processing before calling nextTurn
+        isProcessingTurn = false;
+
+        // End turn after short delay
         setTimeout(() => {
             if (combatState && combatState.isActive) {
                 nextTurn();
@@ -140,9 +164,42 @@ const CombatManager = (() => {
         }, 1000);
     }
 
+    // Get equipped weapon damage
+    function getEquippedWeaponDamage(character) {
+        if (!character.equipment) return null;
+
+        // Check main hand for weapon
+        const mainHandItem = character.equipment.main_hand || character.equipment.mainHand;
+
+        if (mainHandItem && mainHandItem.stats && mainHandItem.stats.damage) {
+            return mainHandItem.stats.damage;
+        }
+
+        return null;
+    }
+
+    // Get current attack damage for a combatant
+    function getCurrentAttack(combatant) {
+        // For players, dynamically calculate from equipment
+        if (combatant.isPlayer) {
+            const character = GameState.getState().character;
+            if (character) {
+                const baseAttack = 5; // Unarmed base damage
+                const weaponDamage = getEquippedWeaponDamage(character);
+                return weaponDamage || baseAttack;
+            }
+            // Fallback to stored attack value
+            return combatant.attack || combatant.baseAttack || 5;
+        }
+        // For enemies, use their static attack value
+        return combatant.attack || 10;
+    }
+
     // Perform a basic attack
     function performAttack(attacker, target) {
-        const damage = Math.max(1, attacker.attack - target.defense + rollD20());
+        // Get current attack value (dynamically for players)
+        const attackValue = getCurrentAttack(attacker);
+        const damage = Math.max(1, attackValue - target.defense);
 
         target.hp = Math.max(0, target.hp - damage);
 
@@ -160,7 +217,9 @@ const CombatManager = (() => {
     // Use a skill
     function useSkill(attacker, target, skillName) {
         if (skillName === 'Power Strike') {
-            const damage = Math.max(1, (attacker.attack * 1.5) - target.defense + rollD20());
+            // Get current attack value (dynamically for players)
+            const attackValue = getCurrentAttack(attacker);
+            const damage = Math.max(1, Math.floor((attackValue * 1.5) - target.defense));
             target.hp = Math.max(0, target.hp - damage);
             logCombat(`${attacker.name} uses Power Strike on ${target.name} for ${damage} damage!`);
 
@@ -178,6 +237,9 @@ const CombatManager = (() => {
     function nextTurn() {
         if (!combatState || !combatState.isActive) return;
 
+        // Ensure we're not already processing a turn
+        if (isProcessingTurn) return;
+
         combatState.currentTurnIndex++;
 
         // If we've gone through all combatants, start a new round
@@ -192,7 +254,7 @@ const CombatManager = (() => {
 
         // Add a small delay before processing the next turn to let UI update
         setTimeout(() => {
-            if (combatState && combatState.isActive) {
+            if (combatState && combatState.isActive && !isProcessingTurn) {
                 processCurrentTurn();
             }
         }, 500);
@@ -608,8 +670,13 @@ const CombatManager = (() => {
                 StatsTracker.incrementStat('combat.abilitiesUsed', 1);
             }
 
-            // End turn
-            nextTurn();
+            renderCombatUI();
+            checkCombatEnd();
+
+            // End turn - check combat end handles victory/defeat
+            if (combatState && combatState.isActive) {
+                nextTurn();
+            }
         } else {
             // Multiple enemies, need to select target
             initiatAction('ability', ability);
@@ -632,8 +699,10 @@ const CombatManager = (() => {
                 useSkill(current, target, skillName);
             }
 
-            // End turn
-            nextTurn();
+            // End turn only if combat is still active
+            if (combatState && combatState.isActive) {
+                nextTurn();
+            }
             return;
         }
 
@@ -666,20 +735,48 @@ const CombatManager = (() => {
             performAttack(current, target);
         } else if (pendingAction.type === 'skill') {
             useSkill(current, target, pendingAction.skill);
+        } else if (pendingAction.type === 'ability') {
+            // Handle ability from AbilityManager
+            const ability = pendingAction.skill; // The ability object was stored in 'skill' field
+            if (ability) {
+                let damage = ability.damage?.base || 0;
+                if (ability.damage?.multiplier) {
+                    damage = Math.floor(damage * ability.damage.multiplier);
+                }
+
+                target.hp -= damage;
+                if (target.hp < 0) target.hp = 0;
+                if (target.hp === 0) target.isAlive = false;
+
+                logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
+
+                if (window.StatsTracker) {
+                    StatsTracker.incrementStat('combat.abilitiesUsed', 1);
+                }
+            }
         }
 
         // Clear pending action
         pendingAction = null;
 
-        // End turn
-        nextTurn();
+        renderCombatUI();
+        checkCombatEnd();
+
+        // End turn only if combat is still active
+        if (combatState && combatState.isActive) {
+            nextTurn();
+        }
     }
 
     // Perform defend action
     function performDefend(character) {
         logCombat(`${character.name} takes a defensive stance!`);
         // Could add defense buff here in future
-        nextTurn();
+
+        // End turn only if combat is still active
+        if (combatState && combatState.isActive) {
+            nextTurn();
+        }
     }
 
     // Attempt to flee combat
@@ -690,7 +787,11 @@ const CombatManager = (() => {
             endCombat('flee');
         } else {
             logCombat('Failed to flee!');
-            nextTurn();
+
+            // End turn only if combat is still active
+            if (combatState && combatState.isActive) {
+                nextTurn();
+            }
         }
     }
 
@@ -704,7 +805,11 @@ const CombatManager = (() => {
 
         if (actionType === 'attack') {
             performAttack(current, target);
-            nextTurn();
+
+            // End turn only if combat is still active
+            if (combatState && combatState.isActive) {
+                nextTurn();
+            }
         }
     }
 
@@ -727,6 +832,11 @@ const CombatManager = (() => {
             return;
         }
 
+        // Calculate player's attack damage based on equipped weapon
+        const baseAttack = 5; // Unarmed base damage
+        const weaponDamage = getEquippedWeaponDamage(character);
+        const playerAttack = weaponDamage || baseAttack;
+
         // Use the actual character object as the player combatant
         const player = {
             ...character,
@@ -734,7 +844,8 @@ const CombatManager = (() => {
             isAlive: true,
             hp: 100,
             maxHp: 100,
-            attack: 15,
+            attack: playerAttack,
+            baseAttack: baseAttack, // Store base for reference
             defense: 5,
             speed: 15,
             initiative: 0
@@ -786,6 +897,7 @@ const CombatManager = (() => {
         if (savedCombat && savedCombat.isActive) {
             combatState = savedCombat;
             pendingAction = savedCombat.pendingAction;
+            isProcessingTurn = false; // Reset turn processing flag on restore
 
             // Show combat view
             toggleCombatView(true);
@@ -809,6 +921,7 @@ const CombatManager = (() => {
     function clearCombatState() {
         combatState = null;
         pendingAction = null;
+        isProcessingTurn = false; // Reset turn processing flag
         GameState.updateProperty('combat', null);
         SaveSystem.save();
     }

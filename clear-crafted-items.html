@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Crafted Items</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e293b;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #f59e0b;
+            margin-top: 0;
+        }
+        button {
+            background-color: #f59e0b;
+            color: #0f172a;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background-color: #d97706;
+            transform: translateY(-2px);
+        }
+        button.secondary {
+            background-color: #334155;
+            color: #e2e8f0;
+        }
+        button.secondary:hover {
+            background-color: #475569;
+        }
+        #status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #0f172a;
+            border-radius: 6px;
+            min-height: 60px;
+        }
+        .success {
+            color: #10b981;
+        }
+        .info {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Crafted Items Manager</h1>
+        <p>Use this tool to manage your crafted items history for testing the "New item created!" banner.</p>
+
+        <button onclick="clearCraftedItems()">Clear All Crafted Items</button>
+        <button class="secondary" onclick="viewCraftedItems()">View Crafted Items</button>
+        <button class="secondary" onclick="removeStonAxe()">Remove Stone Axe Only</button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function clearCraftedItems() {
+            localStorage.removeItem('craftedItems');
+            showStatus('✅ All crafted items history cleared! The "New item created!" banner will now show for all items.', 'success');
+        }
+
+        function viewCraftedItems() {
+            const craftedItems = localStorage.getItem('craftedItems');
+            if (craftedItems) {
+                const items = JSON.parse(craftedItems);
+                showStatus(`📋 Crafted items (${items.length}): ${items.join(', ')}`, 'info');
+            } else {
+                showStatus('📋 No crafted items in history.', 'info');
+            }
+        }
+
+        function removeStonAxe() {
+            const craftedItems = localStorage.getItem('craftedItems');
+            if (craftedItems) {
+                let items = JSON.parse(craftedItems);
+                const originalLength = items.length;
+                items = items.filter(item => item !== 'Stone Axe');
+                localStorage.setItem('craftedItems', JSON.stringify(items));
+
+                if (items.length < originalLength) {
+                    showStatus('✅ Stone Axe removed from crafted items history!', 'success');
+                } else {
+                    showStatus('ℹ️ Stone Axe was not in the crafted items list.', 'info');
+                }
+            } else {
+                showStatus('ℹ️ No crafted items in history.', 'info');
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        // Show current status on load
+        window.onload = viewCraftedItems;
+    </script>
+</body>
+</html>

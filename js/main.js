@@ -48,6 +48,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
 
+    // Start autosave (every 30 seconds)
+    if (window.SaveSystem) {
+        SaveSystem.startAutosave(30);
+    }
+
     // Try to load existing save data
     if (SaveSystem.hasSave()) {
         const savedState = SaveSystem.load();

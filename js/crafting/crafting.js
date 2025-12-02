@@ -326,7 +326,8 @@ const Crafting = (() => {
                     description: previousItemTemplate.description,
                     icon: previousItemTemplate.icon,
                     slot: previousItemTemplate.slot || null,
-                    stats: previousItemTemplate.stats || {}
+                    stats: previousItemTemplate.stats || {},
+                    classifications: previousItemTemplate.classifications || []
                 });
                 Inventory.addItem(character.inventory, previousItem);
                 console.log('Auto-collected previous crafted item:', previousItem.name);
@@ -447,10 +448,19 @@ const Crafting = (() => {
 
         // Check if this is a new item (never crafted before)
         const isFirstCraft = isNewItem(itemTemplate.name);
+        console.log(`Item: ${itemTemplate.name}, Is First Craft: ${isFirstCraft}, Crafted Items:`, craftedItems);
 
         // Show/hide the "New item created!" banner
         if (newItemBanner) {
-            newItemBanner.style.display = isFirstCraft ? 'block' : 'none';
+            if (isFirstCraft) {
+                newItemBanner.style.display = 'block';
+                console.log('✨ Showing "New item created!" banner');
+            } else {
+                newItemBanner.style.display = 'none';
+                console.log('Banner hidden - item previously crafted');
+            }
+        } else {
+            console.error('New item banner element not found!');
         }
 
         // Set content
@@ -465,7 +475,6 @@ const Crafting = (() => {
                 statsHTML += `<div><strong>${capitalizedKey}:</strong> ${value}</div>`;
             }
         }
-        statsHTML += `<div><strong>Type:</strong> ${itemTemplate.type}</div>`;
         statsContent.innerHTML = statsHTML;
 
         // Remove previous event listeners by cloning buttons
@@ -521,7 +530,8 @@ const Crafting = (() => {
             description: itemTemplate.description,
             icon: itemTemplate.icon,
             slot: itemTemplate.slot || null,
-            stats: itemTemplate.stats || {}
+            stats: itemTemplate.stats || {},
+            classifications: itemTemplate.classifications || []
         });
 
         // Mark this item as crafted (for "New item created!" tracking)

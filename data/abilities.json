@@ -9,7 +9,7 @@
       "cooldown": 2,
       "manaCost": 10,
       "damage": {
-        "base": 20,
+        "base": 5,
         "scaling": "strength",
         "multiplier": 1.5
       },
