@@ -638,82 +638,31 @@ const CombatManager = (() => {
         });
     }
 
-    // Show items submenu
+    // ============================================
+    // COMBAT ITEMS MENU
+    // ============================================
+    // ** Uses centralized InventoryUI module **
+    // See js/ui/inventory-ui.js and CLAUDE.md
+    // ============================================
     function showItemsMenu() {
         const actionsEl = document.querySelector('.combat-actions');
         if (!actionsEl) return;
 
         const character = GameState.getState().character;
-        if (!character || !character.inventory) {
-            actionsEl.innerHTML = `
-                <div class="action-message">No items available</div>
-                <div class="combat-menu">
-                    <button class="menu-btn back-btn" id="back-to-menu-btn">← Back</button>
-                </div>
-            `;
-            document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
+
+        // Use InventoryUI module to render combat items menu
+        InventoryUI.renderCombatItemsMenu(
+            actionsEl,
+            character,
+            (item) => {
+                // Callback when item is used
+                useItemInCombat(item);
+            },
+            () => {
+                // Callback for back button
                 renderActionButtons();
-            });
-            return;
-        }
-
-        // Get consumable items usable in combat
-        let consumableItems = [];
-        if (window.ConsumableManager) {
-            consumableItems = ConsumableManager.getCombatConsumables(character.inventory);
-        }
-
-        // Group items by name and icon (stacking)
-        const itemStacks = new Map();
-        consumableItems.forEach(item => {
-            const key = `${item.name}_${item.icon}`;
-            if (!itemStacks.has(key)) {
-                itemStacks.set(key, {
-                    item: item,
-                    quantity: 0,
-                    items: []
-                });
             }
-            const stack = itemStacks.get(key);
-            stack.quantity++;
-            stack.items.push(item);
-        });
-
-        let itemsHTML = '';
-        if (itemStacks.size > 0) {
-            itemStacks.forEach(stack => {
-                const displayName = stack.quantity > 1
-                    ? `${stack.item.name} x${stack.quantity}`
-                    : stack.item.name;
-                itemsHTML += `<button class="menu-btn item-btn" data-item-id="${stack.item.id}">${stack.item.icon || '📦'} ${displayName}</button>`;
-            });
-        } else {
-            itemsHTML = '<div class="action-message no-items">No usable items</div>';
-        }
-
-        actionsEl.innerHTML = `
-            <div class="action-message">Select an item to use:</div>
-            <div class="combat-menu">
-                ${itemsHTML}
-                <button class="menu-btn back-btn" id="back-to-menu-btn">← Back</button>
-            </div>
-        `;
-
-        // Add event listeners to item buttons
-        document.querySelectorAll('[data-item-id]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const itemId = btn.getAttribute('data-item-id');
-                const item = character.inventory.items.find(i => i.id === itemId);
-                if (item) {
-                    useItemInCombat(item);
-                }
-            });
-        });
-
-        // Back button
-        document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
-            renderActionButtons();
-        });
+        );
     }
 
     // Use an item in combat

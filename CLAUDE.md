@@ -101,8 +101,83 @@ if (window.Crafting) await Crafting.init();
 
 ---
 
+## UI Architecture Guidelines
+
+### Inventory UI System
+
+**CRITICAL: All inventory rendering MUST use the centralized InventoryUI module.**
+
+#### Module Location
+`js/ui/inventory-ui.js`
+
+#### Architecture Pattern
+```
+DATA LAYER (Pure Logic)           UI LAYER (Presentation)
+├── inventory.js                  ├── inventory-ui.js ← SINGLE SOURCE OF TRUTH
+├── equipment.js                  │   ├── renderInventoryGrid()
+├── consumable-manager.js         │   ├── renderEquipmentSlots()
+└── item-factory.js               │   ├── renderMiniInventory()
+                                  │   ├── renderCombatItemsMenu()
+                                  │   └── showItemDetailsModal()
+```
+
+#### Usage Rules
+
+**❌ DO NOT:**
+- Write custom HTML generation for inventory items
+- Implement your own item stacking logic
+- Create manual event listeners for item actions
+- Duplicate inventory rendering code in new systems
+
+**✅ DO:**
+- Always import and use `InventoryUI` functions
+- Use callbacks for item action handling
+- Refer to existing examples in main.js, crafting.js, combat-manager.js
+- Read the comprehensive documentation at the top of `inventory-ui.js`
+
+#### Quick Reference
+
+**For full inventory display:**
+```javascript
+InventoryUI.renderInventoryGrid(container, character, handleItemAction);
+```
+
+**For mini inventory (crafting, trading, etc.):**
+```javascript
+InventoryUI.renderMiniInventory(container, character, onItemClick, { usedItemIds });
+```
+
+**For combat items menu:**
+```javascript
+InventoryUI.renderCombatItemsMenu(container, character, onItemUse, onBack);
+```
+
+**For item details modal:**
+```javascript
+InventoryUI.showItemDetailsModal(item);
+```
+
+#### Why This Matters
+
+Before centralization:
+- Inventory rendering code duplicated across 3+ files (493+ lines total)
+- Item stacking logic implemented 3 different ways
+- UI inconsistencies between different inventory views
+- Changes required updating multiple files
+
+After centralization:
+- Single source of truth for all inventory rendering
+- Consistent UI across all contexts
+- Easier to maintain and test
+- Prevents future code duplication
+
+**See `js/ui/inventory-ui.js` for detailed usage examples and API documentation.**
+
+---
+
 ## Notes
 - This file will be appended with additional reminders and guidelines as development progresses
 - Always maintain backward compatibility when updating JSON structures
 - Include clear comments in sample entries for modder guidance
 - When creating new data-driven systems, follow the JSON loading pattern above
+- When displaying inventory, ALWAYS use the InventoryUI module

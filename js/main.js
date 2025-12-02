@@ -296,6 +296,9 @@ function displaySkills(skills) {
 // ============================================
 // INVENTORY UI SYSTEM
 // ============================================
+// ** All inventory rendering uses js/ui/inventory-ui.js **
+// See CLAUDE.md and inventory-ui.js for documentation
+// ============================================
 
 // Render inventory grid (dynamic slots based on items)
 function renderInventoryUI() {
@@ -303,20 +306,9 @@ function renderInventoryUI() {
     if (!character) return;
 
     const inventoryGrid = document.getElementById('inventory-grid');
-    inventoryGrid.innerHTML = '';
 
-    // Get stacked items from inventory
-    const stacks = Inventory.getStackedItems(character.inventory);
-
-    // Create slots for each stack
-    stacks.forEach((stack, index) => {
-        const slot = document.createElement('div');
-        slot.className = 'inventory-slot';
-        slot.dataset.slotIndex = index;
-
-        renderItemInSlot(slot, stack.item, 'inventory', stack);
-        inventoryGrid.appendChild(slot);
-    });
+    // Use InventoryUI module to render the grid
+    InventoryUI.renderInventoryGrid(inventoryGrid, character, handleItemAction);
 
     // Always update mini inventory when inventory changes
     if (window.Crafting) {
@@ -330,162 +322,30 @@ function renderEquipmentUI() {
     if (!character) return;
 
     const equipmentSlotsContainer = document.querySelector('.equipment-slots');
-    equipmentSlotsContainer.innerHTML = '';
 
-    // Define slot order and labels
-    const slots = [
-        { key: 'head', label: 'Head' },
-        { key: 'neck', label: 'Neck' },
-        { key: 'chest', label: 'Chest' },
-        { key: 'hands', label: 'Hands' },
-        { key: 'legs', label: 'Legs' },
-        { key: 'feet', label: 'Feet' },
-        { key: 'main_hand', label: 'Main Hand' },
-        { key: 'off_hand', label: 'Off Hand' },
-        { key: 'ring1', label: 'Ring 1' },
-        { key: 'ring2', label: 'Ring 2' },
-        { key: 'cloak', label: 'Cloak' }
-    ];
-
-    // Check if main hand has a two-handed weapon
-    const mainHandItem = character.equipment.main_hand;
-    const isTwoHandedEquipped = mainHandItem && mainHandItem.classifications && mainHandItem.classifications.includes('two-handed');
-
-    slots.forEach(({ key, label }) => {
-        // Skip off_hand slot if two-handed weapon is equipped
-        if (key === 'off_hand' && isTwoHandedEquipped) {
-            return;
-        }
-
-        const item = character.equipment[key];
-        const slotElement = document.createElement('div');
-        slotElement.dataset.slot = key;
-
-        if (item) {
-            slotElement.className = 'equipment-slot occupied';
-
-            // Special rendering for two-handed weapons in main hand
-            if (key === 'main_hand' && isTwoHandedEquipped) {
-                renderItemInSlot(slotElement, item, 'equipment', null, key, true);
-            } else {
-                renderItemInSlot(slotElement, item, 'equipment', null, key);
-            }
-        } else {
-            slotElement.className = 'equipment-slot empty';
-            slotElement.textContent = label;
-        }
-
-        equipmentSlotsContainer.appendChild(slotElement);
-    });
+    // Use InventoryUI module to render equipment slots
+    InventoryUI.renderEquipmentSlots(equipmentSlotsContainer, character, handleItemAction);
 }
 
-// Render an item in a slot
-function renderItemInSlot(slotElement, item, context, stack = null, equipSlot = null, isTwoHanded = false) {
-    slotElement.classList.remove('empty');
-
-    if (context === 'equipment') {
-        slotElement.classList.add('occupied');
-
-        // Get the slot label - show "Both Hands" for two-handed weapons
-        let slotLabel = equipSlot ? equipSlot.replace('_', ' ') : '';
-        if (isTwoHanded) {
-            slotLabel = 'Both Hands';
-        }
-
-        slotElement.innerHTML = `
-            <div class="equipment-slot-content">
-                <span class="equipment-slot-icon">${item.icon}</span>
-                <div class="equipment-slot-info">
-                    <div class="equipment-slot-name">${item.name}</div>
-                    <div class="equipment-slot-label">${slotLabel}</div>
-                </div>
-            </div>
-            <div class="item-actions">
-                <button class="item-action-btn unequip" data-action="unequip">Unequip</button>
-                <button class="item-action-btn toss" data-action="toss">Toss</button>
-                <button class="item-action-btn info" data-action="info">Info</button>
-            </div>
-        `;
-
-        // Store item ID in dataset
-        slotElement.dataset.itemId = item.id;
-
-        // Attach event listeners to buttons
-        const actionsDiv = slotElement.querySelector('.item-actions');
-        attachItemEventListeners(actionsDiv, item, context, equipSlot, stack);
-    } else {
-        // Display quantity if it's a stack with multiple items
-        const displayName = stack && stack.quantity > 1
-            ? `${item.name} x${stack.quantity}`
-            : item.name;
-
-        // Check if item is consumable
-        const isConsumable = item.classifications && item.classifications.includes('consumable');
-
-        // Build action buttons based on item type
-        let actionButtonsHTML = '';
-        if (isConsumable) {
-            actionButtonsHTML = `
-                <button class="item-action-btn use" data-action="use">Use</button>
-                <button class="item-action-btn toss" data-action="toss">Toss</button>
-                <button class="item-action-btn info" data-action="info">Info</button>
-            `;
-        } else {
-            actionButtonsHTML = `
-                <button class="item-action-btn equip" data-action="equip">Equip</button>
-                <button class="item-action-btn toss" data-action="toss">Toss</button>
-                <button class="item-action-btn info" data-action="info">Info</button>
-            `;
-        }
-
-        slotElement.innerHTML = `
-            <div class="item-card">
-                <span class="item-icon">${item.icon}</span>
-                <span class="item-name">${displayName}</span>
-            </div>
-            <div class="item-actions">
-                ${actionButtonsHTML}
-            </div>
-        `;
-
-        // Store item ID in dataset (use first item in stack)
-        slotElement.dataset.itemId = item.id;
-
-        // Attach event listeners to buttons
-        const actionsDiv = slotElement.querySelector('.item-actions');
-        attachItemEventListeners(actionsDiv, item, context, null, stack);
+// Handle item actions from InventoryUI callbacks
+function handleItemAction(action, item, context, slot = null, stack = null) {
+    switch(action) {
+        case 'equip':
+            equipItemFromInventory(item.id);
+            break;
+        case 'unequip':
+            unequipItemToInventory(slot);
+            break;
+        case 'use':
+            useConsumableItem(item.id);
+            break;
+        case 'toss':
+            discardItem(item.id, context, slot, stack);
+            break;
+        case 'info':
+            InventoryUI.showItemDetailsModal(item);
+            break;
     }
-}
-
-// Attach event listeners to item action buttons
-function attachItemEventListeners(actionsDiv, item, context, slot = null, stack = null) {
-    // Get all action buttons
-    const actionButtons = actionsDiv.querySelectorAll('.item-action-btn');
-
-    actionButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const action = button.dataset.action;
-
-            switch(action) {
-                case 'equip':
-                    equipItemFromInventory(item.id);
-                    break;
-                case 'unequip':
-                    unequipItemToInventory(slot);
-                    break;
-                case 'use':
-                    useConsumableItem(item.id);
-                    break;
-                case 'toss':
-                    discardItem(item.id, context, slot, stack);
-                    break;
-                case 'info':
-                    showItemDetailsModal(item);
-                    break;
-            }
-        });
-    });
 }
 
 // Equip item from inventory
@@ -600,62 +460,9 @@ function discardItem(itemId, context, slot, stack = null) {
     SaveSystem.save();
 }
 
-// Show Item Details Modal
-function showItemDetailsModal(item) {
-    const modal = document.getElementById('item-details-modal');
-    const modalName = document.getElementById('modal-item-name');
-    const modalDescription = document.getElementById('modal-item-description');
-    const modalStatsContent = document.getElementById('modal-stats-content');
-
-    // Set content
-    modalName.textContent = item.name;
-    modalDescription.textContent = item.description;
-
-    // Build stats HTML
-    let statsHTML = '';
-    if (item.stats && Object.keys(item.stats).length > 0) {
-        for (const [key, value] of Object.entries(item.stats)) {
-            const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-            statsHTML += `<div><strong>${capitalizedKey}:</strong> ${value}</div>`;
-        }
-    }
-
-    // Display classifications instead of type
-    if (item.classifications && item.classifications.length > 0) {
-        const formattedClassifications = item.classifications.map(c => {
-            // Capitalize and replace underscores with spaces
-            return c.split(/[-_]/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-');
-        }).join(', ');
-        statsHTML += `<div><strong>Type:</strong> ${formattedClassifications}</div>`;
-    }
-
-    modalStatsContent.innerHTML = statsHTML;
-
-    // Show modal
-    modal.style.display = 'flex';
-}
-
-// Close modal when clicking X or outside
+// Initialize inventory modal handlers (delegated to InventoryUI)
 document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('item-details-modal');
-    const closeBtn = modal.querySelector('.modal-close');
-
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            modal.style.display = 'none';
-        }
-    });
+    InventoryUI.initModalHandlers();
 });
 
 // Save/Load Controls Initialization
