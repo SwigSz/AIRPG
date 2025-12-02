@@ -9,16 +9,15 @@
 
 /* Map View */
 .map-view {
-    display: none;
     flex: 1;
     background-color: #1e293b;
     border: 1px solid #334155;
     border-radius: 8px;
     overflow: hidden;
-}
-
-.map-view.active {
+    position: relative;
     display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .map-placeholder {
@@ -29,4 +28,13 @@
     font-size: 2rem;
     color: #334155;
     font-weight: 600;
+}
+
+/* Map Canvas */
+#map-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }

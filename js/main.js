@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize research tree system
     if (window.Research) await Research.init();
 
+    // Initialize map system
+    if (window.Map) Map.init();
+
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
 
