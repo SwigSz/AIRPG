@@ -393,6 +393,16 @@ const Crafting = (() => {
         // Just add the crafted item to inventory
         Inventory.addItem(character.inventory, craftedItem);
 
+        // Track crafted item in crafting history for research unlocks
+        if (window.GameState && window.GameState.addToCraftingHistory) {
+            GameState.addToCraftingHistory(craftedItem.name);
+        }
+
+        // Trigger research tree update if it exists
+        if (window.Research && window.Research.render) {
+            Research.render();
+        }
+
         // Clear output slot
         outputSlot.innerHTML = '';
         outputSlot.classList.add('empty');

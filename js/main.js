@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize settlement system
     if (window.Settlement) await Settlement.init();
 
+    // Initialize research tree system
+    if (window.Research) await Research.init();
+
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
 

@@ -348,11 +348,55 @@
    PLACEHOLDER SECTIONS (Future Tabs)
    ============================================ */
 .buildings-management,
-.research-tree,
 .population-management,
 .trade-routes,
 .territory-map {
     padding: 1rem;
+}
+
+/* ============================================
+   RESEARCH TREE
+   ============================================ */
+.research-tree-container {
+    overflow: auto;
+    max-height: calc(100vh - 250px);
+    padding: 1rem;
+}
+
+/* Custom scrollbar styling for research tree */
+.research-tree-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.research-tree-container::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 6px;
+    border: 1px solid #1e293b;
+}
+
+.research-tree-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 6px;
+    border: 1px solid #1d4ed8;
+}
+
+.research-tree-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.research-tree-container::-webkit-scrollbar-corner {
+    background: #0f172a;
+}
+
+/* Firefox scrollbar styling */
+.research-tree-container {
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #0f172a;
+}
+
+#research-tree-canvas {
+    display: block;
 }
 
 /* ============================================

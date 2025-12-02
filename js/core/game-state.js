@@ -13,7 +13,8 @@ const GameState = (() => {
         inventory: null,
         quests: [],
         achievements: [],
-        combat: null
+        combat: null,
+        craftingHistory: []
     };
 
     function init() {
@@ -52,8 +53,18 @@ const GameState = (() => {
             inventory: null,
             quests: [],
             achievements: [],
-            combat: null
+            combat: null,
+            craftingHistory: []
         };
+    }
+
+    function addToCraftingHistory(itemName) {
+        if (!state.craftingHistory) {
+            state.craftingHistory = [];
+        }
+        if (!state.craftingHistory.includes(itemName)) {
+            state.craftingHistory.push(itemName);
+        }
     }
 
     return {
@@ -63,7 +74,8 @@ const GameState = (() => {
         updateProperty,
         pause,
         resume,
-        reset
+        reset,
+        addToCraftingHistory
     };
 })();
 
