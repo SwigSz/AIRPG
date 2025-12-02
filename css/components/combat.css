@@ -294,6 +294,12 @@
     color: #cbd5e1;
 }
 
+.action-message.no-abilities {
+    color: #94a3b8;
+    font-style: italic;
+    padding: 1rem;
+}
+
 /* Combat Menu Grid */
 .combat-menu {
     display: grid;

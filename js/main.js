@@ -9,8 +9,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.EventSystem) EventSystem.init();
     if (window.TimeManager) TimeManager.init();
 
+    // Initialize stats tracker
+    if (window.StatsTracker) StatsTracker.init();
+
     // Initialize data systems (load from JSON)
     if (window.EnemyDatabase) await EnemyDatabase.init();
+    if (window.AbilityManager) await AbilityManager.init();
+    if (window.SkillManager) await SkillManager.init();
 
     // Initialize UI systems
     if (window.UIManager) {
@@ -20,6 +25,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.TabManager) TabManager.init();
         if (window.CombatUI) CombatUI.init();
     }
+
+    // Initialize tooltip and notification systems
+    if (window.TooltipManager) TooltipManager.init();
+    if (window.NotificationManager) NotificationManager.init();
+
+    // Initialize character UI
+    if (window.CharacterUI) CharacterUI.init();
+
+    // Initialize combat manager
+    if (window.CombatManager) CombatManager.init();
 
     // Initialize crafting system
     if (window.Crafting) await Crafting.init();
@@ -36,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Try to load existing save data
     if (SaveSystem.hasSave()) {
         const savedState = SaveSystem.load();
-        if (savedState) {
+        if (savedState && savedState.character) {
             GameState.setState(savedState);
             displayCharacterData();
 
@@ -45,11 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 CombatManager.restoreCombatState();
             }
         } else {
-            // Failed to load, create test character
+            // Failed to load or no character, create test character
+            console.log('No character in saved state, creating new character...');
             initializeTestCharacter();
         }
     } else {
         // No save data, create test character
+        console.log('No save data found, creating new character...');
         initializeTestCharacter();
     }
 });
@@ -129,7 +146,7 @@ function initializeTestCharacter() {
     // Create test settlement
     const testSettlement = Settlement.create('New Haven');
     GameState.updateProperty('settlement', testSettlement);
-    Settlement.setSettlement(testSettlement);
+    Settlement.setState(testSettlement);
 
     // Display character data
     displayCharacterData();
@@ -156,6 +173,11 @@ function displayCharacterData() {
     // Render mini inventory if crafting module is available
     if (window.Crafting) {
         Crafting.renderMiniInventory();
+    }
+
+    // Render character UI if available
+    if (window.CharacterUI) {
+        CharacterUI.render();
     }
 
     // Update settlement UI if settlement exists

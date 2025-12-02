@@ -132,9 +132,11 @@ const CombatManager = (() => {
         // Basic attack
         performAttack(enemy, target);
 
-        // End turn after short delay
+        // End turn after short delay (only if combat is still active)
         setTimeout(() => {
-            nextTurn();
+            if (combatState && combatState.isActive) {
+                nextTurn();
+            }
         }, 1000);
     }
 
@@ -188,7 +190,12 @@ const CombatManager = (() => {
         // Save combat state after each turn
         saveCombatState();
 
-        processCurrentTurn();
+        // Add a small delay before processing the next turn to let UI update
+        setTimeout(() => {
+            if (combatState && combatState.isActive) {
+                processCurrentTurn();
+            }
+        }, 500);
     }
 
     // Check if combat should end
@@ -217,6 +224,13 @@ const CombatManager = (() => {
         if (result === 'victory') {
             logCombat('\n=== VICTORY ===');
             logCombat('All enemies have been defeated!');
+
+            // Track combat stats
+            if (window.StatsTracker) {
+                const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
+                StatsTracker.incrementStat('combat.enemiesKilled', deadEnemies.length);
+                StatsTracker.incrementStat('combat.combatsWon', 1);
+            }
 
             // Award XP to all living players
             const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
@@ -253,11 +267,33 @@ const CombatManager = (() => {
                     }
                 });
             }
+
+            // Check for ability/skill unlocks
+            if (window.AbilityManager) {
+                AbilityManager.checkAndUnlockAbilities();
+            }
+            if (window.SkillManager) {
+                SkillManager.checkAndEarnSkills();
+            }
+            // Refresh character UI
+            if (window.CharacterUI) {
+                CharacterUI.render();
+            }
         } else if (result === 'defeat') {
             logCombat('\n=== DEFEAT ===');
             logCombat('Your party has been defeated...');
+
+            // Track combat stats
+            if (window.StatsTracker) {
+                StatsTracker.incrementStat('combat.combatsLost', 1);
+            }
         } else if (result === 'flee') {
             logCombat('\n=== FLED FROM COMBAT ===');
+
+            // Track combat stats
+            if (window.StatsTracker) {
+                StatsTracker.incrementStat('combat.combatsFled', 1);
+            }
         }
 
         // Clear combat state after processing rewards
@@ -498,15 +534,43 @@ const CombatManager = (() => {
         const actionsEl = document.querySelector('.combat-actions');
         if (!actionsEl) return;
 
+        // Get unlocked abilities from AbilityManager
+        let abilitiesHTML = '';
+        if (window.AbilityManager) {
+            const unlockedAbilities = AbilityManager.getUnlockedAbilities();
+
+            if (unlockedAbilities.length > 0) {
+                unlockedAbilities.forEach(ability => {
+                    abilitiesHTML += `<button class="menu-btn skill-btn" data-ability-id="${ability.id}">${ability.icon || '⚡'} ${ability.name}</button>`;
+                });
+            } else {
+                abilitiesHTML = '<div class="action-message no-abilities">No abilities unlocked yet</div>';
+            }
+        } else {
+            // Fallback if AbilityManager not available
+            abilitiesHTML = '<button class="menu-btn skill-btn" data-ability-id="power_strike">⚡ Power Strike</button>';
+        }
+
         actionsEl.innerHTML = `
             <div class="action-message">Select a skill:</div>
             <div class="combat-menu">
-                <button class="menu-btn skill-btn" data-skill="Power Strike">⚡ Power Strike</button>
+                ${abilitiesHTML}
                 <button class="menu-btn back-btn" id="back-to-menu-btn">← Back</button>
             </div>
         `;
 
-        // Power Strike
+        // Add event listeners to ability buttons
+        document.querySelectorAll('[data-ability-id]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const abilityId = btn.getAttribute('data-ability-id');
+                const ability = window.AbilityManager?.getAbilityById(abilityId);
+                if (ability) {
+                    useAbility(ability);
+                }
+            });
+        });
+
+        // Legacy Power Strike handler (keep for backwards compatibility)
         document.querySelector('[data-skill="Power Strike"]')?.addEventListener('click', () => {
             initiatAction('skill', 'Power Strike');
         });
@@ -515,6 +579,41 @@ const CombatManager = (() => {
         document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
             renderActionButtons();
         });
+    }
+
+    // Use an ability from AbilityManager
+    function useAbility(ability) {
+        const aliveEnemies = combatState.combatants.filter(c => !c.isPlayer && c.isAlive);
+        const current = getCurrentCombatant();
+
+        // If only one enemy, auto-target them
+        if (aliveEnemies.length === 1) {
+            const target = aliveEnemies[0];
+
+            // Calculate damage based on ability
+            let damage = ability.damage?.base || 0;
+            if (ability.damage?.multiplier) {
+                damage = Math.floor(damage * ability.damage.multiplier);
+            }
+
+            // Apply damage
+            target.hp -= damage;
+            if (target.hp < 0) target.hp = 0;
+            if (target.hp === 0) target.isAlive = false;
+
+            logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
+
+            // Track ability usage
+            if (window.StatsTracker) {
+                StatsTracker.incrementStat('combat.abilitiesUsed', 1);
+            }
+
+            // End turn
+            nextTurn();
+        } else {
+            // Multiple enemies, need to select target
+            initiatAction('ability', ability);
+        }
     }
 
     // Initiate an action that requires target selection

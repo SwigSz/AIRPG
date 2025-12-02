@@ -1,81 +1,198 @@
 /* ============================================
    CHARACTER TAB
    ============================================ */
-.character-layout {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
+.character-tab-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 1rem;
+}
+
+/* Tab Navigation */
+.character-tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    background-color: #0f172a;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #334155;
+}
+
+.character-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.character-tab-btn:hover {
+    background-color: #334155;
+    border-color: #f59e0b;
+}
+
+.character-tab-btn.active {
+    background-color: #f59e0b;
+    border-color: #f59e0b;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.character-tab-btn .tab-icon {
+    font-size: 1.2rem;
+}
+
+/* Tab Content Area */
+.character-tab-content-area {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.character-tab-content {
+    display: none;
     height: 100%;
 }
 
-/* Skills & Abilities */
-.skills-section {
-    background-color: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 1.5rem;
+.character-tab-content.active {
+    display: block;
 }
 
+.character-tab-content h2 {
+    margin-bottom: 1rem;
+    color: #f59e0b;
+    font-size: 1.5rem;
+}
+
+/* Skills Grid */
 .skills-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
 }
 
 .skill-card {
     aspect-ratio: 1;
-    background-color: #0f172a;
-    border: 1px solid #334155;
+    background-color: #1e293b;
+    border: 2px solid #334155;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0.75rem;
+    padding: 1rem;
     transition: all 0.2s ease;
     text-align: center;
-}
-
-.skill-card.empty {
-    border-style: dashed;
+    cursor: pointer;
 }
 
 .skill-card:hover {
-    border-color: #f59e0b;
+    border-color: #3b82f6;
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.skill-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .skill-name {
     font-weight: 600;
-    color: #f59e0b;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.skill-level {
-    color: #cbd5e1;
-    font-size: 0.85rem;
+    color: #3b82f6;
     margin-bottom: 0.25rem;
+    font-size: 0.95rem;
 }
 
-.skill-xp {
+.skill-category {
     color: #94a3b8;
     font-size: 0.75rem;
+    text-transform: uppercase;
 }
 
-/* Character Stats & Traits */
-.stats-section {
+/* Abilities Grid */
+.abilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.ability-card {
+    aspect-ratio: 1;
+    background-color: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    transition: all 0.2s ease;
+    text-align: center;
+    cursor: pointer;
+}
+
+.ability-card:hover {
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.ability-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.ability-name {
+    font-weight: 600;
+    color: #f59e0b;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+}
+
+.ability-type {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+/* Empty Message */
+.empty-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #94a3b8;
+    padding: 2rem;
+    font-size: 1rem;
+}
+
+/* Stats Categories */
+.stats-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
 }
 
-.character-stats,
-.traits-section {
+.stats-category {
     background-color: #1e293b;
     border: 1px solid #334155;
     border-radius: 8px;
     padding: 1.5rem;
+}
+
+.stats-category h3 {
+    color: #f59e0b;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 0.5rem;
 }
 
 .character-level-info {

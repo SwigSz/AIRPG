@@ -33,8 +33,8 @@ const Crafting = (() => {
         loadCraftedItems();
 
         // Initialize on DOM ready with a small delay
+        // Note: renderMiniInventory will be called when character is ready
         setTimeout(() => {
-            renderMiniInventory();
             initializeCraftingSlots();
             renderRecipeList();
         }, 100);
@@ -365,6 +365,23 @@ const Crafting = (() => {
                 discoveredRecipes.push(matchedRecipe);
                 saveDiscoveredRecipes();
                 renderRecipeList();
+            }
+
+            // Track crafting stats
+            if (window.StatsTracker) {
+                StatsTracker.incrementStat('crafting.itemsCrafted', 1);
+            }
+
+            // Check for ability/skill unlocks
+            if (window.AbilityManager) {
+                AbilityManager.checkAndUnlockAbilities();
+            }
+            if (window.SkillManager) {
+                SkillManager.checkAndEarnSkills();
+            }
+            // Refresh character UI
+            if (window.CharacterUI) {
+                CharacterUI.render();
             }
 
             // Show crafted item modal
