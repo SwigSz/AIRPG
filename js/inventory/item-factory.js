@@ -24,14 +24,34 @@ const Items = (() => {
         return {
             id: generateItemId(),
             name,
-            type, // Item type from ITEM_TYPES
-            slot: options.slot || null, // Equipment slot if applicable
+            classifications: options.classifications || [], // Array: 'weapon', 'tool', 'armor', 'head', 'chest', 'one-handed', 'two-handed', etc.
             stats: options.stats || {},
             description: options.description || '',
             stackable: options.stackable || false,
             quantity: options.quantity || 1,
             icon: options.icon || '📦'
         };
+    }
+
+    // Derive the equipment slot from item classifications
+    function getItemSlot(item) {
+        if (!item.classifications) return null;
+
+        const validSlots = ['head', 'neck', 'chest', 'hands', 'legs', 'feet', 'main_hand', 'off_hand', 'ring', 'cloak'];
+
+        // For weapons, always equip to main_hand by default
+        if (item.classifications.includes('weapon')) {
+            return 'main_hand';
+        }
+
+        // For other items, find the slot in their classifications
+        for (const classification of item.classifications) {
+            if (validSlots.includes(classification)) {
+                return classification;
+            }
+        }
+
+        return null;
     }
 
     function generateItemId() {
@@ -42,88 +62,77 @@ const Items = (() => {
     const PLACEHOLDER_ITEMS = {
         head: {
             name: 'Iron Helm',
-            type: ITEM_TYPES.HEAD,
-            slot: 'head',
+            classifications: ['armor', 'head'],
             stats: { defense: 5, weight: 3 },
             description: 'A sturdy iron helmet that provides basic head protection.',
             icon: '⛑️'
         },
         neck: {
             name: 'Silver Amulet',
-            type: ITEM_TYPES.NECK,
-            slot: 'neck',
+            classifications: ['accessory', 'neck'],
             stats: { magic: 3, charisma: 2 },
             description: 'A mystical amulet that enhances magical abilities.',
             icon: '📿'
         },
         chest: {
             name: 'Leather Armor',
-            type: ITEM_TYPES.CHEST,
-            slot: 'chest',
+            classifications: ['armor', 'chest'],
             stats: { defense: 10, weight: 8 },
             description: 'Well-crafted leather armor offering good protection.',
             icon: '🦺'
         },
         hands: {
             name: 'Cloth Gloves',
-            type: ITEM_TYPES.HANDS,
-            slot: 'hands',
+            classifications: ['armor', 'hands'],
             stats: { dexterity: 2, weight: 1 },
             description: 'Light gloves that allow nimble finger movements.',
             icon: '🧤'
         },
         legs: {
             name: 'Chain Leggings',
-            type: ITEM_TYPES.LEGS,
-            slot: 'legs',
+            classifications: ['armor', 'legs'],
             stats: { defense: 7, weight: 5 },
             description: 'Chainmail leggings providing solid leg protection.',
             icon: '👖'
         },
         feet: {
             name: 'Leather Boots',
-            type: ITEM_TYPES.FEET,
-            slot: 'feet',
+            classifications: ['armor', 'feet'],
             stats: { defense: 3, speed: 1 },
             description: 'Comfortable boots suitable for long journeys.',
             icon: '🥾'
         },
         main_hand: {
             name: 'Iron Sword',
-            type: ITEM_TYPES.MAIN_HAND,
-            slot: 'main_hand',
+            classifications: ['weapon', 'one-handed'],
             stats: { damage: 15, weight: 4 },
             description: 'A well-balanced iron sword with a sharp edge.',
             icon: '⚔️'
         },
         off_hand: {
             name: 'Wooden Shield',
-            type: ITEM_TYPES.OFF_HAND,
-            slot: 'off_hand',
+            classifications: ['armor', 'off_hand', 'one-handed'],
             stats: { defense: 8, weight: 6 },
             description: 'A sturdy wooden shield reinforced with metal bands.',
             icon: '🛡️'
         },
         ring1: {
             name: 'Gold Ring',
-            type: ITEM_TYPES.RING,
-            slot: 'ring1',
+            classifications: ['accessory', 'ring'],
             stats: { charisma: 3, value: 100 },
             description: 'A beautiful gold ring with intricate engravings.',
             icon: '💍'
         },
         ring2: {
             name: 'Ruby Ring',
-            type: ITEM_TYPES.RING,
-            slot: 'ring2',
+            classifications: ['accessory', 'ring'],
             stats: { strength: 2, value: 150 },
             description: 'A ring with a gleaming ruby that radiates power.',
             icon: '💍'
         },
         cloak: {
             name: 'Traveler\'s Cloak',
-            type: ITEM_TYPES.CLOAK,
-            slot: 'cloak',
+            classifications: ['armor', 'cloak'],
             stats: { defense: 2, stealth: 3 },
             description: 'A hooded cloak perfect for traveling incognito.',
             icon: '🧥'
@@ -134,8 +143,8 @@ const Items = (() => {
         const template = PLACEHOLDER_ITEMS[slotKey];
         if (!template) return null;
 
-        return createItem(template.name, template.type, {
-            slot: template.slot,
+        return createItem(template.name, null, {
+            classifications: template.classifications,
             stats: { ...template.stats },
             description: template.description,
             icon: template.icon
@@ -150,6 +159,27 @@ const Items = (() => {
         return items;
     }
 
+    // Helper functions for item classifications
+    function isWeapon(item) {
+        return item.classifications && item.classifications.includes('weapon');
+    }
+
+    function isTool(item) {
+        return item.classifications && item.classifications.includes('tool');
+    }
+
+    function isTwoHanded(item) {
+        return item.classifications && item.classifications.includes('two-handed');
+    }
+
+    function isOneHanded(item) {
+        return item.classifications && item.classifications.includes('one-handed');
+    }
+
+    function hasClassification(item, classification) {
+        return item.classifications && item.classifications.includes(classification);
+    }
+
     function init() {
         console.log('Items: Initializing...');
     }
@@ -159,6 +189,12 @@ const Items = (() => {
         createItem,
         createPlaceholderItem,
         createAllPlaceholderItems,
+        getItemSlot,
+        isWeapon,
+        isTool,
+        isTwoHanded,
+        isOneHanded,
+        hasClassification,
         ITEM_TYPES
     };
 })();

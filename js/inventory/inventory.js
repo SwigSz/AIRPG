@@ -27,7 +27,6 @@ const Inventory = (() => {
         }
 
         const removedItem = inventory.items.splice(index, 1)[0];
-        console.log(`Removed ${removedItem.name} from inventory`);
         return removedItem;
     }
 
@@ -55,23 +54,25 @@ const Inventory = (() => {
             return false;
         }
 
-        if (!item.slot) {
-            console.error('Item cannot be equipped - no slot defined');
-            return false;
-        }
-
         // Remove from inventory
         removeItem(character.inventory, itemId);
 
-        // Equip the item (returns previously equipped item if any)
-        const previousItem = Equipment.equipItem(character.equipment, item);
+        // Equip the item (returns result object with unequipped items array)
+        const result = Equipment.equipItem(character.equipment, item);
 
-        // If there was a previously equipped item, add it back to inventory
-        if (previousItem) {
-            addItem(character.inventory, previousItem);
+        if (!result.success) {
+            // Re-add item to inventory if equipping failed
+            addItem(character.inventory, item);
+            return false;
         }
 
-        console.log(`Equipped ${item.name}`);
+        // Add all unequipped items back to inventory
+        if (result.unequippedItems && result.unequippedItems.length > 0) {
+            result.unequippedItems.forEach(unequippedItem => {
+                addItem(character.inventory, unequippedItem);
+            });
+        }
+
         return true;
     }
 
@@ -89,7 +90,6 @@ const Inventory = (() => {
         }
 
         addItem(character.inventory, item);
-        console.log(`Unequipped ${item.name} to inventory`);
         return true;
     }
 

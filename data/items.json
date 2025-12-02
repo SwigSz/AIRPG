@@ -5,8 +5,7 @@
       "name": "Iron Helm",
       "icon": "⛑️",
       "description": "A sturdy iron helmet that provides basic head protection.",
-      "type": "head",
-      "slot": "head",
+      "classifications": ["armor", "head"],
       "rarity": "common",
       "stats": {
         "defense": 5,
@@ -21,8 +20,7 @@
       "name": "Silver Amulet",
       "icon": "📿",
       "description": "A mystical amulet that enhances magical abilities.",
-      "type": "neck",
-      "slot": "neck",
+      "classifications": ["accessory", "neck"],
       "rarity": "uncommon",
       "stats": {
         "magic": 3,
@@ -37,8 +35,7 @@
       "name": "Leather Armor",
       "icon": "🦺",
       "description": "Well-crafted leather armor offering good protection.",
-      "type": "chest",
-      "slot": "chest",
+      "classifications": ["armor", "chest"],
       "rarity": "common",
       "stats": {
         "defense": 10,
@@ -53,8 +50,7 @@
       "name": "Cloth Gloves",
       "icon": "🧤",
       "description": "Light gloves that allow nimble finger movements.",
-      "type": "hands",
-      "slot": "hands",
+      "classifications": ["armor", "hands"],
       "rarity": "common",
       "stats": {
         "dexterity": 2,
@@ -69,8 +65,7 @@
       "name": "Chain Leggings",
       "icon": "👖",
       "description": "Chainmail leggings providing solid leg protection.",
-      "type": "legs",
-      "slot": "legs",
+      "classifications": ["armor", "legs"],
       "rarity": "common",
       "stats": {
         "defense": 7,
@@ -85,8 +80,7 @@
       "name": "Leather Boots",
       "icon": "🥾",
       "description": "Comfortable boots suitable for long journeys.",
-      "type": "feet",
-      "slot": "feet",
+      "classifications": ["armor", "feet"],
       "rarity": "common",
       "stats": {
         "defense": 3,
@@ -101,8 +95,7 @@
       "name": "Iron Sword",
       "icon": "⚔️",
       "description": "A well-balanced iron sword with a sharp edge.",
-      "type": "main_hand",
-      "slot": "main_hand",
+      "classifications": ["weapon", "one-handed"],
       "rarity": "common",
       "stats": {
         "damage": 15,
@@ -116,12 +109,29 @@
       "value": 50
     },
     {
+      "id": "greatsword",
+      "name": "Greatsword",
+      "icon": "⚔️",
+      "description": "A massive two-handed sword that deals devastating damage.",
+      "classifications": ["weapon", "two-handed"],
+      "rarity": "uncommon",
+      "stats": {
+        "damage": 30,
+        "weight": 12
+      },
+      "requirements": {
+        "strength": 12,
+        "level": 3
+      },
+      "stackable": false,
+      "value": 120
+    },
+    {
       "id": "wooden_shield",
       "name": "Wooden Shield",
       "icon": "🛡️",
       "description": "A sturdy wooden shield reinforced with metal bands.",
-      "type": "off_hand",
-      "slot": "off_hand",
+      "classifications": ["armor", "off_hand", "one-handed"],
       "rarity": "common",
       "stats": {
         "defense": 8,
@@ -136,8 +146,7 @@
       "name": "Gold Ring",
       "icon": "💍",
       "description": "A beautiful gold ring with intricate engravings.",
-      "type": "ring",
-      "slot": "ring",
+      "classifications": ["accessory", "ring"],
       "rarity": "uncommon",
       "stats": {
         "charisma": 3
@@ -151,8 +160,7 @@
       "name": "Ruby Ring",
       "icon": "💍",
       "description": "A ring with a gleaming ruby that radiates power.",
-      "type": "ring",
-      "slot": "ring",
+      "classifications": ["accessory", "ring"],
       "rarity": "rare",
       "stats": {
         "strength": 2
@@ -166,8 +174,7 @@
       "name": "Traveler's Cloak",
       "icon": "🧥",
       "description": "A hooded cloak perfect for traveling incognito.",
-      "type": "cloak",
-      "slot": "cloak",
+      "classifications": ["armor", "cloak"],
       "rarity": "common",
       "stats": {
         "defense": 2,
@@ -182,8 +189,7 @@
       "name": "Health Potion",
       "icon": "🧪",
       "description": "Restores 50 health points when consumed.",
-      "type": "consumable",
-      "slot": null,
+      "classifications": ["consumable"],
       "rarity": "common",
       "effect": {
         "type": "heal",

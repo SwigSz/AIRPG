@@ -127,7 +127,6 @@ const Crafting = (() => {
             return;
         }
 
-        console.log('Rendering mini inventory. Items:', character.inventory.items.length);
         miniInventoryGrid.innerHTML = '';
 
         // Use the same stacking logic as the main inventory
@@ -164,7 +163,6 @@ const Crafting = (() => {
             miniInventoryGrid.appendChild(slot);
         });
 
-        console.log('Mini inventory rendered with stacked items');
         updateMiniInventoryAvailability();
     }
 

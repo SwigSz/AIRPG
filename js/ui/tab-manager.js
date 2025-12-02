@@ -51,6 +51,14 @@ const TabManager = (() => {
             activeTabContent.classList.add('active');
             activeTabContent.style.display = 'block'; // Explicitly show
         }
+
+        // Trigger tab-specific updates when switching to inventory tab
+        if (tabName === 'inventory' && window.renderInventoryUI) {
+            renderInventoryUI();
+        }
+        if (tabName === 'inventory' && window.renderEquipmentUI) {
+            renderEquipmentUI();
+        }
     }
 
     function setInitialTab() {

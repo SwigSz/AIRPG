@@ -17,11 +17,12 @@
         "itemId": "stone_axe",
         "name": "Stone Axe",
         "icon": "🪓",
-        "type": "tool",
-        "description": "A crude axe made from a stick and a rock.",
+        "classifications": ["weapon", "tool", "one-handed"],
+        "description": "A crude axe made from a stick and a rock. Can be used to chop trees or as a weapon.",
         "stats": {
           "damage": 8,
-          "durability": 50
+          "durability": 50,
+          "woodcutting": 2
         }
       },
       "craftingTime": 5,

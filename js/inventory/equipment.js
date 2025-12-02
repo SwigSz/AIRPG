@@ -35,23 +35,70 @@ const Equipment = (() => {
     }
 
     function equipItem(equipment, item) {
-        if (!item || !item.slot) {
-            console.error('Cannot equip item: invalid item or missing slot', item);
-            return false;
+        if (!item) {
+            console.error('Cannot equip item: invalid item', item);
+            return { success: false, unequippedItems: [] };
         }
 
-        const slot = item.slot;
+        // Derive slot from item classifications
+        let slot = window.Items ? Items.getItemSlot(item) : null;
+
+        if (!slot) {
+            console.error('Cannot equip item: no valid slot found in classifications', item);
+            return { success: false, unequippedItems: [] };
+        }
+
+        // Special handling for rings - check both ring slots and use the first empty one
+        if (slot === 'ring') {
+            if (!equipment.ring1) {
+                slot = 'ring1';
+            } else if (!equipment.ring2) {
+                slot = 'ring2';
+            } else {
+                // Both slots occupied, replace ring1
+                slot = 'ring1';
+            }
+        }
+
         if (!(slot in equipment)) {
             console.error(`Invalid equipment slot: ${slot}`);
-            return false;
+            return { success: false, unequippedItems: [] };
         }
 
-        // Unequip existing item in that slot first
-        const previousItem = equipment[slot];
-        equipment[slot] = item;
+        // Check if item is two-handed
+        const isTwoHanded = item.classifications && item.classifications.includes('two-handed');
 
-        console.log(`Equipped ${item.name} to ${slot}`);
-        return previousItem; // Return the previously equipped item (or null)
+        // Array to store items being unequipped
+        const unequippedItems = [];
+
+        if (isTwoHanded) {
+            // Two-handed weapon takes both main and off hand - clear both slots
+            if (equipment.main_hand) {
+                unequippedItems.push(equipment.main_hand);
+            }
+            if (equipment.off_hand) {
+                unequippedItems.push(equipment.off_hand);
+            }
+            equipment.main_hand = item;
+            equipment.off_hand = null;
+        } else {
+            // If equipping to off-hand while two-handed is equipped in main hand, unequip it
+            if (slot === 'off_hand' && equipment.main_hand && equipment.main_hand.classifications && equipment.main_hand.classifications.includes('two-handed')) {
+                unequippedItems.push(equipment.main_hand);
+                equipment.main_hand = null;
+            }
+
+            // Unequip existing item in target slot
+            if (equipment[slot]) {
+                unequippedItems.push(equipment[slot]);
+            }
+
+            // Equip the new item
+            equipment[slot] = item;
+        }
+
+        // Return result object with all unequipped items
+        return { success: true, unequippedItems: unequippedItems };
     }
 
     function unequipItem(equipment, slot) {
@@ -62,10 +109,6 @@ const Equipment = (() => {
 
         const item = equipment[slot];
         equipment[slot] = null;
-
-        if (item) {
-            console.log(`Unequipped ${item.name} from ${slot}`);
-        }
 
         return item; // Return the unequipped item (or null)
     }

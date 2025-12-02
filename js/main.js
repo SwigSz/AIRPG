@@ -88,27 +88,40 @@ function initializeTestCharacter() {
     });
 
     // Add crafting test items (individual items that will stack in the UI)
-    const stick1 = Items.createItem('Stick', Items.ITEM_TYPES.MATERIAL, {
+    const stick1 = Items.createItem('Stick', null, {
+        classifications: ['material'],
         description: 'A sturdy stick.',
         icon: '🪵'
     });
-    const stick2 = Items.createItem('Stick', Items.ITEM_TYPES.MATERIAL, {
+    const stick2 = Items.createItem('Stick', null, {
+        classifications: ['material'],
         description: 'A sturdy stick.',
         icon: '🪵'
     });
-    const rock1 = Items.createItem('Rock', Items.ITEM_TYPES.MATERIAL, {
+    const rock1 = Items.createItem('Rock', null, {
+        classifications: ['material'],
         description: 'A heavy rock.',
         icon: '🪨'
     });
-    const rock2 = Items.createItem('Rock', Items.ITEM_TYPES.MATERIAL, {
+    const rock2 = Items.createItem('Rock', null, {
+        classifications: ['material'],
         description: 'A heavy rock.',
         icon: '🪨'
+    });
+
+    // Add test greatsword
+    const greatsword = Items.createItem('Greatsword', null, {
+        classifications: ['weapon', 'two-handed'],
+        description: 'A massive two-handed sword that deals devastating damage.',
+        icon: '⚔️',
+        stats: { damage: 30, weight: 12 }
     });
 
     Inventory.addItem(testCharacter.inventory, stick1);
     Inventory.addItem(testCharacter.inventory, stick2);
     Inventory.addItem(testCharacter.inventory, rock1);
     Inventory.addItem(testCharacter.inventory, rock2);
+    Inventory.addItem(testCharacter.inventory, greatsword);
 
     // Store in game state
     GameState.updateProperty('character', testCharacter);
@@ -279,14 +292,29 @@ function renderEquipmentUI() {
         { key: 'cloak', label: 'Cloak' }
     ];
 
+    // Check if main hand has a two-handed weapon
+    const mainHandItem = character.equipment.main_hand;
+    const isTwoHandedEquipped = mainHandItem && mainHandItem.classifications && mainHandItem.classifications.includes('two-handed');
+
     slots.forEach(({ key, label }) => {
+        // Skip off_hand slot if two-handed weapon is equipped
+        if (key === 'off_hand' && isTwoHandedEquipped) {
+            return;
+        }
+
         const item = character.equipment[key];
         const slotElement = document.createElement('div');
         slotElement.dataset.slot = key;
 
         if (item) {
             slotElement.className = 'equipment-slot occupied';
-            renderItemInSlot(slotElement, item, 'equipment');
+
+            // Special rendering for two-handed weapons in main hand
+            if (key === 'main_hand' && isTwoHandedEquipped) {
+                renderItemInSlot(slotElement, item, 'equipment', null, key, true);
+            } else {
+                renderItemInSlot(slotElement, item, 'equipment', null, key);
+            }
         } else {
             slotElement.className = 'equipment-slot empty';
             slotElement.textContent = label;
@@ -297,17 +325,24 @@ function renderEquipmentUI() {
 }
 
 // Render an item in a slot
-function renderItemInSlot(slotElement, item, context, stack = null) {
+function renderItemInSlot(slotElement, item, context, stack = null, equipSlot = null, isTwoHanded = false) {
     slotElement.classList.remove('empty');
 
     if (context === 'equipment') {
         slotElement.classList.add('occupied');
+
+        // Get the slot label - show "Both Hands" for two-handed weapons
+        let slotLabel = equipSlot ? equipSlot.replace('_', ' ') : '';
+        if (isTwoHanded) {
+            slotLabel = 'Both Hands';
+        }
+
         slotElement.innerHTML = `
             <div class="equipment-slot-content">
                 <span class="equipment-slot-icon">${item.icon}</span>
                 <div class="equipment-slot-info">
                     <div class="equipment-slot-name">${item.name}</div>
-                    <div class="equipment-slot-label">${item.slot.replace('_', ' ')}</div>
+                    <div class="equipment-slot-label">${slotLabel}</div>
                 </div>
             </div>
             <div class="item-actions">
@@ -322,7 +357,7 @@ function renderItemInSlot(slotElement, item, context, stack = null) {
 
         // Attach event listeners to buttons
         const actionsDiv = slotElement.querySelector('.item-actions');
-        attachItemEventListeners(actionsDiv, item, context, item.slot, stack);
+        attachItemEventListeners(actionsDiv, item, context, equipSlot, stack);
     } else {
         // Display quantity if it's a stack with multiple items
         const displayName = stack && stack.quantity > 1
@@ -463,7 +498,16 @@ function showItemDetailsModal(item) {
             statsHTML += `<div><strong>${capitalizedKey}:</strong> ${value}</div>`;
         }
     }
-    statsHTML += `<div><strong>Type:</strong> ${item.type}</div>`;
+
+    // Display classifications instead of type
+    if (item.classifications && item.classifications.length > 0) {
+        const formattedClassifications = item.classifications.map(c => {
+            // Capitalize and replace underscores with spaces
+            return c.split(/[-_]/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-');
+        }).join(', ');
+        statsHTML += `<div><strong>Type:</strong> ${formattedClassifications}</div>`;
+    }
+
     modalStatsContent.innerHTML = statsHTML;
 
     // Show modal
