@@ -346,12 +346,6 @@
     background-color: #1e293b;
     border: 1px solid #334155;
     border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.attribute-item:hover {
-    border-color: #3b82f6;
-    transform: translateX(2px);
 }
 
 .attribute-name {

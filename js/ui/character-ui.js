@@ -343,27 +343,27 @@ const CharacterUI = (() => {
                         <div class="stat-label">Attributes</div>
                         <div class="attributes-list">
                             <div class="attribute-item">
-                                <span class="attribute-name">⚔️ Strength:</span>
+                                <span class="attribute-name">Strength:</span>
                                 <span class="attribute-value">${charStats.strength || 10}</span>
                             </div>
                             <div class="attribute-item">
-                                <span class="attribute-name">🎯 Dexterity:</span>
+                                <span class="attribute-name">Dexterity:</span>
                                 <span class="attribute-value">${charStats.dexterity || 10}</span>
                             </div>
                             <div class="attribute-item">
-                                <span class="attribute-name">💪 Constitution:</span>
+                                <span class="attribute-name">Constitution:</span>
                                 <span class="attribute-value">${charStats.constitution || 10}</span>
                             </div>
                             <div class="attribute-item">
-                                <span class="attribute-name">🧠 Intelligence:</span>
+                                <span class="attribute-name">Intelligence:</span>
                                 <span class="attribute-value">${charStats.intelligence || 10}</span>
                             </div>
                             <div class="attribute-item">
-                                <span class="attribute-name">🔮 Wisdom:</span>
+                                <span class="attribute-name">Wisdom:</span>
                                 <span class="attribute-value">${charStats.wisdom || 10}</span>
                             </div>
                             <div class="attribute-item">
-                                <span class="attribute-name">✨ Charisma:</span>
+                                <span class="attribute-name">Charisma:</span>
                                 <span class="attribute-value">${charStats.charisma || 10}</span>
                             </div>
                         </div>
