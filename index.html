@@ -549,6 +549,28 @@
         </div>
     </div>
 
+    <!-- Crafted Item Modal -->
+    <div id="crafted-item-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content item-details crafted-item-modal">
+            <div class="new-item-banner" id="new-item-banner" style="display: none;">
+                <span class="new-item-icon">✨</span>
+                <span class="new-item-text">New item created!</span>
+                <span class="new-item-icon">✨</span>
+            </div>
+            <button class="modal-close">&times;</button>
+            <h2 id="crafted-item-name">Item Name</h2>
+            <p id="crafted-item-description" class="item-description-text">Item description goes here</p>
+            <div id="crafted-item-stats" class="item-stats-section">
+                <h3>Stats</h3>
+                <div id="crafted-stats-content"></div>
+            </div>
+            <div class="crafted-item-actions">
+                <button class="modal-btn modal-btn-secondary" id="discard-crafted-btn">Discard</button>
+                <button class="modal-btn modal-btn-primary" id="take-crafted-btn">Take</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
     <script src="js/core/game-state.js"></script>
     <script src="js/core/save-system.js"></script>

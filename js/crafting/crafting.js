@@ -6,6 +6,7 @@ const Crafting = (() => {
     let initialized = false;
     let discoveredRecipes = []; // Recipes the player has discovered
     let recipes = []; // Recipe database loaded from JSON
+    let craftedItems = []; // Track items that have been crafted before
 
     async function loadRecipes() {
         try {
@@ -27,6 +28,9 @@ const Crafting = (() => {
 
         // Load discovered recipes from localStorage
         loadDiscoveredRecipes();
+
+        // Load crafted items history from localStorage
+        loadCraftedItems();
 
         // Initialize on DOM ready with a small delay
         setTimeout(() => {
@@ -72,6 +76,36 @@ const Crafting = (() => {
     function saveDiscoveredRecipes() {
         const recipeIds = discoveredRecipes.map(r => r.id);
         localStorage.setItem('discoveredRecipes', JSON.stringify(recipeIds));
+    }
+
+    function loadCraftedItems() {
+        const saved = localStorage.getItem('craftedItems');
+        if (saved) {
+            try {
+                craftedItems = JSON.parse(saved);
+                console.log('Loaded', craftedItems.length, 'previously crafted items');
+            } catch (error) {
+                console.error('Failed to load crafted items:', error);
+                craftedItems = [];
+            }
+        } else {
+            craftedItems = [];
+        }
+    }
+
+    function saveCraftedItems() {
+        localStorage.setItem('craftedItems', JSON.stringify(craftedItems));
+    }
+
+    function isNewItem(itemName) {
+        return !craftedItems.includes(itemName);
+    }
+
+    function markItemAsCrafted(itemName) {
+        if (!craftedItems.includes(itemName)) {
+            craftedItems.push(itemName);
+            saveCraftedItems();
+        }
     }
 
     function renderMiniInventory() {
@@ -334,6 +368,9 @@ const Crafting = (() => {
                 saveDiscoveredRecipes();
                 renderRecipeList();
             }
+
+            // Show crafted item modal
+            showCraftedItemModal(matchedRecipe.output);
         } else {
             console.log('No matching recipe found');
             alert('No recipe matches this combination!');
@@ -379,18 +416,103 @@ const Crafting = (() => {
         }
 
         const craftedItemTemplate = JSON.parse(outputSlot.dataset.craftedItem);
+
+        // Show crafted item modal instead of auto-collecting
+        showCraftedItemModal(craftedItemTemplate);
+    }
+
+    function showCraftedItemModal(itemTemplate) {
+        const modal = document.getElementById('crafted-item-modal');
+        const itemName = document.getElementById('crafted-item-name');
+        const itemDescription = document.getElementById('crafted-item-description');
+        const statsContent = document.getElementById('crafted-stats-content');
+        const takeBtn = document.getElementById('take-crafted-btn');
+        const discardBtn = document.getElementById('discard-crafted-btn');
+        const newItemBanner = document.getElementById('new-item-banner');
+
+        // Check if this is a new item (never crafted before)
+        const isFirstCraft = isNewItem(itemTemplate.name);
+
+        // Show/hide the "New item created!" banner
+        if (newItemBanner) {
+            newItemBanner.style.display = isFirstCraft ? 'block' : 'none';
+        }
+
+        // Set content
+        itemName.textContent = itemTemplate.name;
+        itemDescription.textContent = itemTemplate.description || 'No description available.';
+
+        // Build stats HTML
+        let statsHTML = '';
+        if (itemTemplate.stats && Object.keys(itemTemplate.stats).length > 0) {
+            for (const [key, value] of Object.entries(itemTemplate.stats)) {
+                const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+                statsHTML += `<div><strong>${capitalizedKey}:</strong> ${value}</div>`;
+            }
+        }
+        statsHTML += `<div><strong>Type:</strong> ${itemTemplate.type}</div>`;
+        statsContent.innerHTML = statsHTML;
+
+        // Remove previous event listeners by cloning buttons
+        const newTakeBtn = takeBtn.cloneNode(true);
+        const newDiscardBtn = discardBtn.cloneNode(true);
+        takeBtn.parentNode.replaceChild(newTakeBtn, takeBtn);
+        discardBtn.parentNode.replaceChild(newDiscardBtn, discardBtn);
+
+        // Add event listeners
+        newTakeBtn.addEventListener('click', () => {
+            takeCraftedItem(itemTemplate);
+            modal.style.display = 'none';
+        });
+
+        newDiscardBtn.addEventListener('click', () => {
+            discardCraftedItem();
+            modal.style.display = 'none';
+        });
+
+        // Close button
+        const closeBtn = modal.querySelector('.modal-close');
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Close with Escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+
+        // Show modal
+        modal.style.display = 'flex';
+    }
+
+    function takeCraftedItem(itemTemplate) {
         const character = GameState.getState().character;
 
         // Create a proper item with unique ID using Items.createItem
-        const craftedItem = Items.createItem(craftedItemTemplate.name, craftedItemTemplate.type, {
-            description: craftedItemTemplate.description,
-            icon: craftedItemTemplate.icon,
-            slot: craftedItemTemplate.slot || null,
-            stats: craftedItemTemplate.stats || {}
+        const craftedItem = Items.createItem(itemTemplate.name, itemTemplate.type, {
+            description: itemTemplate.description,
+            icon: itemTemplate.icon,
+            slot: itemTemplate.slot || null,
+            stats: itemTemplate.stats || {}
         });
 
-        // Items were already removed from inventory in attemptCraft()
-        // Just add the crafted item to inventory
+        // Mark this item as crafted (for "New item created!" tracking)
+        markItemAsCrafted(craftedItem.name);
+
+        // Add the crafted item to inventory
         Inventory.addItem(character.inventory, craftedItem);
 
         // Track crafted item in crafting history for research unlocks
@@ -404,6 +526,7 @@ const Crafting = (() => {
         }
 
         // Clear output slot
+        const outputSlot = document.querySelector('.output-slot');
         outputSlot.innerHTML = '';
         outputSlot.classList.add('empty');
         delete outputSlot.dataset.craftedItem;
@@ -419,7 +542,31 @@ const Crafting = (() => {
             SaveSystem.save();
         }
 
-        console.log('Crafted:', craftedItem.name);
+        console.log('Crafted and took:', craftedItem.name);
+    }
+
+    function discardCraftedItem() {
+        // Get the item template before clearing
+        const outputSlot = document.querySelector('.output-slot');
+        const craftedItemTemplate = JSON.parse(outputSlot.dataset.craftedItem || '{}');
+
+        // Mark this item as crafted even though it's being discarded
+        // (so the "New item created!" banner won't show again)
+        if (craftedItemTemplate.name) {
+            markItemAsCrafted(craftedItemTemplate.name);
+        }
+
+        // Clear output slot without adding to inventory
+        outputSlot.innerHTML = '';
+        outputSlot.classList.add('empty');
+        delete outputSlot.dataset.craftedItem;
+
+        // Save game
+        if (window.SaveSystem) {
+            SaveSystem.save();
+        }
+
+        console.log('Crafted item discarded');
     }
 
     function renderRecipeList() {
