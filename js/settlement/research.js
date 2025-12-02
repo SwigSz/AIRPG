@@ -33,9 +33,9 @@ const Research = (() => {
 
         ctx = canvas.getContext('2d');
 
-        // Set canvas size
-        canvas.width = 800;
-        canvas.height = 600;
+        // Set canvas size - container will handle scrolling
+        canvas.width = 1200;
+        canvas.height = 500;
 
         // Create tooltip element
         createTooltip();

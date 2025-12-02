@@ -181,6 +181,11 @@
     overflow-y: auto;
 }
 
+/* Hide resources panel when research tab is active */
+.settlement-main-layout:has(#settlement-research-content.active) .settlement-resources-panel {
+    display: none;
+}
+
 .settlement-resources-panel h3 {
     color: #f59e0b;
     font-size: 1.2rem;
