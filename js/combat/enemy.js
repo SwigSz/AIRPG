@@ -53,11 +53,12 @@ const EnemyDatabase = (() => {
                     defense: enemy.stats.defense,
                     attack: enemy.attack,
                     biome: enemy.biomes || [],
-                    xpReward: enemy.xpReward
+                    xpReward: enemy.xpReward,
+                    loot: enemy.loot || []
                 };
             });
 
-            console.log('Loaded', Object.keys(ENEMIES).length, 'enemies from JSON');
+            // Enemies loaded from JSON
         } catch (error) {
             console.error('Failed to load enemies:', error);
             ENEMIES = {};

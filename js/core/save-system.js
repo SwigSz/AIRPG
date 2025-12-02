@@ -16,11 +16,7 @@ const SaveSystem = (() => {
                 state: state
             };
             localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-            if (!isAutosave) {
-                console.log('Game saved successfully');
-            } else {
-                console.log('Game autosaved');
-            }
+            // Game saved (silently to reduce console bloat)
             return true;
         } catch (error) {
             console.error('Failed to save game:', error);
@@ -37,7 +33,7 @@ const SaveSystem = (() => {
             }
 
             const parsed = JSON.parse(saveData);
-            console.log('Game loaded successfully');
+            // Game loaded successfully
             return parsed.state;
         } catch (error) {
             console.error('Failed to load game:', error);
@@ -48,7 +44,7 @@ const SaveSystem = (() => {
     function deleteSave() {
         try {
             localStorage.removeItem(SAVE_KEY);
-            console.log('Save deleted successfully');
+            // Save deleted successfully
             return true;
         } catch (error) {
             console.error('Failed to delete save:', error);
@@ -165,14 +161,14 @@ const SaveSystem = (() => {
             }
         }, intervalSeconds * 1000);
 
-        console.log(`Autosave enabled (every ${intervalSeconds} seconds)`);
+        // Autosave enabled
     }
 
     function stopAutosave() {
         if (autosaveInterval) {
             clearInterval(autosaveInterval);
             autosaveInterval = null;
-            console.log('Autosave stopped');
+            // Autosave stopped
         }
     }
 

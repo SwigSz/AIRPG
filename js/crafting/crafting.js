@@ -13,7 +13,7 @@ const Crafting = (() => {
             const response = await fetch('data/recipes.json');
             const data = await response.json();
             recipes = data.recipes || [];
-            console.log('Loaded', recipes.length, 'recipes from JSON');
+            // Recipes loaded from JSON
         } catch (error) {
             console.error('Failed to load recipes:', error);
             recipes = [];
@@ -21,7 +21,7 @@ const Crafting = (() => {
     }
 
     async function init() {
-        console.log('Crafting: Initializing...');
+        // Crafting initializing
 
         // Load recipes from JSON file
         await loadRecipes();
@@ -63,7 +63,7 @@ const Crafting = (() => {
             try {
                 const recipeIds = JSON.parse(saved);
                 discoveredRecipes = recipeIds.map(id => recipes.find(r => r.id === id)).filter(r => r);
-                console.log('Loaded', discoveredRecipes.length, 'discovered recipes');
+                // Discovered recipes loaded
             } catch (error) {
                 console.error('Failed to load discovered recipes:', error);
                 discoveredRecipes = [];
@@ -83,7 +83,7 @@ const Crafting = (() => {
         if (saved) {
             try {
                 craftedItems = JSON.parse(saved);
-                console.log('Loaded', craftedItems.length, 'previously crafted items');
+                // Previously crafted items loaded
             } catch (error) {
                 console.error('Failed to load crafted items:', error);
                 craftedItems = [];

@@ -14,7 +14,7 @@ const TooltipManager = (() => {
         tooltip.style.display = 'none';
         document.body.appendChild(tooltip);
 
-        console.log('TooltipManager: Initialized');
+        // TooltipManager initialized
     }
 
     // Show tooltip for a skill or ability

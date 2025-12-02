@@ -12,7 +12,7 @@ const SkillManager = (() => {
             const response = await fetch('data/skills.json');
             const data = await response.json();
             skillsData = data.skills || [];
-            console.log('SkillManager: Loaded', skillsData.length, 'skills');
+            // Skills loaded
 
             // Load earned skills from game state if available
             if (window.GameState) {

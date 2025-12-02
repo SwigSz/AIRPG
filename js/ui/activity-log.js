@@ -7,6 +7,7 @@ const ActivityLog = (() => {
     let maxLogs = GameConfig?.UI?.ACTIVITY_LOG_MAX || 100;
     let filters = {
         combat: true,
+        loot: true,
         general: true,
         events: true,
         system: true
@@ -46,11 +47,11 @@ const ActivityLog = (() => {
             timestamp
         };
 
-        logs.unshift(log);
+        logs.push(log);
 
-        // Keep only max logs
+        // Keep only max logs (remove oldest)
         if (logs.length > maxLogs) {
-            logs = logs.slice(0, maxLogs);
+            logs = logs.slice(-maxLogs);
         }
 
         render();
@@ -84,6 +85,14 @@ const ActivityLog = (() => {
                 <span class="activity-text">${log.message}</span>
             </div>
         `).join('');
+
+        // Auto-scroll to bottom - scroll the parent .log-content container
+        const scrollContainer = document.querySelector('.log-content');
+        if (scrollContainer) {
+            setTimeout(() => {
+                scrollContainer.scrollTop = scrollContainer.scrollHeight;
+            }, 0);
+        }
     }
 
     function clear() {

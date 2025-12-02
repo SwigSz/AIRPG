@@ -16,7 +16,7 @@ const NotificationManager = (() => {
             document.body.appendChild(notificationContainer);
         }
 
-        console.log('NotificationManager: Initialized');
+        // NotificationManager initialized
     }
 
     // Show ability unlock notification

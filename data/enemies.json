@@ -18,7 +18,18 @@
         "damage": "1~2"
       },
       "abilities": [],
-      "loot": [],
+      "loot": [
+        {
+          "itemId": "stick",
+          "chance": 0.3,
+          "quantity": { "min": 1, "max": 2 }
+        },
+        {
+          "itemId": "fiber",
+          "chance": 0.3,
+          "quantity": { "min": 1, "max": 1 }
+        }
+      ],
       "xpReward": 10,
       "biomes": []
     },

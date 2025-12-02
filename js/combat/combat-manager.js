@@ -73,10 +73,9 @@ const CombatManager = (() => {
         combatState.currentTurnIndex = 0;
         combatState.turnNumber = 1;
 
-        logCombat('=== COMBAT START ===');
-        combatState.turnOrder.forEach(c => {
-            logCombat(`${c.name} rolled initiative: ${c.initiative}`);
-        });
+        // Log enemy encounter
+        const enemyNames = combatState.combatants.filter(c => !c.isPlayer).map(c => c.name).join(', ');
+        logCombat(`Combat started against ${enemyNames}`);
 
         // Show combat view
         toggleCombatView(true);
@@ -112,13 +111,11 @@ const CombatManager = (() => {
 
         // Skip dead combatants
         if (!current.isAlive) {
-            logCombat(`${current.name}'s turn is skipped (deceased)`);
             isProcessingTurn = false;
             nextTurn();
             return;
         }
 
-        logCombat(`\n--- ${current.name}'s Turn ---`);
         renderCombatUI();
 
         // If it's an enemy's turn, auto-process
@@ -246,7 +243,6 @@ const CombatManager = (() => {
         if (combatState.currentTurnIndex >= combatState.turnOrder.length) {
             combatState.currentTurnIndex = 0;
             combatState.turnNumber++;
-            logCombat(`\n=== Turn ${combatState.turnNumber} ===`);
         }
 
         // Save combat state after each turn
@@ -284,8 +280,7 @@ const CombatManager = (() => {
         combatState.isActive = false;
 
         if (result === 'victory') {
-            logCombat('\n=== VICTORY ===');
-            logCombat('All enemies have been defeated!');
+            logCombat('Victory! All enemies defeated.');
 
             // Track combat stats
             if (window.StatsTracker) {
@@ -298,19 +293,14 @@ const CombatManager = (() => {
             const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
             const totalXP = deadEnemies.reduce((sum, enemy) => sum + (enemy.xpReward || 0), 0);
 
-            console.log('Dead enemies:', deadEnemies);
-            console.log('Total XP to award:', totalXP);
-
             if (totalXP > 0) {
                 combatants.forEach(player => {
                     if (player.isPlayer && player.isAlive) {
                         // Get the actual GameState character
                         const character = GameState.getState().character;
-                        console.log('Character before XP:', character);
                         if (character) {
                             // Add XP directly to the GameState character
                             const leveled = Character.addXP(character, totalXP);
-                            console.log('Character after XP:', character);
                             logCombat(`${player.name} gained ${totalXP} XP!`);
                             if (leveled) {
                                 logCombat(`${player.name} leveled up to level ${character.level}!`);
@@ -330,6 +320,13 @@ const CombatManager = (() => {
                 });
             }
 
+            // Process loot drops from defeated enemies
+            if (window.LootManager) {
+                deadEnemies.forEach(enemy => {
+                    LootManager.handleEnemyLoot(enemy);
+                });
+            }
+
             // Check for ability/skill unlocks
             if (window.AbilityManager) {
                 AbilityManager.checkAndUnlockAbilities();
@@ -342,15 +339,14 @@ const CombatManager = (() => {
                 CharacterUI.render();
             }
         } else if (result === 'defeat') {
-            logCombat('\n=== DEFEAT ===');
-            logCombat('Your party has been defeated...');
+            logCombat('Defeat! Your party has been defeated.');
 
             // Track combat stats
             if (window.StatsTracker) {
                 StatsTracker.incrementStat('combat.combatsLost', 1);
             }
         } else if (result === 'flee') {
-            logCombat('\n=== FLED FROM COMBAT ===');
+            logCombat('Fled from combat.');
 
             // Track combat stats
             if (window.StatsTracker) {
@@ -860,7 +856,6 @@ const CombatManager = (() => {
 
         // Randomly select an enemy
         const randomEnemyId = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
-        console.log(`Random encounter: ${randomEnemyId}`);
 
         // Create enemy from factory using random selection
         const enemyInstance = EnemyFactory.createEnemy(randomEnemyId);

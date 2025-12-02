@@ -15,7 +15,7 @@ const CharacterUI = (() => {
         // Render initial data
         render();
 
-        console.log('CharacterUI: Initialized');
+        // CharacterUI initialized
     }
 
     // Create the new structure for the character tab

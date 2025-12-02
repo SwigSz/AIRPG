@@ -128,7 +128,7 @@ const Inventory = (() => {
     }
 
     function init() {
-        console.log('Inventory: Initializing...');
+        // Inventory initialized
     }
 
     return {

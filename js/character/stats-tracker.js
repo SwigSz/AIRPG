@@ -39,7 +39,7 @@ const StatsTracker = (() => {
             // Just update the game state property
             GameState.updateProperty('playerStats', stats);
         }
-        console.log('StatsTracker: Initialized', stats);
+        // StatsTracker initialized
     }
 
     // Get all stats

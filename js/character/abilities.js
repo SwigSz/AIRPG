@@ -12,7 +12,7 @@ const AbilityManager = (() => {
             const response = await fetch('data/abilities.json');
             const data = await response.json();
             abilitiesData = data.abilities || [];
-            console.log('AbilityManager: Loaded', abilitiesData.length, 'abilities');
+            // Abilities loaded
 
             // Load unlocked abilities from game state if available
             if (window.GameState) {

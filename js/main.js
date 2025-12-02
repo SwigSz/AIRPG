@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.EnemyDatabase) await EnemyDatabase.init();
     if (window.AbilityManager) await AbilityManager.init();
     if (window.SkillManager) await SkillManager.init();
+    if (window.LootManager) await LootManager.init();
 
     // Initialize UI systems
     if (window.UIManager) {

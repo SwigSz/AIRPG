@@ -52,6 +52,7 @@ const EnemyFactory = (() => {
             flavor: template.flavor || template.desc || '',
             biome: template.biome || [],
             xpReward: template.xpReward || 0,
+            loot: template.loot || [],
             isAlive: true,
             isPlayer: false,
             initiative: 0
