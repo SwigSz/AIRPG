@@ -577,8 +577,7 @@ const CombatManager = (() => {
 
         // Items button
         document.getElementById('items-btn')?.addEventListener('click', () => {
-            logCombat('No items available.');
-            renderActionButtons();
+            showItemsMenu();
         });
 
         // Flee button
@@ -637,6 +636,112 @@ const CombatManager = (() => {
         document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
             renderActionButtons();
         });
+    }
+
+    // Show items submenu
+    function showItemsMenu() {
+        const actionsEl = document.querySelector('.combat-actions');
+        if (!actionsEl) return;
+
+        const character = GameState.getState().character;
+        if (!character || !character.inventory) {
+            actionsEl.innerHTML = `
+                <div class="action-message">No items available</div>
+                <div class="combat-menu">
+                    <button class="menu-btn back-btn" id="back-to-menu-btn">← Back</button>
+                </div>
+            `;
+            document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
+                renderActionButtons();
+            });
+            return;
+        }
+
+        // Get consumable items usable in combat
+        let consumableItems = [];
+        if (window.ConsumableManager) {
+            consumableItems = ConsumableManager.getCombatConsumables(character.inventory);
+        }
+
+        // Group items by name and icon (stacking)
+        const itemStacks = new Map();
+        consumableItems.forEach(item => {
+            const key = `${item.name}_${item.icon}`;
+            if (!itemStacks.has(key)) {
+                itemStacks.set(key, {
+                    item: item,
+                    quantity: 0,
+                    items: []
+                });
+            }
+            const stack = itemStacks.get(key);
+            stack.quantity++;
+            stack.items.push(item);
+        });
+
+        let itemsHTML = '';
+        if (itemStacks.size > 0) {
+            itemStacks.forEach(stack => {
+                const displayName = stack.quantity > 1
+                    ? `${stack.item.name} x${stack.quantity}`
+                    : stack.item.name;
+                itemsHTML += `<button class="menu-btn item-btn" data-item-id="${stack.item.id}">${stack.item.icon || '📦'} ${displayName}</button>`;
+            });
+        } else {
+            itemsHTML = '<div class="action-message no-items">No usable items</div>';
+        }
+
+        actionsEl.innerHTML = `
+            <div class="action-message">Select an item to use:</div>
+            <div class="combat-menu">
+                ${itemsHTML}
+                <button class="menu-btn back-btn" id="back-to-menu-btn">← Back</button>
+            </div>
+        `;
+
+        // Add event listeners to item buttons
+        document.querySelectorAll('[data-item-id]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const itemId = btn.getAttribute('data-item-id');
+                const item = character.inventory.items.find(i => i.id === itemId);
+                if (item) {
+                    useItemInCombat(item);
+                }
+            });
+        });
+
+        // Back button
+        document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
+            renderActionButtons();
+        });
+    }
+
+    // Use an item in combat
+    function useItemInCombat(item) {
+        const current = getCurrentCombatant();
+        if (!current) return;
+
+        const character = GameState.getState().character;
+        if (!character) return;
+
+        // Use the consumable via ConsumableManager
+        if (window.ConsumableManager) {
+            const success = ConsumableManager.useConsumable(character, item, combatState);
+
+            if (success) {
+                // Update UI
+                renderCombatUI();
+                checkCombatEnd();
+
+                // End turn only if combat is still active
+                if (combatState && combatState.isActive) {
+                    nextTurn();
+                }
+            } else {
+                // Failed to use item, return to menu
+                renderActionButtons();
+            }
+        }
     }
 
     // Use an ability from AbilityManager

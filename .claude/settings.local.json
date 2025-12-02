@@ -17,7 +17,8 @@
       "Bash(powershell -Command \"Remove-Item -Path ''\\?\\c:\\Users\\maufo\\AI-RPG\\nul'' -Force\")",
       "Bash(powershell -Command \"Remove-Item -LiteralPath ''\\?\\C:\\Users\\maufo\\AI-RPG\\nul'' -Force\")",
       "Bash(powershell -Command \"Remove-Item -LiteralPath ''.\\nul'' -Force\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

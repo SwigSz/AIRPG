@@ -195,8 +195,88 @@
         "type": "heal",
         "amount": 50
       },
+      "usableInCombat": true,
       "stackable": true,
       "value": 20
+    },
+    {
+      "id": "mana_potion",
+      "name": "Mana Potion",
+      "icon": "💙",
+      "description": "Restores 50 mana points when consumed.",
+      "classifications": ["consumable"],
+      "rarity": "common",
+      "effect": {
+        "type": "mana",
+        "amount": 50
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 25
+    },
+    {
+      "id": "greater_health_potion",
+      "name": "Greater Health Potion",
+      "icon": "🧪",
+      "description": "Restores 100 health points when consumed.",
+      "classifications": ["consumable"],
+      "rarity": "uncommon",
+      "effect": {
+        "type": "heal",
+        "amount": 100
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 50
+    },
+    {
+      "id": "greater_mana_potion",
+      "name": "Greater Mana Potion",
+      "icon": "💙",
+      "description": "Restores 100 mana points when consumed.",
+      "classifications": ["consumable"],
+      "rarity": "uncommon",
+      "effect": {
+        "type": "mana",
+        "amount": 100
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 60
+    },
+    {
+      "id": "elixir_of_strength",
+      "name": "Elixir of Strength",
+      "icon": "⚗️",
+      "description": "Temporarily increases attack by 5 for 3 turns.",
+      "classifications": ["consumable"],
+      "rarity": "rare",
+      "effect": {
+        "type": "buff",
+        "stat": "attack",
+        "amount": 5,
+        "duration": 3
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 100
+    },
+    {
+      "id": "elixir_of_defense",
+      "name": "Elixir of Defense",
+      "icon": "⚗️",
+      "description": "Temporarily increases defense by 5 for 3 turns.",
+      "classifications": ["consumable"],
+      "rarity": "rare",
+      "effect": {
+        "type": "buff",
+        "stat": "defense",
+        "amount": 5,
+        "duration": 3
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 100
     }
   ]
 }

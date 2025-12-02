@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.StatsTracker) StatsTracker.init();
 
     // Initialize data systems (load from JSON)
+    if (window.ItemFactory) await ItemFactory.init();
     if (window.EnemyDatabase) await EnemyDatabase.init();
     if (window.AbilityManager) await AbilityManager.init();
     if (window.SkillManager) await SkillManager.init();
@@ -109,6 +110,32 @@ function initializeTestCharacter() {
     placeholderItems.forEach(item => {
         Inventory.addItem(testCharacter.inventory, item);
     });
+
+    // Add starting consumable items
+    if (window.ItemFactory) {
+        // Add health potions
+        for (let i = 0; i < 5; i++) {
+            const healthPotion = ItemFactory.createItem('health_potion');
+            if (healthPotion) Inventory.addItem(testCharacter.inventory, healthPotion);
+        }
+
+        // Add mana potions
+        for (let i = 0; i < 3; i++) {
+            const manaPotion = ItemFactory.createItem('mana_potion');
+            if (manaPotion) Inventory.addItem(testCharacter.inventory, manaPotion);
+        }
+
+        // Add greater health potion
+        const greaterHealthPotion = ItemFactory.createItem('greater_health_potion');
+        if (greaterHealthPotion) Inventory.addItem(testCharacter.inventory, greaterHealthPotion);
+
+        // Add elixirs
+        const strengthElixir = ItemFactory.createItem('elixir_of_strength');
+        if (strengthElixir) Inventory.addItem(testCharacter.inventory, strengthElixir);
+
+        const defenseElixir = ItemFactory.createItem('elixir_of_defense');
+        if (defenseElixir) Inventory.addItem(testCharacter.inventory, defenseElixir);
+    }
 
     // Add crafting test items (individual items that will stack in the UI)
     const stick1 = Items.createItem('Stick', null, {
@@ -392,15 +419,32 @@ function renderItemInSlot(slotElement, item, context, stack = null, equipSlot = 
             ? `${item.name} x${stack.quantity}`
             : item.name;
 
+        // Check if item is consumable
+        const isConsumable = item.classifications && item.classifications.includes('consumable');
+
+        // Build action buttons based on item type
+        let actionButtonsHTML = '';
+        if (isConsumable) {
+            actionButtonsHTML = `
+                <button class="item-action-btn use" data-action="use">Use</button>
+                <button class="item-action-btn toss" data-action="toss">Toss</button>
+                <button class="item-action-btn info" data-action="info">Info</button>
+            `;
+        } else {
+            actionButtonsHTML = `
+                <button class="item-action-btn equip" data-action="equip">Equip</button>
+                <button class="item-action-btn toss" data-action="toss">Toss</button>
+                <button class="item-action-btn info" data-action="info">Info</button>
+            `;
+        }
+
         slotElement.innerHTML = `
             <div class="item-card">
                 <span class="item-icon">${item.icon}</span>
                 <span class="item-name">${displayName}</span>
             </div>
             <div class="item-actions">
-                <button class="item-action-btn equip" data-action="equip">Equip</button>
-                <button class="item-action-btn toss" data-action="toss">Toss</button>
-                <button class="item-action-btn info" data-action="info">Info</button>
+                ${actionButtonsHTML}
             </div>
         `;
 
@@ -429,6 +473,9 @@ function attachItemEventListeners(actionsDiv, item, context, slot = null, stack 
                     break;
                 case 'unequip':
                     unequipItemToInventory(slot);
+                    break;
+                case 'use':
+                    useConsumableItem(item.id);
                     break;
                 case 'toss':
                     discardItem(item.id, context, slot, stack);
@@ -467,6 +514,52 @@ function unequipItemToInventory(slot) {
         // Update UI
         renderInventoryUI();
         renderEquipmentUI();
+
+        // Auto-save
+        SaveSystem.save();
+    }
+}
+
+// Use consumable item from inventory
+function useConsumableItem(itemId) {
+    const character = GameState.getState().character;
+    if (!character) return;
+
+    // Get the item from inventory
+    const item = Inventory.getItem(character.inventory, itemId);
+    if (!item) {
+        console.error('Item not found in inventory');
+        return;
+    }
+
+    // Check if item is consumable
+    if (!window.ConsumableManager || !ConsumableManager.isConsumable(item)) {
+        ActivityLog.addMessage('This item cannot be used.', 'info');
+        return;
+    }
+
+    // Check if we're in combat
+    const combatState = window.CombatManager?.getCombatState();
+    const inCombat = combatState && combatState.isActive;
+
+    // If in combat and item is not usable in combat, prevent usage
+    if (inCombat && !item.usableInCombat) {
+        ActivityLog.addMessage('This item cannot be used in combat.', 'combat');
+        return;
+    }
+
+    // Use the consumable
+    const success = ConsumableManager.useConsumable(character, item, combatState);
+
+    if (success) {
+        // Update UI
+        renderInventoryUI();
+
+        // If in combat, update combat UI
+        if (inCombat && window.CombatManager) {
+            // Note: Consumables used outside of combat turns don't end the turn
+            // If you want them to end the turn, add that logic in CombatManager
+        }
 
         // Auto-save
         SaveSystem.save();
@@ -619,3 +712,59 @@ function initializeSaveLoadControls() {
         });
     }
 }
+
+// ============================================
+// Debug Helper Functions (for testing)
+// ============================================
+
+// Function to give items to the player (accessible via browser console)
+window.giveItem = function(itemId, quantity = 1) {
+    const character = GameState.getState().character;
+    if (!character) {
+        console.error('No character found');
+        return;
+    }
+
+    if (!window.ItemFactory) {
+        console.error('ItemFactory not available');
+        return;
+    }
+
+    for (let i = 0; i < quantity; i++) {
+        const item = ItemFactory.createItem(itemId);
+        if (item) {
+            const success = Inventory.addItem(character.inventory, item);
+            if (!success) {
+                console.error(`Failed to add item ${i + 1}/${quantity} - inventory full`);
+                break;
+            }
+        } else {
+            console.error(`Failed to create item with id: ${itemId}`);
+            return;
+        }
+    }
+
+    console.log(`Added ${quantity}x ${itemId} to inventory`);
+
+    // Update UI
+    if (window.renderInventoryUI) {
+        renderInventoryUI();
+    }
+
+    // Save
+    if (window.SaveSystem) {
+        SaveSystem.save();
+    }
+};
+
+// Function to list all available item IDs
+window.listItems = function() {
+    if (!window.ItemFactory || !window.ItemFactory.getAllItemIds) {
+        console.error('ItemFactory not available or missing getAllItemIds method');
+        return;
+    }
+
+    const itemIds = ItemFactory.getAllItemIds();
+    console.log('Available item IDs:');
+    itemIds.forEach(id => console.log('  - ' + id));
+};

@@ -200,3 +200,72 @@ const Items = (() => {
 })();
 
 window.Items = Items;
+
+// ============================================
+// Item Factory - Loads items from JSON
+// ============================================
+
+const ItemFactory = (() => {
+    let itemDatabase = {};
+
+    async function init() {
+        console.log('ItemFactory: Loading items from items.json...');
+        try {
+            const response = await fetch('data/items.json');
+            const data = await response.json();
+
+            // Store items in a map for quick lookup
+            if (data.items && Array.isArray(data.items)) {
+                data.items.forEach(item => {
+                    itemDatabase[item.id] = item;
+                });
+                console.log(`ItemFactory: Loaded ${data.items.length} items`);
+            } else {
+                console.error('ItemFactory: Invalid items.json format');
+            }
+        } catch (error) {
+            console.error('ItemFactory: Failed to load items.json', error);
+        }
+    }
+
+    function createItem(itemId) {
+        const template = itemDatabase[itemId];
+        if (!template) {
+            console.error(`ItemFactory: Item template not found for id: ${itemId}`);
+            return null;
+        }
+
+        // Create a new item instance from the template
+        // Each item gets a unique ID for inventory tracking
+        return {
+            ...JSON.parse(JSON.stringify(template)), // Deep clone
+            id: generateItemId(itemId)
+        };
+    }
+
+    function generateItemId(baseId) {
+        return baseId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function getItemTemplate(itemId) {
+        return itemDatabase[itemId] || null;
+    }
+
+    function getAllItemIds() {
+        return Object.keys(itemDatabase);
+    }
+
+    function getAllItems() {
+        return Object.values(itemDatabase);
+    }
+
+    return {
+        init,
+        createItem,
+        getItemTemplate,
+        getAllItemIds,
+        getAllItems
+    };
+})();
+
+window.ItemFactory = ItemFactory;
