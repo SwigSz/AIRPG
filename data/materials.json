@@ -1,0 +1,59 @@
+{
+  "materials": [
+    {
+      "id": "stick",
+      "name": "Stick",
+      "icon": "🪵",
+      "description": "A simple wooden stick.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 1,
+      "sources": ["tree", "bush"]
+    },
+    {
+      "id": "rock",
+      "name": "Rock",
+      "icon": "🪨",
+      "description": "A sturdy rock.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 1,
+      "sources": ["stone_node", "cave"]
+    },
+    {
+      "id": "fiber",
+      "name": "Fiber",
+      "icon": "🌾",
+      "description": "Plant fibers used for crafting.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 1,
+      "sources": ["grass", "hemp_plant"]
+    },
+    {
+      "id": "leather",
+      "name": "Leather",
+      "icon": "🦴",
+      "description": "Tanned animal hide.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 5,
+      "sources": ["animal_loot", "crafted"]
+    },
+    {
+      "id": "iron_ore",
+      "name": "Iron Ore",
+      "icon": "⛏️",
+      "description": "Raw iron ore to be smelted.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "uncommon",
+      "value": 10,
+      "sources": ["iron_vein", "mine"]
+    }
+  ]
+}

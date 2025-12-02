@@ -1,0 +1,83 @@
+/* ============================================
+   Hover Tooltip Styles
+   ============================================ */
+
+.hover-tooltip {
+    position: fixed;
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f1f3a 100%);
+    border: 2px solid #4a90e2;
+    border-radius: 8px;
+    padding: 15px;
+    min-width: 250px;
+    max-width: 350px;
+    z-index: 10001;
+    pointer-events: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #334155;
+}
+
+.tooltip-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.tooltip-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #4a90e2;
+}
+
+.tooltip-description {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.tooltip-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.tooltip-detail {
+    font-size: 13px;
+    color: #94a3b8;
+    display: flex;
+    justify-content: space-between;
+}
+
+.detail-value {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.tooltip-unlock {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #334155;
+    font-size: 12px;
+    color: #fbbf24;
+    font-style: italic;
+}

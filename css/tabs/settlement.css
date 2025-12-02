@@ -1,95 +1,517 @@
 /* ============================================
    SETTLEMENT TAB
+   Dark theme matching game's color scheme
    ============================================ */
+
+/* Tab Container */
 #settlement-tab {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 0;
+    height: 100%;
+    padding: 0;
 }
 
-.settlement-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-}
-
-.stat-box {
+/* ============================================
+   SETTLEMENT HEADER BAR
+   ============================================ */
+.settlement-header-bar {
     background-color: #1e293b;
     border: 1px solid #334155;
     border-radius: 8px;
-    padding: 1.5rem;
-    text-align: center;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.stat-box-label {
-    font-size: 0.9rem;
-    color: #94a3b8;
-    margin-bottom: 0.5rem;
-}
-
-.stat-box-value {
-    font-size: 2rem;
+.settlement-civ-name {
+    font-size: 1.4rem;
     font-weight: 700;
     color: #f59e0b;
 }
 
-.task-allocation {
-    background-color: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.tasks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-.task-card {
-    background-color: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 1rem;
+.settlement-header-stats {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    gap: 2rem;
 }
 
-.task-name {
-    font-weight: 600;
+.settlement-header-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: #cbd5e1;
 }
 
-.task-slider {
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: #334155;
-    outline: none;
-    -webkit-appearance: none;
+.settlement-header-stat .stat-icon {
+    font-size: 1.2rem;
 }
 
-.task-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #f59e0b;
-    cursor: pointer;
+.settlement-header-stat .stat-label {
+    font-size: 0.9rem;
+    color: #94a3b8;
 }
 
-.task-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #f59e0b;
-    cursor: pointer;
+.settlement-header-stat .stat-value {
+    font-weight: 700;
+    color: #e2e8f0;
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   SETTLEMENT TOP NAVIGATION TABS
+   ============================================ */
+.settlement-nav-tabs {
+    display: flex;
+    gap: 0;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+}
+
+.settlement-nav-tab {
+    flex: 1;
+    background-color: #1e293b;
     border: none;
+    border-right: 1px solid #0f172a;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
-.task-workers {
+.settlement-nav-tab:last-child {
+    border-right: none;
+}
+
+.settlement-nav-tab:hover {
+    background-color: #334155;
+    color: #f59e0b;
+}
+
+.settlement-nav-tab.active {
+    background-color: #f59e0b;
+    color: #0f172a;
+    box-shadow: inset 0 -3px 0 #d97706;
+}
+
+.settlement-nav-tab .tab-icon {
+    font-size: 1.1rem;
+}
+
+.settlement-nav-tab .tab-label {
+    font-weight: 600;
+}
+
+/* ============================================
+   SETTLEMENT MAIN LAYOUT (Content + Resources Panel)
+   ============================================ */
+.settlement-main-layout {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+    overflow: hidden;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+}
+
+/* Left Content Area */
+.settlement-content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background-color: #0f172a;
+}
+
+/* Custom scrollbar for content area */
+.settlement-content-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.settlement-content-area::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.settlement-content-area::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+.settlement-content-area::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Hide inactive settlement tab content */
+.settlement-tab-content {
+    display: none;
+}
+
+.settlement-tab-content.active {
+    display: block;
+}
+
+/* Placeholder text */
+.placeholder-text {
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* ============================================
+   RIGHT PANEL - RESOURCES
+   ============================================ */
+.settlement-resources-panel {
+    width: 320px;
+    background-color: #1e293b;
+    border-left: 2px solid #334155;
+    border-top: 2px solid #334155;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+/* Hide resources panel when research tab is active */
+.settlement-main-layout:has(#settlement-research-content.active) .settlement-resources-panel {
+    display: none;
+}
+
+.settlement-resources-panel h3 {
+    color: #f59e0b;
+    font-size: 1.2rem;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #334155;
+    text-align: center;
+}
+
+/* Resource Categories */
+.resource-category {
+    margin-bottom: 1.5rem;
+}
+
+.resource-category-header {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background-color: #0f172a;
+    border-left: 3px solid #f59e0b;
+}
+
+/* Resource Items */
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.resource-icon {
+    font-size: 1.5rem;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.resource-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.resource-name {
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.resource-amount {
     font-size: 0.85rem;
     color: #94a3b8;
+}
+
+.resource-amount .current {
+    color: #e0e7ff;
+    font-weight: 600;
+}
+
+.resource-amount .max {
+    color: #64748b;
+}
+
+.resource-production {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.resource-production.positive {
+    color: #34d399;
+}
+
+.resource-production.negative {
+    color: #f87171;
+}
+
+.resource-production.stable {
+    color: #fbbf24;
+}
+
+/* Custom scrollbar for resources panel */
+.settlement-resources-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settlement-resources-panel::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+.settlement-resources-panel::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+}
+
+.settlement-resources-panel::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* ============================================
+   TOOLTIPS
+   ============================================ */
+.tooltip {
+    position: absolute;
+    background-color: #1e293b;
+    border: 2px solid #f59e0b;
+    border-radius: 6px;
+    padding: 0.75rem;
+    max-width: 250px;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.tooltip-title {
+    font-weight: 700;
+    color: #f59e0b;
+    margin-bottom: 0.5rem;
+}
+
+.tooltip-description {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    margin-bottom: 0.5rem;
+}
+
+.tooltip-stats {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+@media (max-width: 1600px) {
+    .settlement-resources-panel {
+        width: 280px;
+    }
+}
+
+@media (max-width: 1280px) {
+    .settlement-resources-panel {
+        width: 240px;
+        padding: 1rem;
+    }
+
+    .resource-icon {
+        font-size: 1.2rem;
+    }
+
+    .resource-name {
+        font-size: 0.85rem;
+    }
+}
+
+/* ============================================
+   PLACEHOLDER SECTIONS (Future Tabs)
+   ============================================ */
+.buildings-management,
+.population-management,
+.trade-routes,
+.territory-map {
+    padding: 1rem;
+}
+
+/* ============================================
+   RESEARCH TREE
+   ============================================ */
+.research-tree-container {
+    overflow: auto;
+    max-height: calc(100vh - 250px);
+    padding: 1rem;
+}
+
+/* Custom scrollbar styling for research tree */
+.research-tree-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.research-tree-container::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 6px;
+    border: 1px solid #1e293b;
+}
+
+.research-tree-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 6px;
+    border: 1px solid #1d4ed8;
+}
+
+.research-tree-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.research-tree-container::-webkit-scrollbar-corner {
+    background: #0f172a;
+}
+
+/* Firefox scrollbar styling */
+.research-tree-container {
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #0f172a;
+}
+
+#research-tree-canvas {
+    display: block;
+}
+
+/* ============================================
+   BUILDING SECTIONS
+   ============================================ */
+.building-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    color: #fbbf24;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    padding: 0.5rem 0.75rem;
+    background-color: rgba(251, 191, 36, 0.1);
+    border-left: 3px solid #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.building-card {
+    background-color: #334155;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: default;
+    position: relative;
+}
+
+.building-card:hover {
+    background-color: #3f4c63;
+    border-color: #64748b;
+}
+
+.building-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.building-icon {
+    font-size: 2rem;
+    min-width: 2rem;
+}
+
+.building-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.building-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    line-height: 1.2;
+}
+
+.building-count-display {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.building-count {
+    font-weight: 700;
+    color: #fbbf24;
+}
+
+.building-build-btn {
+    background-color: #fbbf24;
+    color: #1e293b;
+    border: none;
+    border-radius: 3px;
+    padding: 0.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.building-build-btn:hover {
+    background-color: #f59e0b;
+}
+
+.building-build-btn:active {
+    transform: scale(0.98);
+}
+
+/* Settlement-specific tooltip */
+.settlement-tooltip {
+    position: absolute;
+    background-color: #1e293b;
+    border: 2px solid #f59e0b;
+    border-radius: 6px;
+    padding: 0.75rem;
+    max-width: 250px;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }

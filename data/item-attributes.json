@@ -1,0 +1,133 @@
+{
+  "classifications": [
+    {
+      "id": "weapon",
+      "name": "Weapon",
+      "description": "Can be used in combat to deal damage"
+    },
+    {
+      "id": "tool",
+      "name": "Tool",
+      "description": "Can be used for gathering resources or crafting"
+    },
+    {
+      "id": "armor",
+      "name": "Armor",
+      "description": "Provides defensive protection when equipped"
+    },
+    {
+      "id": "accessory",
+      "name": "Accessory",
+      "description": "Provides stat bonuses or special effects"
+    },
+    {
+      "id": "consumable",
+      "name": "Consumable",
+      "description": "Single-use item that provides temporary or permanent effects"
+    },
+    {
+      "id": "material",
+      "name": "Material",
+      "description": "Used as ingredients in crafting recipes"
+    },
+    {
+      "id": "quest",
+      "name": "Quest Item",
+      "description": "Required for quest completion"
+    },
+    {
+      "id": "one-handed",
+      "name": "One-Handed",
+      "description": "Can be equipped in one hand, allowing dual-wielding or use with a shield"
+    },
+    {
+      "id": "two-handed",
+      "name": "Two-Handed",
+      "description": "Requires both hands to equip, preventing use of off-hand items"
+    }
+  ],
+  "slots": [
+    {
+      "id": "head",
+      "name": "Head",
+      "description": "Equipment worn on the head"
+    },
+    {
+      "id": "neck",
+      "name": "Neck",
+      "description": "Equipment worn around the neck"
+    },
+    {
+      "id": "chest",
+      "name": "Chest",
+      "description": "Equipment worn on the torso"
+    },
+    {
+      "id": "hands",
+      "name": "Hands",
+      "description": "Equipment worn on the hands"
+    },
+    {
+      "id": "legs",
+      "name": "Legs",
+      "description": "Equipment worn on the legs"
+    },
+    {
+      "id": "feet",
+      "name": "Feet",
+      "description": "Equipment worn on the feet"
+    },
+    {
+      "id": "main_hand",
+      "name": "Main Hand",
+      "description": "Equipment held in the primary hand"
+    },
+    {
+      "id": "off_hand",
+      "name": "Off Hand",
+      "description": "Equipment held in the secondary hand"
+    },
+    {
+      "id": "ring1",
+      "name": "Ring 1",
+      "description": "First ring slot"
+    },
+    {
+      "id": "ring2",
+      "name": "Ring 2",
+      "description": "Second ring slot"
+    },
+    {
+      "id": "cloak",
+      "name": "Cloak",
+      "description": "Equipment worn over armor"
+    }
+  ],
+  "rarity": [
+    {
+      "id": "common",
+      "name": "Common",
+      "color": "#FFFFFF"
+    },
+    {
+      "id": "uncommon",
+      "name": "Uncommon",
+      "color": "#1EFF00"
+    },
+    {
+      "id": "rare",
+      "name": "Rare",
+      "color": "#0070DD"
+    },
+    {
+      "id": "epic",
+      "name": "Epic",
+      "color": "#A335EE"
+    },
+    {
+      "id": "legendary",
+      "name": "Legendary",
+      "color": "#FF8000"
+    }
+  ]
+}

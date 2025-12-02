@@ -1,3 +1,56 @@
 {
-  "spells": []
+  "spells": [
+    {
+      "id": "fireball",
+      "name": "Fireball",
+      "icon": "🔥",
+      "description": "Launch a blazing ball of fire at your enemy.",
+      "school": "evocation",
+      "tier": 1,
+      "manaCost": 25,
+      "castTime": 2,
+      "cooldown": 0,
+      "damage": {
+        "type": "fire",
+        "base": 30,
+        "scaling": "intelligence",
+        "multiplier": 1.2
+      },
+      "range": 15,
+      "areaOfEffect": {
+        "radius": 3,
+        "shape": "circle"
+      },
+      "unlockRequirements": {
+        "level": 3,
+        "skills": {
+          "magic": 10
+        }
+      }
+    },
+    {
+      "id": "healing_light",
+      "name": "Healing Light",
+      "icon": "✨",
+      "description": "Channel divine energy to restore health to an ally.",
+      "school": "restoration",
+      "tier": 1,
+      "manaCost": 20,
+      "castTime": 1.5,
+      "cooldown": 3,
+      "healing": {
+        "base": 40,
+        "scaling": "wisdom",
+        "multiplier": 1.5
+      },
+      "range": 10,
+      "target": "single",
+      "unlockRequirements": {
+        "level": 2,
+        "skills": {
+          "magic": 5
+        }
+      }
+    }
+  ]
 }

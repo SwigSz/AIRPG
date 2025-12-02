@@ -1,3 +1,282 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "iron_helm",
+      "name": "Iron Helm",
+      "icon": "⛑️",
+      "description": "A sturdy iron helmet that provides basic head protection.",
+      "classifications": ["armor", "head"],
+      "rarity": "common",
+      "stats": {
+        "defense": 5,
+        "weight": 3
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 30
+    },
+    {
+      "id": "silver_amulet",
+      "name": "Silver Amulet",
+      "icon": "📿",
+      "description": "A mystical amulet that enhances magical abilities.",
+      "classifications": ["accessory", "neck"],
+      "rarity": "uncommon",
+      "stats": {
+        "magic": 3,
+        "charisma": 2
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 75
+    },
+    {
+      "id": "leather_armor",
+      "name": "Leather Armor",
+      "icon": "🦺",
+      "description": "Well-crafted leather armor offering good protection.",
+      "classifications": ["armor", "chest"],
+      "rarity": "common",
+      "stats": {
+        "defense": 10,
+        "weight": 8
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 60
+    },
+    {
+      "id": "cloth_gloves",
+      "name": "Cloth Gloves",
+      "icon": "🧤",
+      "description": "Light gloves that allow nimble finger movements.",
+      "classifications": ["armor", "hands"],
+      "rarity": "common",
+      "stats": {
+        "dexterity": 2,
+        "weight": 1
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 15
+    },
+    {
+      "id": "chain_leggings",
+      "name": "Chain Leggings",
+      "icon": "👖",
+      "description": "Chainmail leggings providing solid leg protection.",
+      "classifications": ["armor", "legs"],
+      "rarity": "common",
+      "stats": {
+        "defense": 7,
+        "weight": 5
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 45
+    },
+    {
+      "id": "leather_boots",
+      "name": "Leather Boots",
+      "icon": "🥾",
+      "description": "Comfortable boots suitable for long journeys.",
+      "classifications": ["armor", "feet"],
+      "rarity": "common",
+      "stats": {
+        "defense": 3,
+        "speed": 1
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 25
+    },
+    {
+      "id": "iron_sword",
+      "name": "Iron Sword",
+      "icon": "⚔️",
+      "description": "A well-balanced iron sword with a sharp edge.",
+      "classifications": ["weapon", "one-handed"],
+      "rarity": "common",
+      "stats": {
+        "damage": 15,
+        "weight": 4
+      },
+      "requirements": {
+        "strength": 8,
+        "level": 1
+      },
+      "stackable": false,
+      "value": 50
+    },
+    {
+      "id": "greatsword",
+      "name": "Greatsword",
+      "icon": "⚔️",
+      "description": "A massive two-handed sword that deals devastating damage.",
+      "classifications": ["weapon", "two-handed"],
+      "rarity": "uncommon",
+      "stats": {
+        "damage": 30,
+        "weight": 12
+      },
+      "requirements": {
+        "strength": 12,
+        "level": 3
+      },
+      "stackable": false,
+      "value": 120
+    },
+    {
+      "id": "wooden_shield",
+      "name": "Wooden Shield",
+      "icon": "🛡️",
+      "description": "A sturdy wooden shield reinforced with metal bands.",
+      "classifications": ["armor", "off_hand", "one-handed"],
+      "rarity": "common",
+      "stats": {
+        "defense": 8,
+        "weight": 6
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 35
+    },
+    {
+      "id": "gold_ring",
+      "name": "Gold Ring",
+      "icon": "💍",
+      "description": "A beautiful gold ring with intricate engravings.",
+      "classifications": ["accessory", "ring"],
+      "rarity": "uncommon",
+      "stats": {
+        "charisma": 3
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 100
+    },
+    {
+      "id": "ruby_ring",
+      "name": "Ruby Ring",
+      "icon": "💍",
+      "description": "A ring with a gleaming ruby that radiates power.",
+      "classifications": ["accessory", "ring"],
+      "rarity": "rare",
+      "stats": {
+        "strength": 2
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 150
+    },
+    {
+      "id": "travelers_cloak",
+      "name": "Traveler's Cloak",
+      "icon": "🧥",
+      "description": "A hooded cloak perfect for traveling incognito.",
+      "classifications": ["armor", "cloak"],
+      "rarity": "common",
+      "stats": {
+        "defense": 2,
+        "stealth": 3
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 40
+    },
+    {
+      "id": "health_potion",
+      "name": "Health Potion",
+      "icon": "🧪",
+      "description": "Restores 50 health points when consumed.",
+      "classifications": ["consumable"],
+      "rarity": "common",
+      "effect": {
+        "type": "heal",
+        "amount": 50
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 20
+    },
+    {
+      "id": "mana_potion",
+      "name": "Mana Potion",
+      "icon": "💙",
+      "description": "Restores 50 mana points when consumed.",
+      "classifications": ["consumable"],
+      "rarity": "common",
+      "effect": {
+        "type": "mana",
+        "amount": 50
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 25
+    },
+    {
+      "id": "greater_health_potion",
+      "name": "Greater Health Potion",
+      "icon": "🧪",
+      "description": "Restores 100 health points when consumed.",
+      "classifications": ["consumable"],
+      "rarity": "uncommon",
+      "effect": {
+        "type": "heal",
+        "amount": 100
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 50
+    },
+    {
+      "id": "greater_mana_potion",
+      "name": "Greater Mana Potion",
+      "icon": "💙",
+      "description": "Restores 100 mana points when consumed.",
+      "classifications": ["consumable"],
+      "rarity": "uncommon",
+      "effect": {
+        "type": "mana",
+        "amount": 100
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 60
+    },
+    {
+      "id": "elixir_of_strength",
+      "name": "Elixir of Strength",
+      "icon": "⚗️",
+      "description": "Temporarily increases attack by 5 for 3 turns.",
+      "classifications": ["consumable"],
+      "rarity": "rare",
+      "effect": {
+        "type": "buff",
+        "stat": "attack",
+        "amount": 5,
+        "duration": 3
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 100
+    },
+    {
+      "id": "elixir_of_defense",
+      "name": "Elixir of Defense",
+      "icon": "⚗️",
+      "description": "Temporarily increases defense by 5 for 3 turns.",
+      "classifications": ["consumable"],
+      "rarity": "rare",
+      "effect": {
+        "type": "buff",
+        "stat": "defense",
+        "amount": 5,
+        "duration": 3
+      },
+      "usableInCombat": true,
+      "stackable": true,
+      "value": 100
+    }
+  ]
 }

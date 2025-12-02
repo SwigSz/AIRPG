@@ -5,7 +5,20 @@
       "Bash(if not exist assets mkdir assets)",
       "Bash(if not exist css mkdir css)",
       "Bash(if not exist js mkdir js)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(if exist index.html echo \"Ready to test\")",
+      "Bash(start index.html)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "Bash(start debug-save.html)",
+      "Bash(if exist debug-save.html echo \"Debug file exists\")",
+      "Bash(nul)",
+      "Bash(del \"\\?\\c:\\Users\\maufo\\AI-RPG\\nul\")",
+      "Bash(powershell -Command \"Remove-Item -Path ''\\?\\c:\\Users\\maufo\\AI-RPG\\nul'' -Force\")",
+      "Bash(powershell -Command \"Remove-Item -LiteralPath ''\\?\\C:\\Users\\maufo\\AI-RPG\\nul'' -Force\")",
+      "Bash(powershell -Command \"Remove-Item -LiteralPath ''.\\nul'' -Force\")",
+      "Bash(git add:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

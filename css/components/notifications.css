@@ -1,0 +1,97 @@
+/* ============================================
+   Notification System Styles
+   ============================================ */
+
+.notification-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.notification {
+    background: linear-gradient(135deg, #2a3f5f 0%, #1a2332 100%);
+    border: 2px solid #4a90e2;
+    border-radius: 8px;
+    padding: 15px 20px;
+    min-width: 300px;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s ease-out;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification.hide {
+    opacity: 0;
+    transform: translateX(400px);
+}
+
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.notification-icon {
+    font-size: 48px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.notification-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.notification-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffd700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.notification-message {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.notification-description {
+    font-size: 13px;
+    color: #aaaaaa;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+/* Ability-specific styles */
+.ability-notification {
+    border-color: #e24a4a;
+    background: linear-gradient(135deg, #5f2a2a 0%, #331a1a 100%);
+}
+
+.ability-notification .notification-title {
+    color: #ff6b6b;
+}
+
+/* Skill-specific styles */
+.skill-notification {
+    border-color: #4ae24a;
+    background: linear-gradient(135deg, #2a5f2a 0%, #1a331a 100%);
+}
+
+.skill-notification .notification-title {
+    color: #6bff6b;
+}

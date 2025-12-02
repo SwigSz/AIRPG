@@ -1,3 +1,32 @@
 {
-  "recipes": []
+  "recipes": [
+    {
+      "id": "stone_axe",
+      "name": "Stone Axe",
+      "icon": "🪓",
+      "category": "tools",
+      "unlockRequirements": {
+        "level": 1,
+        "skills": []
+      },
+      "inputs": [
+        { "itemId": "stick", "name": "Stick", "count": 1 },
+        { "itemId": "rock", "name": "Rock", "count": 1 }
+      ],
+      "output": {
+        "itemId": "stone_axe",
+        "name": "Stone Axe",
+        "icon": "🪓",
+        "classifications": ["weapon", "tool", "one-handed"],
+        "description": "A crude axe made from a stick and a rock. Can be used to chop trees or as a weapon.",
+        "stats": {
+          "damage": 8,
+          "durability": 50,
+          "woodcutting": 2
+        }
+      },
+      "craftingTime": 5,
+      "xpReward": 10
+    }
+  ]
 }

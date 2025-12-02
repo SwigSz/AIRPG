@@ -40,6 +40,9 @@ temp/
 Thumbs.db
 desktop.ini
 
+# Windows reserved names
+nul
+
 # Testing
 coverage/
 .nyc_output/

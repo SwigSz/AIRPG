@@ -1,3 +1,26 @@
 {
-  "upgrades": []
+  "upgrades": [
+    {
+      "id": "wooden_wall",
+      "name": "Wooden Wall",
+      "icon": "🪵",
+      "description": "A basic wooden palisade to protect the settlement from attacks.",
+      "category": "defense",
+      "unlockRequirements": {
+        "population": 10,
+        "completedUpgrades": [],
+        "resources": {
+          "wood": 500,
+          "stone": 100
+        }
+      },
+      "buildTime": 7200,
+      "effects": {
+        "defense": 20,
+        "morale": 5
+      },
+      "obtained": false,
+      "tier": 1
+    }
+  ]
 }

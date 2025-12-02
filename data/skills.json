@@ -1,3 +1,16 @@
 {
-  "skills": []
+  "skills": [
+    {
+      "id": "crafting",
+      "name": "Crafting",
+      "icon": "🔨",
+      "description": "Basic crafting knowledge. Earned upon crafting your first item.",
+      "category": "crafting",
+      "xpReward": 100,
+      "unlockConditions": "itemsCrafted>=1",
+      "effects": {
+        "description": "Unlocks the ability to craft items"
+      }
+    }
+  ]
 }

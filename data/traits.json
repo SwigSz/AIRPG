@@ -1,3 +1,46 @@
 {
-  "traits": []
+  "traits": [
+    {
+      "id": "strong",
+      "name": "Strong",
+      "icon": "💪",
+      "description": "Born with exceptional physical strength.",
+      "type": "positive",
+      "rarity": "common",
+      "effects": {
+        "strength": 2,
+        "carryWeight": 20
+      },
+      "conflicts": ["weak"],
+      "acquireMethod": "character_creation"
+    },
+    {
+      "id": "quick_learner",
+      "name": "Quick Learner",
+      "icon": "📚",
+      "description": "Learns skills faster than others.",
+      "type": "positive",
+      "rarity": "uncommon",
+      "effects": {
+        "xpGain": 1.15,
+        "skillXpGain": 1.2
+      },
+      "conflicts": ["slow_learner"],
+      "acquireMethod": "character_creation"
+    },
+    {
+      "id": "frail",
+      "name": "Frail",
+      "icon": "🤕",
+      "description": "Susceptible to injury and illness.",
+      "type": "negative",
+      "rarity": "common",
+      "effects": {
+        "constitution": -2,
+        "maxHealth": -15
+      },
+      "conflicts": ["hardy"],
+      "acquireMethod": "character_creation"
+    }
+  ]
 }

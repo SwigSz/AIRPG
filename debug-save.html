@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Save Data</title>
+</head>
+<body>
+    <h1>LocalStorage Debug</h1>
+    <button onclick="showSave()">Show Save Data</button>
+    <button onclick="clearSave()">Clear Save Data</button>
+    <pre id="output"></pre>
+
+    <script>
+        function showSave() {
+            const saveData = localStorage.getItem('ai_rpg_save');
+            const output = document.getElementById('output');
+            if (saveData) {
+                const parsed = JSON.parse(saveData);
+                output.textContent = JSON.stringify(parsed, null, 2);
+            } else {
+                output.textContent = 'No save data found';
+            }
+        }
+
+        function clearSave() {
+            localStorage.removeItem('ai_rpg_save');
+            document.getElementById('output').textContent = 'Save data cleared';
+        }
+
+        // Auto-show on load
+        showSave();
+    </script>
+</body>
+</html>

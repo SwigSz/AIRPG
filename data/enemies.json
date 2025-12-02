@@ -1,3 +1,76 @@
 {
-  "enemies": []
+  "enemies": [
+    {
+      "id": "test_dummy",
+      "name": "Test Dummy",
+      "icon": "🎯",
+      "description": "A training dummy. It doesn't fight back.",
+      "level": 1,
+      "kind": "construct",
+      "stats": {
+        "hp": 50,
+        "maxHp": 50,
+        "defense": 3
+      },
+      "attack": {
+        "name": "bump",
+        "kind": "blunt",
+        "damage": "1~2"
+      },
+      "abilities": [],
+      "loot": [
+        {
+          "itemId": "stick",
+          "chance": 0.3,
+          "quantity": { "min": 1, "max": 2 }
+        },
+        {
+          "itemId": "fiber",
+          "chance": 0.3,
+          "quantity": { "min": 1, "max": 1 }
+        }
+      ],
+      "xpReward": 10,
+      "biomes": []
+    },
+    {
+      "id": "goblin",
+      "name": "Goblin",
+      "icon": "👺",
+      "description": "A small, mischievous creature that attacks travelers.",
+      "level": 1,
+      "kind": "goblinoid",
+      "stats": {
+        "hp": 30,
+        "maxHp": 30,
+        "defense": 2,
+        "strength": 5,
+        "dexterity": 8,
+        "constitution": 4,
+        "intelligence": 3,
+        "wisdom": 2,
+        "charisma": 1
+      },
+      "attack": {
+        "name": "rusty dagger",
+        "kind": "pierce",
+        "damage": "2~5"
+      },
+      "abilities": ["basic_attack"],
+      "loot": [
+        {
+          "itemId": "goblin_ear",
+          "chance": 0.5,
+          "quantity": { "min": 1, "max": 2 }
+        },
+        {
+          "itemId": "copper_coin",
+          "chance": 0.8,
+          "quantity": { "min": 1, "max": 5 }
+        }
+      ],
+      "xpReward": 25,
+      "biomes": ["forest", "plains"]
+    }
+  ]
 }

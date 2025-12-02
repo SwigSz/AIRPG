@@ -1,0 +1,19 @@
+{
+  "abilities": [
+    {
+      "id": "power_strike",
+      "name": "Power Strike",
+      "icon": "💥",
+      "description": "A powerful strike that deals extra damage.",
+      "type": "physical",
+      "cooldown": 2,
+      "manaCost": 10,
+      "damage": {
+        "base": 5,
+        "scaling": "strength",
+        "multiplier": 1.5
+      },
+      "unlockConditions": "enemiesKilled>=1"
+    }
+  ]
+}

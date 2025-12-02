@@ -96,6 +96,10 @@
     background: linear-gradient(90deg, #2563eb, #3b82f6);
 }
 
+.xp-bar {
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
 /* World Info Section */
 #world-info {
     min-width: 200px;
@@ -117,4 +121,39 @@
 .population {
     color: #94a3b8;
     font-size: 0.85rem;
+}
+
+/* Save Controls Section */
+#save-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.save-control-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 2px solid #f59e0b;
+    background-color: #334155;
+    color: #f59e0b;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.save-control-btn:hover {
+    background-color: #f59e0b;
+    color: #1e293b;
+    transform: translateY(-2px);
+}
+
+.save-control-btn.danger {
+    border-color: #dc2626;
+    color: #dc2626;
+}
+
+.save-control-btn.danger:hover {
+    background-color: #dc2626;
+    color: #ffffff;
 }

@@ -12,11 +12,12 @@ const GameState = (() => {
         world: null,
         inventory: null,
         quests: [],
-        achievements: []
+        achievements: [],
+        combat: null,
+        craftingHistory: []
     };
 
     function init() {
-        console.log('GameState: Initializing...');
         state.initialized = true;
         return state;
     }
@@ -26,7 +27,8 @@ const GameState = (() => {
     }
 
     function setState(newState) {
-        state = { ...state, ...newState };
+        // Directly replace the entire state object
+        state = newState;
     }
 
     function updateProperty(key, value) {
@@ -51,8 +53,19 @@ const GameState = (() => {
             world: null,
             inventory: null,
             quests: [],
-            achievements: []
+            achievements: [],
+            combat: null,
+            craftingHistory: []
         };
+    }
+
+    function addToCraftingHistory(itemName) {
+        if (!state.craftingHistory) {
+            state.craftingHistory = [];
+        }
+        if (!state.craftingHistory.includes(itemName)) {
+            state.craftingHistory.push(itemName);
+        }
     }
 
     return {
@@ -62,7 +75,8 @@ const GameState = (() => {
         updateProperty,
         pause,
         resume,
-        reset
+        reset,
+        addToCraftingHistory
     };
 })();
 
