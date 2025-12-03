@@ -111,7 +111,7 @@ const Items = (() => {
         },
         off_hand: {
             name: 'Wooden Shield',
-            classifications: ['armor', 'off_hand', 'one-handed'],
+            classifications: ['off_hand', 'one-handed', 'shield'],
             stats: { defense: 8, weight: 6 },
             description: 'A sturdy wooden shield reinforced with metal bands.',
             icon: '🛡️'

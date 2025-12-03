@@ -131,7 +131,7 @@
       "name": "Wooden Shield",
       "icon": "🛡️",
       "description": "A sturdy wooden shield reinforced with metal bands.",
-      "classifications": ["armor", "off_hand", "one-handed"],
+      "classifications": ["off_hand", "one-handed", "shield"],
       "rarity": "common",
       "stats": {
         "defense": 8,

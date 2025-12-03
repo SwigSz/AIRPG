@@ -59,6 +59,11 @@
       "id": "magic",
       "name": "Magic",
       "description": "Weapons that channel magical energy to attack"
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "description": "Defensive equipment that blocks incoming attacks"
     }
   ],
   "slots": [

@@ -298,6 +298,104 @@ function getAdditionalBonuses(character, damageType) {
 
 ---
 
+## Item Classification System
+
+### Overview
+The game uses a flexible, data-driven classification system where items can have multiple classifications. Classifications are defined in `data/attributes.json` and applied to items in `data/items.json`.
+
+### Key Principles
+
+1. **Multiple Classifications**: Items can have multiple classifications (e.g., `["weapon", "one-handed", "melee"]`)
+2. **Data-Driven**: All classifications are defined in attributes.json - no hardcoding in JavaScript
+3. **Modular**: Adding new classifications requires NO code changes, only data updates
+4. **Extensible**: Future systems can check for any classification to apply game logic
+
+### Classification Types
+
+#### Primary Types
+- `weapon` - Can deal damage in combat
+- `armor` - Provides defense
+- `accessory` - Jewelry and trinkets
+- `consumable` - Single-use items
+- `material` - Crafting ingredients
+- `tool` - Used for gathering resources
+- `quest` - Quest-specific items
+
+#### Hand Slot Types
+- `one-handed` - Can be equipped in one hand
+- `two-handed` - Requires both hands
+
+#### Weapon Damage Types
+- `melee` - Close-range physical weapons
+- `ranged` - Distance weapons (bows, crossbows)
+- `magic` - Magical weapons (wands, staves)
+
+#### Special Types
+- `shield` - Defensive off-hand equipment (NOT armor)
+
+### Adding New Classifications
+
+**Step 1: Define in attributes.json**
+```json
+{
+  "id": "new_classification",
+  "name": "Display Name",
+  "description": "What this classification means"
+}
+```
+
+**Step 2: Apply to Items**
+```json
+{
+  "id": "item_id",
+  "classifications": ["weapon", "two-handed", "new_classification"]
+}
+```
+
+**Step 3: (Optional) Add Game Logic**
+If the classification should DO something:
+- Add logic to relevant systems (combat, inventory, etc.)
+- Use `item.classifications.includes('new_classification')` to check
+
+### Important Rules
+
+**✅ DO:**
+- Add classifications to both attributes.json AND items.json
+- Use multiple classifications to describe items fully
+- Keep classifications semantic and descriptive
+- Update placeholder items in item-factory.js when changing classifications
+
+**❌ DO NOT:**
+- Hardcode classification checks without defining in attributes.json
+- Use classifications as booleans (they are tags, not flags)
+- Forget to update both items.json and item-factory.js placeholders
+- Mix classification purposes (damage types vs item types)
+
+### Weapon Type System Integration
+
+Weapon damage types (melee/ranged/magic) integrate with the DamageCalculator:
+
+1. Weapon has damage type in classifications: `["weapon", "one-handed", "melee"]`
+2. DamageCalculator detects the damage type
+3. Applies appropriate attribute multiplier (STR for melee, DEX for ranged, INT for magic)
+4. Returns final calculated damage
+
+**Without damage type classification**: Weapon deals base damage only (no multipliers)
+
+### Example: Shield Classification
+
+Shields demonstrate the flexibility of the system:
+- **Before**: `["armor", "off_hand", "one-handed"]`
+- **After**: `["off_hand", "one-handed", "shield"]`
+- **Reason**: Shields are not armor; they're defensive equipment with unique mechanics
+
+Future implementation could add:
+- Block chance based on shield classification
+- Shield-specific skills
+- Shield bash abilities
+
+---
+
 ## Notes
 - This file will be appended with additional reminders and guidelines as development progresses
 - Always maintain backward compatibility when updating JSON structures
