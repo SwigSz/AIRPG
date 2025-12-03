@@ -1,5 +1,73 @@
 # Claude's Development Notes & Reminders
 
+## Quick Reference: File Locations
+
+When you need to edit specific functionality, look in these locations:
+
+### Core Systems
+- **Main entry point**: `js/main.js` - Game initialization, character creation, main game loop
+- **Character data**: `js/character/character.js` - Character object creation and management
+- **Character stats**: `js/character/stats.js` - Stat calculations and derived attributes
+- **Combat stats**: `js/character/combat-stats.js` - Combat-specific stat calculations
+- **Game state**: `js/core/game-state.js` - Global game state management
+- **Save system**: `js/core/save-system.js` - Save/load functionality
+
+### Inventory & Items
+- **Inventory logic**: `js/items/inventory.js` - Inventory data structure and operations
+- **Inventory UI**: `js/ui/inventory-ui.js` - ALL inventory rendering (centralized)
+- **Equipment logic**: `js/items/equipment.js` - Equipment data structure and operations
+- **Item factory**: `js/items/item-factory.js` - Creates items from items.json
+- **Item definitions**: `data/items.json` - All item data (weapons, armor, consumables)
+- **Materials**: `data/materials.json` - Crafting materials data
+- **Consumables**: `js/items/consumable-manager.js` - Potion/consumable usage logic
+
+### Combat Systems
+- **Combat manager**: `js/combat/combat-manager.js` - Combat flow, turns, UI
+- **Damage calculator**: `js/combat/damage-calculator.js` - ALL damage calculations (centralized)
+- **Enemy database**: `js/combat/enemy.js` - Loads and manages enemy data
+- **Enemy definitions**: `data/enemies.json` - All enemy data
+- **Abilities**: `data/abilities.json` - Combat abilities data
+- **Skills**: `data/skills.json` - Skill definitions
+- **Spells**: `data/spells.json` - Spell definitions
+
+### World & Map
+- **Map system**: `js/world/map.js` - World map, movement, encounters
+- **Settlements**: `js/world/settlement.js` - Settlement management
+- **Settlement upgrades**: `data/settlement-upgrades.json` - Upgrade definitions
+
+### Crafting & Research
+- **Crafting system**: `js/crafting/crafting.js` - Crafting logic and UI
+- **Recipes**: `data/recipes.json` - All crafting recipes
+- **Research system**: `js/research/research.js` - Research/tech tree logic
+- **Research data**: `data/research.json` - Research definitions
+
+### UI Components
+- **UI Manager**: `js/ui/ui-manager.js` - UI panel management
+- **Inventory UI**: `js/ui/inventory-ui.js` - Centralized inventory rendering
+- **Modal system**: `js/ui/modal.js` - Modal dialogs
+- **Debug menu**: `js/debug-menu.js` - Debug tools and cheats
+
+### Skills & Progression
+- **Skills system**: `js/skills/skills.js` - Skill leveling and management
+- **Traits**: `data/traits.json` - Character trait definitions
+- **Achievements**: `data/achievements.json` - Achievement definitions
+
+### Quests
+- **Quest system**: `js/quests/quests.js` - Quest logic and tracking
+- **Quest data**: `data/quests.json` - Quest definitions
+
+### Common Patterns
+- **Need to add a new item?** → Edit `data/items.json`
+- **Need to modify item rendering?** → Edit `js/ui/inventory-ui.js` (NEVER duplicate this code)
+- **Need to change damage calculations?** → Edit `js/combat/damage-calculator.js` (NEVER calculate elsewhere)
+- **Need to add an enemy?** → Edit `data/enemies.json`
+- **Need to add a recipe?** → Edit `data/recipes.json`
+- **Need to modify combat flow?** → Edit `js/combat/combat-manager.js`
+- **Need to change map behavior?** → Edit `js/world/map.js`
+- **Need to modify character creation?** → Edit `js/main.js` (initializeTestCharacter function)
+
+---
+
 ## Project Structure Guidelines
 
 ### Data Files Architecture

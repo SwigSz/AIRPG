@@ -1124,18 +1124,20 @@ const Map = (() => {
             return;
         }
 
-        // First, clear all resources from the grid
-        // This ensures depleted resources don't reappear
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-            for (let x = 0; x < GRID_WIDTH; x++) {
-                if (grid[y] && grid[y][x]) {
-                    grid[y][x].resource = null;
+        // Only clear and restore resources if there are saved resources
+        // This prevents clearing resources on first load when there's no save data yet
+        if (state.world.resourceTiles) {
+            // First, clear all resources from the grid
+            // This ensures depleted resources don't reappear
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    if (grid[y] && grid[y][x]) {
+                        grid[y][x].resource = null;
+                    }
                 }
             }
-        }
 
-        // Then restore only the saved resource tiles
-        if (state.world.resourceTiles) {
+            // Then restore only the saved resource tiles
             state.world.resourceTiles.forEach(savedTile => {
                 const tile = grid[savedTile.y][savedTile.x];
                 if (tile) {

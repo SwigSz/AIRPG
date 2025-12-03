@@ -7,6 +7,9 @@
 // This module provides reusable UI rendering functions for inventory display
 // across different contexts (main inventory, crafting, combat, etc.)
 //
+// Preserve JavaScript's built-in Map constructor before game's Map class overwrites it
+const JavaScriptMap = Map;
+//
 // ============================================
 // WHY THIS MODULE EXISTS
 // ============================================
@@ -455,7 +458,7 @@ const InventoryUI = (() => {
      * @returns {Map} Map of stacks
      */
     function createItemStacks(items) {
-        const itemStacks = new Map();
+        const itemStacks = new JavaScriptMap();
 
         items.forEach(item => {
             const key = `${item.name}_${item.icon}`;

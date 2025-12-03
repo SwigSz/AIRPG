@@ -313,6 +313,114 @@
       },
       "stackable": false,
       "value": 10
+    },
+    {
+      "id": "shortbow",
+      "name": "Shortbow",
+      "icon": "🏹",
+      "description": "A simple wooden bow, perfect for beginners learning archery.",
+      "classifications": ["weapon", "two-handed", "ranged"],
+      "rarity": "common",
+      "stats": {
+        "damage": 12,
+        "weight": 3
+      },
+      "requirements": {
+        "dexterity": 6,
+        "level": 1
+      },
+      "stackable": false,
+      "value": 40
+    },
+    {
+      "id": "hunting_bow",
+      "name": "Hunting Bow",
+      "icon": "🏹",
+      "description": "A sturdy bow used by hunters. Provides excellent range and accuracy.",
+      "classifications": ["weapon", "two-handed", "ranged"],
+      "rarity": "uncommon",
+      "stats": {
+        "damage": 20,
+        "weight": 4
+      },
+      "requirements": {
+        "dexterity": 10,
+        "level": 3
+      },
+      "stackable": false,
+      "value": 85
+    },
+    {
+      "id": "crossbow",
+      "name": "Heavy Crossbow",
+      "icon": "🏹",
+      "description": "A powerful mechanical crossbow that pierces armor with ease.",
+      "classifications": ["weapon", "two-handed", "ranged"],
+      "rarity": "rare",
+      "stats": {
+        "damage": 28,
+        "weight": 8
+      },
+      "requirements": {
+        "dexterity": 12,
+        "level": 5
+      },
+      "stackable": false,
+      "value": 150
+    },
+    {
+      "id": "wooden_wand",
+      "name": "Wooden Wand",
+      "icon": "🪄",
+      "description": "A basic wand carved from oak, used to channel magical energy.",
+      "classifications": ["weapon", "one-handed", "magic"],
+      "rarity": "common",
+      "stats": {
+        "damage": 10,
+        "weight": 1
+      },
+      "requirements": {
+        "intelligence": 6,
+        "level": 1
+      },
+      "stackable": false,
+      "value": 45
+    },
+    {
+      "id": "crystal_staff",
+      "name": "Crystal Staff",
+      "icon": "🔮",
+      "description": "A staff topped with a glowing crystal that amplifies magical power.",
+      "classifications": ["weapon", "two-handed", "magic"],
+      "rarity": "uncommon",
+      "stats": {
+        "damage": 22,
+        "weight": 5
+      },
+      "requirements": {
+        "intelligence": 10,
+        "level": 3
+      },
+      "stackable": false,
+      "value": 100
+    },
+    {
+      "id": "arcane_tome",
+      "name": "Arcane Tome",
+      "icon": "📖",
+      "description": "An ancient spellbook containing powerful arcane knowledge.",
+      "classifications": ["weapon", "one-handed", "magic"],
+      "rarity": "rare",
+      "stats": {
+        "damage": 26,
+        "weight": 3
+      },
+      "requirements": {
+        "intelligence": 12,
+        "level": 5
+      },
+      "stackable": false,
+      "value": 175
     }
   ]
 }

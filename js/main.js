@@ -156,6 +156,38 @@ function initializeTestCharacter() {
         Inventory.addItem(testCharacter.inventory, greatsword);
     }
 
+    // Add ranged weapons for testing
+    const shortbow = ItemFactory.createItem('shortbow');
+    if (shortbow) {
+        Inventory.addItem(testCharacter.inventory, shortbow);
+    }
+
+    const huntingBow = ItemFactory.createItem('hunting_bow');
+    if (huntingBow) {
+        Inventory.addItem(testCharacter.inventory, huntingBow);
+    }
+
+    const crossbow = ItemFactory.createItem('crossbow');
+    if (crossbow) {
+        Inventory.addItem(testCharacter.inventory, crossbow);
+    }
+
+    // Add magic weapons for testing
+    const woodenWand = ItemFactory.createItem('wooden_wand');
+    if (woodenWand) {
+        Inventory.addItem(testCharacter.inventory, woodenWand);
+    }
+
+    const crystalStaff = ItemFactory.createItem('crystal_staff');
+    if (crystalStaff) {
+        Inventory.addItem(testCharacter.inventory, crystalStaff);
+    }
+
+    const arcaneTome = ItemFactory.createItem('arcane_tome');
+    if (arcaneTome) {
+        Inventory.addItem(testCharacter.inventory, arcaneTome);
+    }
+
     // Store in game state
     GameState.updateProperty('character', testCharacter);
 
