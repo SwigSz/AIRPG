@@ -53,6 +53,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
 
+    // Initialize debug menu (after character is loaded)
+    // Will be initialized after character load
+    if (window.DebugMenu) {
+        // Wait for character to be available
+        setTimeout(() => {
+            const character = GameState.getState().character;
+            if (character) {
+                DebugMenu.init(character);
+            }
+        }, 100);
+    }
+
     // Start autosave (every 30 seconds)
     if (window.SaveSystem) {
         SaveSystem.startAutosave(30);
