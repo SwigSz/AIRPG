@@ -13,7 +13,7 @@
         "scaling": "strength",
         "multiplier": 1.5
       },
-      "unlockConditions": "enemiesKilled>=1"
+      "unlockConditions": "level>=5"
     }
   ]
 }

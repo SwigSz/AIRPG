@@ -64,12 +64,6 @@ const CharacterUI = (() => {
                         <h2>Character Statistics</h2>
                         <div class="stats-categories">
                             <div class="stats-category">
-                                <h3>Combat Stats</h3>
-                                <div class="stats-list" id="combat-stats-list">
-                                    <!-- Combat stats will be rendered here -->
-                                </div>
-                            </div>
-                            <div class="stats-category">
                                 <h3>Character Stats</h3>
                                 <div class="stats-list" id="character-stats-list">
                                     <!-- Character stats will be rendered here -->
@@ -262,46 +256,7 @@ const CharacterUI = (() => {
 
         const stats = StatsTracker.getStats();
 
-        // Render combat stats
-        const combatStatsList = document.getElementById('combat-stats-list');
-        if (combatStatsList && stats.combat) {
-            combatStatsList.innerHTML = `
-                <div class="stat-item">
-                    <span class="stat-label">Enemies Killed:</span>
-                    <span class="stat-value">${stats.combat.enemiesKilled || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Damage Dealt:</span>
-                    <span class="stat-value">${stats.combat.damageDealt || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Damage Taken:</span>
-                    <span class="stat-value">${stats.combat.damageTaken || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Attacks Made:</span>
-                    <span class="stat-value">${stats.combat.attacksMade || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Abilities Used:</span>
-                    <span class="stat-value">${stats.combat.abilitiesUsed || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Combats Won:</span>
-                    <span class="stat-value">${stats.combat.combatsWon || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Combats Lost:</span>
-                    <span class="stat-value">${stats.combat.combatsLost || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Combats Fled:</span>
-                    <span class="stat-value">${stats.combat.combatsFled || 0}</span>
-                </div>
-            `;
-        }
-
-        // Render character stats (new combat stats)
+        // Render character stats
         const characterStatsList = document.getElementById('character-stats-list');
         if (characterStatsList) {
             const character = window.GameState?.getState().character;

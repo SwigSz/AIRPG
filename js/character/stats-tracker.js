@@ -6,14 +6,9 @@ const StatsTracker = (() => {
     // Default stats structure
     const defaultStats = {
         combat: {
-            enemiesKilled: 0,
-            damageDealt: 0,
-            damageTaken: 0,
-            attacksMade: 0,
-            abilitiesUsed: 0,
-            combatsWon: 0,
-            combatsLost: 0,
-            combatsFled: 0
+            kills: 0,
+            battlesWon: 0,
+            battlesLost: 0
         },
         crafting: {
             itemsCrafted: 0,

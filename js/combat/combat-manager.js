@@ -351,14 +351,13 @@ const CombatManager = (() => {
             logCombat('Victory! All enemies defeated.');
 
             // Track combat stats
+            const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
             if (window.StatsTracker) {
-                const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
-                StatsTracker.incrementStat('combat.enemiesKilled', deadEnemies.length);
-                StatsTracker.incrementStat('combat.combatsWon', 1);
+                StatsTracker.incrementStat('combat.kills', deadEnemies.length);
+                StatsTracker.incrementStat('combat.battlesWon', 1);
             }
 
             // Award XP to all living players
-            const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
             const totalXP = deadEnemies.reduce((sum, enemy) => sum + (enemy.xpReward || 0), 0);
 
             if (totalXP > 0) {
@@ -411,15 +410,10 @@ const CombatManager = (() => {
 
             // Track combat stats
             if (window.StatsTracker) {
-                StatsTracker.incrementStat('combat.combatsLost', 1);
+                StatsTracker.incrementStat('combat.battlesLost', 1);
             }
         } else if (result === 'flee') {
             logCombat('Fled from combat.');
-
-            // Track combat stats
-            if (window.StatsTracker) {
-                StatsTracker.incrementStat('combat.combatsFled', 1);
-            }
         }
 
         // Clear combat state after processing rewards
@@ -802,11 +796,6 @@ const CombatManager = (() => {
                 }
             }
 
-            // Track ability usage
-            if (window.StatsTracker) {
-                StatsTracker.incrementStat('combat.abilitiesUsed', 1);
-            }
-
             renderCombatUI();
             checkCombatEnd();
 
@@ -896,10 +885,6 @@ const CombatManager = (() => {
                             updateTopBar(character);
                         }
                     }
-                }
-
-                if (window.StatsTracker) {
-                    StatsTracker.incrementStat('combat.abilitiesUsed', 1);
                 }
             }
         }
