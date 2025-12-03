@@ -43,6 +43,61 @@ const CombatManager = (() => {
         return Math.floor(Math.random() * 20) + 1;
     }
 
+    // Show floating damage number on combatant card
+    function showFloatingDamage(combatantId, amount, type) {
+        const targetCard = document.querySelector(`[data-combatant-id="${combatantId}"]`);
+        if (!targetCard) return;
+
+        const floatEl = document.createElement('div');
+        floatEl.className = `damage-float ${type}`;
+        floatEl.textContent = type === 'miss' ? 'EVADED' : (type === 'heal' ? `+${amount}` : `-${amount}`);
+
+        targetCard.appendChild(floatEl);
+
+        // Remove element after animation completes
+        setTimeout(() => {
+            floatEl.remove();
+        }, 1200);
+    }
+
+    // Animate HP damage on combatant card
+    function animateHPDamage(combatantId, oldHP, newHP, maxHP) {
+        const targetCard = document.querySelector(`[data-combatant-id="${combatantId}"]`);
+        if (!targetCard) return;
+
+        const hpBar = targetCard.querySelector('.hp-bar');
+        if (!hpBar) return;
+
+        const hpFill = hpBar.querySelector('.hp-fill');
+        const damageIndicator = hpBar.querySelector('.hp-damage-indicator');
+        if (!hpFill || !damageIndicator) return;
+
+        const oldPercent = (oldHP / maxHP) * 100;
+        const newPercent = (newHP / maxHP) * 100;
+        const damagePercent = oldPercent - newPercent;
+
+        // Set initial state: HP fill at new value, damage indicator showing the gap
+        hpFill.style.transition = 'none';
+        hpFill.style.width = `${newPercent}%`;
+        damageIndicator.style.transition = 'none';
+        damageIndicator.style.width = `${damagePercent}%`;
+        damageIndicator.style.left = `${newPercent}%`;
+        damageIndicator.style.opacity = '0';
+
+        // Force reflow
+        void hpBar.offsetWidth;
+
+        // Show damage indicator (lighter bar) in the gap for 0.3s
+        damageIndicator.style.opacity = '1';
+
+        // After 0.3s, animate the damage indicator shrinking to nothing
+        setTimeout(() => {
+            damageIndicator.style.transition = 'width 0.5s ease, opacity 0.5s ease';
+            damageIndicator.style.width = '0%';
+            damageIndicator.style.opacity = '0';
+        }, 300);
+    }
+
     // Roll initiative for all combatants
     function rollInitiative(combatants) {
         combatants.forEach(combatant => {
@@ -193,6 +248,14 @@ const CombatManager = (() => {
 
     // Perform a basic attack
     function performAttack(attacker, target) {
+        // Determine target card ID for floating damage
+        let targetCardId = 'player';
+        if (!target.isPlayer) {
+            const enemies = combatState.combatants.filter(c => !c.isPlayer);
+            const targetIndex = enemies.findIndex(e => e.id === target.id);
+            targetCardId = `enemy-${targetIndex}`;
+        }
+
         // Check for evasion (only for players as targets)
         if (target.isPlayer) {
             const character = GameState.getState().character;
@@ -200,6 +263,7 @@ const CombatManager = (() => {
                 const evasionRoll = Math.random() * 100; // Roll 0-100
                 if (evasionRoll < character.evasion) {
                     logCombat(`${target.name} evaded ${attacker.name}'s attack!`);
+                    showFloatingDamage(targetCardId, 0, 'miss');
                     renderCombatUI();
                     checkCombatEnd();
                     return; // Attack completely missed
@@ -224,6 +288,8 @@ const CombatManager = (() => {
             }
         }
 
+        // Store old HP for animation
+        const oldHP = target.hp;
         target.hp = Math.max(0, target.hp - damage);
 
         if (isCrit) {
@@ -249,36 +315,62 @@ const CombatManager = (() => {
         }
 
         renderCombatUI();
+
+        // Show floating damage number and animate HP AFTER rendering
+        requestAnimationFrame(() => {
+            showFloatingDamage(targetCardId, damage, 'damage');
+            animateHPDamage(targetCardId, oldHP, target.hp, target.maxHp);
+        });
+
         checkCombatEnd();
     }
 
     // Use a skill
     function useSkill(attacker, target, skillName) {
+        // Determine target card ID for floating damage
+        let targetCardId = 'player';
+        if (!target.isPlayer) {
+            const enemies = combatState.combatants.filter(c => !c.isPlayer);
+            const targetIndex = enemies.findIndex(e => e.id === target.id);
+            targetCardId = `enemy-${targetIndex}`;
+        }
+
         if (skillName === 'Power Strike') {
             // Get current attack value (dynamically for players)
             const attackValue = getCurrentAttack(attacker);
             const damage = Math.max(1, Math.floor((attackValue * 1.5) - target.defense));
+
+            // Store old HP for animation
+            const oldHP = target.hp;
             target.hp = Math.max(0, target.hp - damage);
+
             logCombat(`${attacker.name} uses Power Strike on ${target.name} for ${damage} damage!`);
 
             if (target.hp <= 0) {
                 target.isAlive = false;
                 logCombat(`${target.name} has been defeated!`);
             }
-        }
 
-        // Update character HP in real-time if target is the player
-        if (target.isPlayer) {
-            const character = GameState.getState().character;
-            if (character) {
-                character.hp = target.hp;
-                if (window.updateTopBar) {
-                    updateTopBar(character);
+            // Update character HP in real-time if target is the player
+            if (target.isPlayer) {
+                const character = GameState.getState().character;
+                if (character) {
+                    character.hp = target.hp;
+                    if (window.updateTopBar) {
+                        updateTopBar(character);
+                    }
                 }
             }
+
+            renderCombatUI();
+
+            // Show floating damage number and animate HP AFTER rendering
+            requestAnimationFrame(() => {
+                showFloatingDamage(targetCardId, damage, 'damage');
+                animateHPDamage(targetCardId, oldHP, target.hp, target.maxHp);
+            });
         }
 
-        renderCombatUI();
         checkCombatEnd();
     }
 
@@ -530,9 +622,10 @@ const CombatManager = (() => {
         enemyDisplay.innerHTML = '';
 
         const enemies = combatState.combatants.filter(c => !c.isPlayer);
-        enemies.forEach(enemy => {
+        enemies.forEach((enemy, index) => {
             const enemyCard = document.createElement('div');
             enemyCard.className = 'combatant-card enemy';
+            enemyCard.setAttribute('data-combatant-id', `enemy-${index}`);
             if (!enemy.isAlive) enemyCard.classList.add('dead');
 
             // Make alive enemies clickable for targeting
@@ -541,15 +634,25 @@ const CombatManager = (() => {
                 enemyCard.style.cursor = 'pointer';
             }
 
+            const enemyDefense = enemy.defense || 0;
+            const enemyAttackMin = Math.max(1, enemy.attack - 2);
+            const enemyAttackMax = enemy.attack + 2;
+
             enemyCard.innerHTML = `
                 <div class="combatant-name">${enemy.name}</div>
                 <div class="combatant-hp">
                     <div class="hp-bar">
                         <div class="hp-fill" style="width: ${(enemy.hp / enemy.maxHp) * 100}%"></div>
+                        <div class="hp-damage-indicator" style="width: 0%"></div>
                     </div>
                     <div class="hp-text">${enemy.hp} / ${enemy.maxHp}</div>
                 </div>
-                ${!enemy.isAlive ? '<div class="corpse-label">CORPSE</div>' : ''}
+                ${enemy.isAlive ? `
+                    <div class="enemy-stats">
+                        <div class="enemy-stat">🛡️ ${enemyDefense}</div>
+                        <div class="enemy-stat">⚔️ ${enemyAttackMin}-${enemyAttackMax}</div>
+                    </div>
+                ` : '<div class="corpse-label">CORPSE</div>'}
             `;
 
             // Add click handler for targeting
@@ -576,6 +679,7 @@ const CombatManager = (() => {
         players.forEach(player => {
             const playerCard = document.createElement('div');
             playerCard.className = 'combatant-card player';
+            playerCard.setAttribute('data-combatant-id', 'player');
             if (!player.isAlive) playerCard.classList.add('dead');
 
             playerCard.innerHTML = `
@@ -583,6 +687,7 @@ const CombatManager = (() => {
                 <div class="combatant-hp">
                     <div class="hp-bar">
                         <div class="hp-fill" style="width: ${(player.hp / player.maxHp) * 100}%"></div>
+                        <div class="hp-damage-indicator" style="width: 0%"></div>
                     </div>
                     <div class="hp-text">${player.hp} / ${player.maxHp}</div>
                 </div>
@@ -600,7 +705,7 @@ const CombatManager = (() => {
 
         const current = getCurrentCombatant();
 
-        if (!current || !current.isPlayer || !current.isAlive || !combatState.isActive) {
+        if (!current || !current.isAlive || !combatState.isActive) {
             actionsEl.innerHTML = '<div class="action-message">Waiting...</div>';
             return;
         }
@@ -618,42 +723,50 @@ const CombatManager = (() => {
             return;
         }
 
-        // Show main combat menu
+        // Determine if it's the player's turn
+        const isPlayerTurn = current.isPlayer;
+        const disabledClass = isPlayerTurn ? '' : 'disabled';
+        const messageText = isPlayerTurn ? `${current.name}'s Turn - Choose your action:` : 'Enemy turn';
+
+        // Show main combat menu (always visible, but disabled during enemy turn)
         actionsEl.innerHTML = `
-            <div class="action-message">${current.name}'s Turn - Choose your action:</div>
+            <div class="action-message">${messageText}</div>
             <div class="combat-menu">
-                <button class="menu-btn" id="attack-btn">⚔️ Attack</button>
-                <button class="menu-btn" id="defend-btn">🛡️ Defend</button>
-                <button class="menu-btn" id="skills-btn">✨ Skills</button>
-                <button class="menu-btn" id="items-btn">🎒 Items</button>
-                <button class="menu-btn" id="flee-btn">🏃 Flee</button>
+                <button class="menu-btn attack-btn ${disabledClass}" id="attack-btn">⚔️ Attack</button>
+                <button class="menu-btn ${disabledClass}" id="defend-btn">🛡️ Defend</button>
+                <button class="menu-btn ${disabledClass}" id="skills-btn">✨ Skills</button>
+                <button class="menu-btn ${disabledClass}" id="items-btn">🎒 Items</button>
+                <button class="menu-btn ${disabledClass}" id="flee-btn">🏃 Flee</button>
             </div>
         `;
 
-        // Attack button
-        document.getElementById('attack-btn')?.addEventListener('click', () => {
-            initiatAction('attack');
-        });
+        // Only add event listeners if it's the player's turn
+        if (isPlayerTurn) {
+            // Attack button
+            document.getElementById('attack-btn')?.addEventListener('click', () => {
+                initiatAction('attack');
+            });
 
-        // Defend button
-        document.getElementById('defend-btn')?.addEventListener('click', () => {
-            performDefend(current);
-        });
+            // Defend button
+            document.getElementById('defend-btn')?.addEventListener('click', () => {
+                performDefend(current);
+            });
 
-        // Skills button
-        document.getElementById('skills-btn')?.addEventListener('click', () => {
-            showSkillsMenu();
-        });
+            // Skills button
+            document.getElementById('skills-btn')?.addEventListener('click', () => {
+                showSkillsMenu();
+            });
 
-        // Items button
-        document.getElementById('items-btn')?.addEventListener('click', () => {
-            showItemsMenu();
-        });
+            // Items button
+            document.getElementById('items-btn')?.addEventListener('click', () => {
+                showItemsMenu();
+            });
 
-        // Flee button
-        document.getElementById('flee-btn')?.addEventListener('click', () => {
-            attemptFlee();
-        });
+            // Flee button
+            document.getElementById('flee-btn')?.addEventListener('click', () => {
+                attemptFlee();
+            });
+        }
     }
 
     // Show skills submenu
@@ -778,6 +891,17 @@ const CombatManager = (() => {
                 damage = Math.floor(damage * ability.damage.multiplier);
             }
 
+            // Determine target card ID for animation
+            let targetCardId = 'player';
+            if (!target.isPlayer) {
+                const enemies = combatState.combatants.filter(c => !c.isPlayer);
+                const targetIndex = enemies.findIndex(e => e.id === target.id);
+                targetCardId = `enemy-${targetIndex}`;
+            }
+
+            // Store old HP for animation
+            const oldHP = target.hp;
+
             // Apply damage
             target.hp -= damage;
             if (target.hp < 0) target.hp = 0;
@@ -797,6 +921,13 @@ const CombatManager = (() => {
             }
 
             renderCombatUI();
+
+            // Show floating damage number and animate HP AFTER rendering
+            requestAnimationFrame(() => {
+                showFloatingDamage(targetCardId, damage, 'damage');
+                animateHPDamage(targetCardId, oldHP, target.hp, target.maxHp);
+            });
+
             checkCombatEnd();
 
             // End turn - check combat end handles victory/defeat
@@ -870,6 +1001,17 @@ const CombatManager = (() => {
                     damage = Math.floor(damage * ability.damage.multiplier);
                 }
 
+                // Determine target card ID for animation
+                let targetCardId = 'player';
+                if (!target.isPlayer) {
+                    const enemies = combatState.combatants.filter(c => !c.isPlayer);
+                    const targetIndex = enemies.findIndex(e => e.id === target.id);
+                    targetCardId = `enemy-${targetIndex}`;
+                }
+
+                // Store old HP for animation
+                const oldHP = target.hp;
+
                 target.hp -= damage;
                 if (target.hp < 0) target.hp = 0;
                 if (target.hp === 0) target.isAlive = false;
@@ -886,13 +1028,20 @@ const CombatManager = (() => {
                         }
                     }
                 }
+
+                // Clear pending action
+                pendingAction = null;
+
+                renderCombatUI();
+
+                // Show floating damage number and animate HP AFTER rendering
+                requestAnimationFrame(() => {
+                    showFloatingDamage(targetCardId, damage, 'damage');
+                    animateHPDamage(targetCardId, oldHP, target.hp, target.maxHp);
+                });
             }
         }
 
-        // Clear pending action
-        pendingAction = null;
-
-        renderCombatUI();
         checkCombatEnd();
 
         // End turn only if combat is still active

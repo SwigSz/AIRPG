@@ -40,7 +40,7 @@
     z-index: 102;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0;
     padding: 1rem;
 }
 
@@ -52,7 +52,8 @@
     padding: 1rem;
     background-color: #1e293b;
     border: 2px solid #334155;
-    border-radius: 8px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
 }
 
 .turn-counter {
@@ -81,12 +82,15 @@
 /* Turn Order Bar */
 .turn-order {
     background-color: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 1rem;
+    border: 2px solid #334155;
+    border-radius: 0;
+    padding: 0.5rem 1rem;
     display: flex;
     align-items: center;
     gap: 1rem;
+    height: 40px;
+    border-top: none;
+    border-bottom: none;
 }
 
 .turn-order-label {
@@ -99,17 +103,17 @@
 .turn-order-slots {
     flex: 1;
     display: flex;
-    gap: 0.5rem;
+    gap: 0.35rem;
     overflow-x: auto;
 }
 
 .turn-slot {
     min-width: 100px;
-    height: 60px;
+    height: 40px;
     background-color: #0f172a;
     border: 2px solid #334155;
     border-radius: 6px;
-    padding: 0.5rem;
+    padding: 0.35rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -137,7 +141,7 @@
 .turn-slot-name {
     font-weight: 700;
     color: #cbd5e1;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     text-align: center;
 }
 
@@ -146,9 +150,7 @@
 }
 
 .turn-slot-init {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    margin-top: 0.25rem;
+    display: none;
 }
 
 /* Combat Battlefield - Split Layout */
@@ -158,6 +160,11 @@
     flex-direction: column;
     gap: 0;
     overflow: hidden;
+    background-color: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 0;
+    border-top: none;
+    border-bottom: none;
 }
 
 .enemy-area,
@@ -165,12 +172,11 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: #1e293b;
     padding: 0.75rem;
 }
 
 .enemy-area {
-    border-bottom: none;
+    border-bottom: 1px solid #334155;
 }
 
 .area-label {
@@ -196,7 +202,7 @@
 }
 
 .combatant-card {
-    width: 160px;
+    width: 120px;
     background-color: #0f172a;
     border: 2px solid #334155;
     border-radius: 8px;
@@ -204,6 +210,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.combatant-card:hover {
+    transform: scale(1.02);
 }
 
 .combatant-card.player {
@@ -224,11 +236,28 @@
     font-size: 0.95rem;
     color: #cbd5e1;
     text-align: center;
+    position: relative;
 }
 
 .combatant-card.dead .combatant-name {
     text-decoration: line-through;
     color: #64748b;
+}
+
+/* Enemy Stats Row */
+.enemy-stats {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.enemy-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
 }
 
 .combatant-hp {
@@ -243,12 +272,24 @@
     border: 1px solid #334155;
     border-radius: 4px;
     overflow: hidden;
+    position: relative;
 }
 
 .hp-fill {
     height: 100%;
     background: linear-gradient(90deg, #ef4444, #dc2626);
-    transition: width 0.3s ease;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.hp-damage-indicator {
+    height: 100%;
+    background: linear-gradient(90deg, #f87171, #ef4444);
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
 }
 
 .hp-text {
@@ -287,6 +328,8 @@
     border-color: #fbbf24 !important;
     box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
     animation: pulse-target 1.5s ease-in-out infinite;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 @keyframes pulse-target {
@@ -301,13 +344,34 @@
 .combatant-card.targetable:hover {
     transform: scale(1.05);
     border-color: #f59e0b !important;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+    cursor: crosshair;
+}
+
+.combatant-card.targetable:active {
+    animation: target-flash 0.2s ease;
+}
+
+@keyframes target-flash {
+    0%, 100% {
+        background-color: #0f172a;
+    }
+    50% {
+        background-color: #1e293b;
+    }
+}
+
+/* Dead enemies - no hover effects */
+.combatant-card.dead:hover {
+    transform: none;
+    cursor: not-allowed;
 }
 
 /* Combat Actions */
 .combat-actions {
     background-color: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
+    border: 2px solid #334155;
+    border-radius: 0 0 8px 8px;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
@@ -315,6 +379,7 @@
     align-items: center;
     justify-content: center;
     min-height: 120px;
+    border-top: none;
 }
 
 .action-message {
@@ -334,7 +399,7 @@
 /* Combat Menu Grid */
 .combat-menu {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     width: 100%;
 }
@@ -350,14 +415,26 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    height: 50px;
 }
 
-.menu-btn:hover {
+/* Attack Button - Same as other buttons */
+.menu-btn.attack-btn {
+    grid-column: 1 / -1;
+}
+
+.menu-btn:hover:not(.disabled) {
     background-color: #f59e0b;
     color: #0f172a;
     border-color: #f59e0b;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.menu-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .menu-btn.skill-btn {
@@ -396,4 +473,41 @@
 /* Adjust for skills submenu (2 items) */
 .combat-menu:has(.back-btn) {
     grid-template-columns: repeat(2, 1fr);
+}
+
+/* Floating Damage Numbers */
+.damage-float {
+    position: absolute;
+    font-size: 1.8rem;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 1000;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    animation: float-up 1.2s ease-out forwards;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.damage-float.damage {
+    color: #ef4444;
+}
+
+.damage-float.heal {
+    color: #22c55e;
+}
+
+.damage-float.miss {
+    color: #94a3b8;
+}
+
+@keyframes float-up {
+    0% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -100px);
+        opacity: 0;
+    }
 }

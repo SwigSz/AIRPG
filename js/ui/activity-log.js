@@ -39,6 +39,14 @@ const ActivityLog = (() => {
     }
 
     function add(message, type = 'info') {
+        // Filter out ALL combat messages - only show loot and XP
+        if (type === 'combat') {
+            // Only allow XP gain messages through
+            if (!message.match(/gained \d+ XP/i)) {
+                return; // Don't add this message
+            }
+        }
+
         const timestamp = new Date().toLocaleTimeString();
         const log = {
             id: generateLogId(),
