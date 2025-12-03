@@ -366,10 +366,20 @@ const CharacterUI = (() => {
             `<button class="attribute-plus-btn" data-attribute="${attributeKey}" title="Spend 1 attribute point">+</button>` :
             '';
 
+        // Get calculated stats to show equipment bonuses
+        const calculated = window.CharacterStats ? CharacterStats.calculate(character) : null;
+        const equipBonus = calculated?.equipmentBonuses?.[attributeKey] || 0;
+
+        // Format: "BaseValue" or "BaseValue (+Bonus)"
+        let displayValue = value.toString();
+        if (equipBonus > 0) {
+            displayValue = `${value} <span class="equipment-bonus">(+${equipBonus})</span>`;
+        }
+
         return `
             <div class="attribute-item">
                 <span class="attribute-name">${attributeName}:</span>
-                <span class="attribute-value">${value}</span>
+                <span class="attribute-value">${displayValue}</span>
                 ${buttonHtml}
             </div>
         `;

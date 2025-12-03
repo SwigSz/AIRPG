@@ -135,7 +135,26 @@ const CharacterStats = (() => {
         const carryCapacity = FORMULAS.carryCapacity.base + (totalStrForCapacity * FORMULAS.carryCapacity.perStrength);
 
         return {
-            // Attributes (base + equipment)
+            // NEW: Split attributes for UI display
+            baseAttributes: {
+                strength: str,
+                dexterity: dex,
+                constitution: con,
+                intelligence: int,
+                wisdom: wis,
+                charisma: cha
+            },
+            equipmentBonuses: equipBonus,
+            totalAttributes: {
+                strength: totalStr,
+                dexterity: totalDex,
+                constitution: con + equipBonus.constitution,
+                intelligence: totalInt,
+                wisdom: totalWis,
+                charisma: cha + equipBonus.charisma
+            },
+
+            // LEGACY: Keep old 'attributes' property for backwards compatibility
             attributes: {
                 strength: totalStr,
                 dexterity: totalDex,

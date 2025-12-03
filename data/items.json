@@ -9,6 +9,7 @@
       "rarity": "common",
       "stats": {
         "defense": 5,
+        "constitution": 1,
         "weight": 3
       },
       "requirements": {},
@@ -23,7 +24,7 @@
       "classifications": ["accessory", "neck"],
       "rarity": "uncommon",
       "stats": {
-        "magic": 3,
+        "intelligence": 3,
         "charisma": 2
       },
       "requirements": {},
@@ -39,6 +40,7 @@
       "rarity": "common",
       "stats": {
         "defense": 10,
+        "dexterity": 2,
         "weight": 8
       },
       "requirements": {},
@@ -54,6 +56,7 @@
       "rarity": "common",
       "stats": {
         "dexterity": 2,
+        "defense": 1,
         "weight": 1
       },
       "requirements": {},
@@ -69,6 +72,7 @@
       "rarity": "common",
       "stats": {
         "defense": 7,
+        "constitution": 1,
         "weight": 5
       },
       "requirements": {},
@@ -84,7 +88,8 @@
       "rarity": "common",
       "stats": {
         "defense": 3,
-        "speed": 1
+        "dexterity": 1,
+        "weight": 2
       },
       "requirements": {},
       "stackable": false,
@@ -99,6 +104,7 @@
       "rarity": "common",
       "stats": {
         "damage": 15,
+        "strength": 1,
         "weight": 4
       },
       "requirements": {
@@ -117,6 +123,7 @@
       "rarity": "uncommon",
       "stats": {
         "damage": 30,
+        "strength": 3,
         "weight": 12
       },
       "requirements": {
@@ -135,6 +142,7 @@
       "rarity": "common",
       "stats": {
         "defense": 8,
+        "constitution": 2,
         "weight": 6
       },
       "requirements": {},

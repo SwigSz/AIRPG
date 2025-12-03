@@ -362,6 +362,14 @@
     font-size: 1rem;
 }
 
+/* Equipment Bonus Display */
+.equipment-bonus {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-left: 0.25rem;
+}
+
 .traits-list {
     display: flex;
     flex-direction: column;
