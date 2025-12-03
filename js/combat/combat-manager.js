@@ -177,15 +177,14 @@ const CombatManager = (() => {
 
     // Get current attack damage for a combatant
     function getCurrentAttack(combatant) {
-        // For players, dynamically calculate from equipment
+        // For players, use centralized damage calculation system
         if (combatant.isPlayer) {
             const character = GameState.getState().character;
-            if (character) {
-                const baseAttack = 5; // Unarmed base damage
-                const weaponDamage = getEquippedWeaponDamage(character);
-                return weaponDamage || baseAttack;
+            if (character && window.DamageCalculator) {
+                // Use DamageCalculator for proper damage type multipliers
+                return DamageCalculator.calculateCurrentWeaponDamage(character);
             }
-            // Fallback to stored attack value
+            // Fallback if DamageCalculator not loaded
             return combatant.attack || combatant.baseAttack || 5;
         }
         // For enemies, use their static attack value
@@ -194,17 +193,59 @@ const CombatManager = (() => {
 
     // Perform a basic attack
     function performAttack(attacker, target) {
+        // Check for evasion (only for players as targets)
+        if (target.isPlayer) {
+            const character = GameState.getState().character;
+            if (character && character.evasion > 0) {
+                const evasionRoll = Math.random() * 100; // Roll 0-100
+                if (evasionRoll < character.evasion) {
+                    logCombat(`${target.name} evaded ${attacker.name}'s attack!`);
+                    renderCombatUI();
+                    checkCombatEnd();
+                    return; // Attack completely missed
+                }
+            }
+        }
+
         // Get current attack value (dynamically for players)
         const attackValue = getCurrentAttack(attacker);
-        const damage = Math.max(1, attackValue - target.defense);
+        let damage = Math.max(1, attackValue - target.defense);
+
+        // Check for crit (only for players)
+        let isCrit = false;
+        if (attacker.isPlayer) {
+            const character = GameState.getState().character;
+            if (character && character.critChance > 0) {
+                const critRoll = Math.random() * 100; // Roll 0-100
+                if (critRoll < character.critChance) {
+                    isCrit = true;
+                    damage = damage * 2; // Double damage on crit
+                }
+            }
+        }
 
         target.hp = Math.max(0, target.hp - damage);
 
-        logCombat(`${attacker.name} attacks ${target.name} for ${damage} damage!`);
+        if (isCrit) {
+            logCombat(`${attacker.name} attacks ${target.name} for ${damage} damage! CRITICAL HIT!`);
+        } else {
+            logCombat(`${attacker.name} attacks ${target.name} for ${damage} damage!`);
+        }
 
         if (target.hp <= 0) {
             target.isAlive = false;
             logCombat(`${target.name} has been defeated!`);
+        }
+
+        // Update character HP in real-time if target is the player
+        if (target.isPlayer) {
+            const character = GameState.getState().character;
+            if (character) {
+                character.hp = target.hp;
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
+            }
         }
 
         renderCombatUI();
@@ -223,6 +264,17 @@ const CombatManager = (() => {
             if (target.hp <= 0) {
                 target.isAlive = false;
                 logCombat(`${target.name} has been defeated!`);
+            }
+        }
+
+        // Update character HP in real-time if target is the player
+        if (target.isPlayer) {
+            const character = GameState.getState().character;
+            if (character) {
+                character.hp = target.hp;
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
             }
         }
 
@@ -277,20 +329,35 @@ const CombatManager = (() => {
         // Save references before clearing state
         const combatants = combatState.combatants;
 
+        // Save player's HP back to character profile BEFORE clearing combat state
+        const playerCombatant = combatants.find(c => c.isPlayer);
+        if (playerCombatant) {
+            const character = GameState.getState().character;
+            if (character) {
+                // Update character's HP to match their combat HP
+                character.hp = Math.max(0, playerCombatant.hp);
+                character.maxHp = playerCombatant.maxHp;
+
+                // Update the top bar immediately to show new HP
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
+            }
+        }
+
         combatState.isActive = false;
 
         if (result === 'victory') {
             logCombat('Victory! All enemies defeated.');
 
             // Track combat stats
+            const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
             if (window.StatsTracker) {
-                const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
-                StatsTracker.incrementStat('combat.enemiesKilled', deadEnemies.length);
-                StatsTracker.incrementStat('combat.combatsWon', 1);
+                StatsTracker.incrementStat('combat.kills', deadEnemies.length);
+                StatsTracker.incrementStat('combat.battlesWon', 1);
             }
 
             // Award XP to all living players
-            const deadEnemies = combatants.filter(c => !c.isPlayer && !c.isAlive);
             const totalXP = deadEnemies.reduce((sum, enemy) => sum + (enemy.xpReward || 0), 0);
 
             if (totalXP > 0) {
@@ -343,15 +410,10 @@ const CombatManager = (() => {
 
             // Track combat stats
             if (window.StatsTracker) {
-                StatsTracker.incrementStat('combat.combatsLost', 1);
+                StatsTracker.incrementStat('combat.battlesLost', 1);
             }
         } else if (result === 'flee') {
             logCombat('Fled from combat.');
-
-            // Track combat stats
-            if (window.StatsTracker) {
-                StatsTracker.incrementStat('combat.combatsFled', 1);
-            }
         }
 
         // Clear combat state after processing rewards
@@ -373,6 +435,15 @@ const CombatManager = (() => {
                 }
             }
 
+            // Handle map encounter based on combat result
+            if (window.Map) {
+                if (result === 'victory') {
+                    window.Map.handleCombatVictory();
+                } else if (result === 'flee' || result === 'defeat') {
+                    window.Map.handleCombatFleeOrDefeat();
+                }
+            }
+
             // Auto-save after combat
             if (window.SaveSystem) {
                 SaveSystem.save();
@@ -387,17 +458,16 @@ const CombatManager = (() => {
         }
     }
 
-    // Toggle combat view
+    // Toggle combat view - Shows/hides overlay on top of map
     function toggleCombatView(show) {
-        const mapView = document.querySelector('.map-view');
-        const combatView = document.querySelector('.combat-view');
+        const combatOverlay = document.querySelector('.combat-overlay');
 
         if (show) {
-            mapView.classList.remove('active');
-            combatView.classList.add('active');
+            // Show combat overlay on top of map
+            combatOverlay.classList.add('active');
         } else {
-            combatView.classList.remove('active');
-            mapView.classList.add('active');
+            // Hide combat overlay, revealing map underneath
+            combatOverlay.classList.remove('active');
         }
     }
 
@@ -638,82 +708,31 @@ const CombatManager = (() => {
         });
     }
 
-    // Show items submenu
+    // ============================================
+    // COMBAT ITEMS MENU
+    // ============================================
+    // ** Uses centralized InventoryUI module **
+    // See js/ui/inventory-ui.js and CLAUDE.md
+    // ============================================
     function showItemsMenu() {
         const actionsEl = document.querySelector('.combat-actions');
         if (!actionsEl) return;
 
         const character = GameState.getState().character;
-        if (!character || !character.inventory) {
-            actionsEl.innerHTML = `
-                <div class="action-message">No items available</div>
-                <div class="combat-menu">
-                    <button class="menu-btn back-btn" id="back-to-menu-btn">← Back</button>
-                </div>
-            `;
-            document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
+
+        // Use InventoryUI module to render combat items menu
+        InventoryUI.renderCombatItemsMenu(
+            actionsEl,
+            character,
+            (item) => {
+                // Callback when item is used
+                useItemInCombat(item);
+            },
+            () => {
+                // Callback for back button
                 renderActionButtons();
-            });
-            return;
-        }
-
-        // Get consumable items usable in combat
-        let consumableItems = [];
-        if (window.ConsumableManager) {
-            consumableItems = ConsumableManager.getCombatConsumables(character.inventory);
-        }
-
-        // Group items by name and icon (stacking)
-        const itemStacks = new Map();
-        consumableItems.forEach(item => {
-            const key = `${item.name}_${item.icon}`;
-            if (!itemStacks.has(key)) {
-                itemStacks.set(key, {
-                    item: item,
-                    quantity: 0,
-                    items: []
-                });
             }
-            const stack = itemStacks.get(key);
-            stack.quantity++;
-            stack.items.push(item);
-        });
-
-        let itemsHTML = '';
-        if (itemStacks.size > 0) {
-            itemStacks.forEach(stack => {
-                const displayName = stack.quantity > 1
-                    ? `${stack.item.name} x${stack.quantity}`
-                    : stack.item.name;
-                itemsHTML += `<button class="menu-btn item-btn" data-item-id="${stack.item.id}">${stack.item.icon || '📦'} ${displayName}</button>`;
-            });
-        } else {
-            itemsHTML = '<div class="action-message no-items">No usable items</div>';
-        }
-
-        actionsEl.innerHTML = `
-            <div class="action-message">Select an item to use:</div>
-            <div class="combat-menu">
-                ${itemsHTML}
-                <button class="menu-btn back-btn" id="back-to-menu-btn">← Back</button>
-            </div>
-        `;
-
-        // Add event listeners to item buttons
-        document.querySelectorAll('[data-item-id]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const itemId = btn.getAttribute('data-item-id');
-                const item = character.inventory.items.find(i => i.id === itemId);
-                if (item) {
-                    useItemInCombat(item);
-                }
-            });
-        });
-
-        // Back button
-        document.getElementById('back-to-menu-btn')?.addEventListener('click', () => {
-            renderActionButtons();
-        });
+        );
     }
 
     // Use an item in combat
@@ -766,9 +785,15 @@ const CombatManager = (() => {
 
             logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
 
-            // Track ability usage
-            if (window.StatsTracker) {
-                StatsTracker.incrementStat('combat.abilitiesUsed', 1);
+            // Update character HP in real-time if target is the player
+            if (target.isPlayer) {
+                const character = GameState.getState().character;
+                if (character) {
+                    character.hp = target.hp;
+                    if (window.updateTopBar) {
+                        updateTopBar(character);
+                    }
+                }
             }
 
             renderCombatUI();
@@ -851,8 +876,15 @@ const CombatManager = (() => {
 
                 logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
 
-                if (window.StatsTracker) {
-                    StatsTracker.incrementStat('combat.abilitiesUsed', 1);
+                // Update character HP in real-time if target is the player
+                if (target.isPlayer) {
+                    const character = GameState.getState().character;
+                    if (character) {
+                        character.hp = target.hp;
+                        if (window.updateTopBar) {
+                            updateTopBar(character);
+                        }
+                    }
                 }
             }
         }
@@ -933,18 +965,24 @@ const CombatManager = (() => {
             return;
         }
 
+        // Initialize HP/Mana if they don't exist (for old saves)
+        if (character.hp === undefined) character.hp = 100;
+        if (character.maxHp === undefined) character.maxHp = 100;
+        if (character.mana === undefined) character.mana = 10;
+        if (character.maxMana === undefined) character.maxMana = 10;
+
         // Calculate player's attack damage based on equipped weapon
         const baseAttack = 5; // Unarmed base damage
         const weaponDamage = getEquippedWeaponDamage(character);
         const playerAttack = weaponDamage || baseAttack;
 
-        // Use the actual character object as the player combatant
+        // Use the actual character object as the player combatant with PERSISTENT HP
         const player = {
             ...character,
             isPlayer: true,
-            isAlive: true,
-            hp: 100,
-            maxHp: 100,
+            isAlive: character.hp > 0,
+            hp: character.hp,
+            maxHp: character.maxHp,
             attack: playerAttack,
             baseAttack: baseAttack, // Store base for reference
             defense: 5,

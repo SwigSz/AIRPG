@@ -10,7 +10,8 @@
       "stats": {
         "hp": 50,
         "maxHp": 50,
-        "defense": 3
+        "defense": 3,
+        "evasion": null
       },
       "attack": {
         "name": "bump",
@@ -44,12 +45,7 @@
         "hp": 30,
         "maxHp": 30,
         "defense": 2,
-        "strength": 5,
-        "dexterity": 8,
-        "constitution": 4,
-        "intelligence": 3,
-        "wisdom": 2,
-        "charisma": 1
+        "evasion": null
       },
       "attack": {
         "name": "rusty dagger",
@@ -71,6 +67,176 @@
       ],
       "xpReward": 25,
       "biomes": ["forest", "plains"]
+    },
+    {
+      "id": "wolf",
+      "name": "Wolf",
+      "icon": "🐺",
+      "description": "A lean predator that hunts in packs. Its bite is vicious.",
+      "level": 1,
+      "kind": "beast",
+      "stats": {
+        "hp": 35,
+        "maxHp": 35,
+        "defense": 1,
+        "evasion": null
+      },
+      "attack": {
+        "name": "bite",
+        "kind": "pierce",
+        "damage": "3~6"
+      },
+      "abilities": [],
+      "loot": [
+        {
+          "itemId": "wolf_pelt",
+          "chance": 0.6,
+          "quantity": { "min": 1, "max": 1 }
+        },
+        {
+          "itemId": "raw_meat",
+          "chance": 0.5,
+          "quantity": { "min": 1, "max": 2 }
+        }
+      ],
+      "xpReward": 20,
+      "biomes": ["forest", "plains"]
+    },
+    {
+      "id": "giant_rat",
+      "name": "Giant Rat",
+      "icon": "🐀",
+      "description": "A disease-ridden rodent the size of a small dog. Found near swamps and refuse.",
+      "level": 1,
+      "kind": "beast",
+      "stats": {
+        "hp": 20,
+        "maxHp": 20,
+        "defense": 0,
+        "evasion": null
+      },
+      "attack": {
+        "name": "gnaw",
+        "kind": "pierce",
+        "damage": "2~4"
+      },
+      "abilities": [],
+      "loot": [
+        {
+          "itemId": "rat_tail",
+          "chance": 0.4,
+          "quantity": { "min": 1, "max": 1 }
+        },
+        {
+          "itemId": "diseased_meat",
+          "chance": 0.3,
+          "quantity": { "min": 1, "max": 1 }
+        }
+      ],
+      "xpReward": 15,
+      "biomes": ["swamp", "plains"]
+    },
+    {
+      "id": "skeleton",
+      "name": "Skeleton",
+      "icon": "💀",
+      "description": "Animated bones held together by dark magic. It rattles as it moves.",
+      "level": 1,
+      "kind": "undead",
+      "stats": {
+        "hp": 40,
+        "maxHp": 40,
+        "defense": 2,
+        "evasion": null
+      },
+      "attack": {
+        "name": "rusty blade",
+        "kind": "slash",
+        "damage": "3~5"
+      },
+      "abilities": [],
+      "loot": [
+        {
+          "itemId": "bone",
+          "chance": 0.7,
+          "quantity": { "min": 2, "max": 4 }
+        },
+        {
+          "itemId": "rusty_sword",
+          "chance": 0.2,
+          "quantity": { "min": 1, "max": 1 }
+        }
+      ],
+      "xpReward": 30,
+      "biomes": ["swamp", "forest"]
+    },
+    {
+      "id": "cave_bat",
+      "name": "Cave Bat",
+      "icon": "🦇",
+      "description": "A large bat that nests in dark caves. Swift and hard to hit.",
+      "level": 1,
+      "kind": "beast",
+      "stats": {
+        "hp": 25,
+        "maxHp": 25,
+        "defense": 0,
+        "evasion": null
+      },
+      "attack": {
+        "name": "dive",
+        "kind": "pierce",
+        "damage": "2~5"
+      },
+      "abilities": [],
+      "loot": [
+        {
+          "itemId": "bat_wing",
+          "chance": 0.5,
+          "quantity": { "min": 1, "max": 2 }
+        }
+      ],
+      "xpReward": 18,
+      "biomes": ["desert", "tundra"]
+    },
+    {
+      "id": "bandit",
+      "name": "Bandit",
+      "icon": "🗡️",
+      "description": "A desperate outlaw who preys on travelers. Armed and dangerous.",
+      "level": 1,
+      "kind": "humanoid",
+      "stats": {
+        "hp": 45,
+        "maxHp": 45,
+        "defense": 3,
+        "evasion": null
+      },
+      "attack": {
+        "name": "slash",
+        "kind": "slash",
+        "damage": "4~7"
+      },
+      "abilities": [],
+      "loot": [
+        {
+          "itemId": "copper_coin",
+          "chance": 0.9,
+          "quantity": { "min": 3, "max": 8 }
+        },
+        {
+          "itemId": "leather_scraps",
+          "chance": 0.4,
+          "quantity": { "min": 1, "max": 2 }
+        },
+        {
+          "itemId": "rusty_dagger",
+          "chance": 0.3,
+          "quantity": { "min": 1, "max": 1 }
+        }
+      ],
+      "xpReward": 35,
+      "biomes": ["plains", "forest", "desert", "tundra"]
     }
   ]
 }

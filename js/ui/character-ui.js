@@ -64,15 +64,9 @@ const CharacterUI = (() => {
                         <h2>Character Statistics</h2>
                         <div class="stats-categories">
                             <div class="stats-category">
-                                <h3>Combat Stats</h3>
-                                <div class="stats-list" id="combat-stats-list">
-                                    <!-- Combat stats will be rendered here -->
-                                </div>
-                            </div>
-                            <div class="stats-category">
-                                <h3>Crafting Stats</h3>
-                                <div class="stats-list" id="crafting-stats-list">
-                                    <!-- Crafting stats will be rendered here -->
+                                <h3>Character Stats</h3>
+                                <div class="stats-list" id="character-stats-list">
+                                    <!-- Character stats will be rendered here -->
                                 </div>
                             </div>
                             <div class="stats-category">
@@ -135,6 +129,8 @@ const CharacterUI = (() => {
             renderAbilities();
         } else if (activeTab === 'stats') {
             renderStats();
+            // Set up attribute buttons after rendering stats
+            setTimeout(() => setupAttributeButtons(), 0);
         }
     }
 
@@ -260,58 +256,61 @@ const CharacterUI = (() => {
 
         const stats = StatsTracker.getStats();
 
-        // Render combat stats
-        const combatStatsList = document.getElementById('combat-stats-list');
-        if (combatStatsList && stats.combat) {
-            combatStatsList.innerHTML = `
-                <div class="stat-item">
-                    <span class="stat-label">Enemies Killed:</span>
-                    <span class="stat-value">${stats.combat.enemiesKilled || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Damage Dealt:</span>
-                    <span class="stat-value">${stats.combat.damageDealt || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Damage Taken:</span>
-                    <span class="stat-value">${stats.combat.damageTaken || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Attacks Made:</span>
-                    <span class="stat-value">${stats.combat.attacksMade || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Abilities Used:</span>
-                    <span class="stat-value">${stats.combat.abilitiesUsed || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Combats Won:</span>
-                    <span class="stat-value">${stats.combat.combatsWon || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Combats Lost:</span>
-                    <span class="stat-value">${stats.combat.combatsLost || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Combats Fled:</span>
-                    <span class="stat-value">${stats.combat.combatsFled || 0}</span>
-                </div>
-            `;
-        }
+        // Render character stats
+        const characterStatsList = document.getElementById('character-stats-list');
+        if (characterStatsList) {
+            const character = window.GameState?.getState().character;
+            if (character && window.CharacterStats) {
+                // Calculate stats with breakdowns
+                const calculated = CharacterStats.calculate(character);
+                const breakdowns = calculated.breakdowns;
 
-        // Render crafting stats
-        const craftingStatsList = document.getElementById('crafting-stats-list');
-        if (craftingStatsList && stats.crafting) {
-            craftingStatsList.innerHTML = `
-                <div class="stat-item">
-                    <span class="stat-label">Items Crafted:</span>
-                    <span class="stat-value">${stats.crafting.itemsCrafted || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Recipe Discoveries:</span>
-                    <span class="stat-value">${stats.crafting.recipeDiscoveries || 0}</span>
-                </div>
-            `;
+                // Format attack multipliers as percentages
+                const meleeAttackPercent = Math.round((character.meleeAttack || 1.0) * 100);
+                const rangedAttackPercent = Math.round((character.rangedAttack || 1.0) * 100);
+                const magicAttackPercent = Math.round((character.magicAttack || 1.0) * 100);
+
+                characterStatsList.innerHTML = `
+                    <div class="stat-item" title="${breakdowns.maxHp.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Max HP:</span>
+                        <span class="stat-value">${character.maxHp || 100}</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.maxMana.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Max Mana:</span>
+                        <span class="stat-value">${character.maxMana || 50}</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.meleeAttack.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Melee Attack:</span>
+                        <span class="stat-value">${meleeAttackPercent}%</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.rangedAttack.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Ranged Attack:</span>
+                        <span class="stat-value">${rangedAttackPercent}%</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.magicAttack.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Magic Attack:</span>
+                        <span class="stat-value">${magicAttackPercent}%</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.defense.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Defense:</span>
+                        <span class="stat-value">${character.defense || 0}</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.evasion.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Evasion:</span>
+                        <span class="stat-value">${(character.evasion || 0).toFixed(1)}%</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.critChance.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Crit Chance:</span>
+                        <span class="stat-value">${(character.critChance || 0).toFixed(1)}%</span>
+                    </div>
+                    <div class="stat-item" title="${breakdowns.carryCapacity.replace(/\n/g, '&#10;')}">
+                        <span class="stat-label">Carry Capacity:</span>
+                        <span class="stat-value">${character.carryCapacity || 40} lbs</span>
+                    </div>
+                `;
+            } else {
+                characterStatsList.innerHTML = '<p class="empty-message">No character data available</p>';
+            }
         }
 
         // Render general stats (character progression)
@@ -340,32 +339,17 @@ const CharacterUI = (() => {
 
                     <!-- Character Attributes -->
                     <div class="stat-item attributes-section">
-                        <div class="stat-label">Attributes</div>
+                        <div class="stat-label">
+                            Attributes
+                            ${character.attributePoints > 0 ? `<span class="attribute-points-badge">(${character.attributePoints})</span>` : ''}
+                        </div>
                         <div class="attributes-list">
-                            <div class="attribute-item">
-                                <span class="attribute-name">Strength:</span>
-                                <span class="attribute-value">${charStats.strength || 10}</span>
-                            </div>
-                            <div class="attribute-item">
-                                <span class="attribute-name">Dexterity:</span>
-                                <span class="attribute-value">${charStats.dexterity || 10}</span>
-                            </div>
-                            <div class="attribute-item">
-                                <span class="attribute-name">Constitution:</span>
-                                <span class="attribute-value">${charStats.constitution || 10}</span>
-                            </div>
-                            <div class="attribute-item">
-                                <span class="attribute-name">Intelligence:</span>
-                                <span class="attribute-value">${charStats.intelligence || 10}</span>
-                            </div>
-                            <div class="attribute-item">
-                                <span class="attribute-name">Wisdom:</span>
-                                <span class="attribute-value">${charStats.wisdom || 10}</span>
-                            </div>
-                            <div class="attribute-item">
-                                <span class="attribute-name">Charisma:</span>
-                                <span class="attribute-value">${charStats.charisma || 10}</span>
-                            </div>
+                            ${renderAttributeRow(character, 'strength', 'STR', charStats.strength || 0)}
+                            ${renderAttributeRow(character, 'dexterity', 'DEX', charStats.dexterity || 0)}
+                            ${renderAttributeRow(character, 'constitution', 'CON', charStats.constitution || 0)}
+                            ${renderAttributeRow(character, 'intelligence', 'INT', charStats.intelligence || 0)}
+                            ${renderAttributeRow(character, 'wisdom', 'WIS', charStats.wisdom || 0)}
+                            ${renderAttributeRow(character, 'charisma', 'CHA', charStats.charisma || 0)}
                         </div>
                     </div>
                 `;
@@ -375,16 +359,74 @@ const CharacterUI = (() => {
         }
     }
 
-    // Format playtime in hours and minutes
-    function formatPlaytime(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        return `${hours}h ${minutes}m`;
+    // Render an attribute row with + button if points available
+    function renderAttributeRow(character, attributeKey, attributeName, value) {
+        const hasPoints = character.attributePoints > 0;
+        const buttonHtml = hasPoints ?
+            `<button class="attribute-plus-btn" data-attribute="${attributeKey}" title="Spend 1 attribute point">+</button>` :
+            '';
+
+        // Get calculated stats to show equipment bonuses
+        const calculated = window.CharacterStats ? CharacterStats.calculate(character) : null;
+        const equipBonus = calculated?.equipmentBonuses?.[attributeKey] || 0;
+
+        // Format: "BaseValue" or "BaseValue (+Bonus)"
+        let displayValue = value.toString();
+        if (equipBonus > 0) {
+            displayValue = `${value} <span class="equipment-bonus">(+${equipBonus})</span>`;
+        }
+
+        return `
+            <div class="attribute-item">
+                <span class="attribute-name">${attributeName}:</span>
+                <span class="attribute-value">${displayValue}</span>
+                ${buttonHtml}
+            </div>
+        `;
+    }
+
+    // Handle attribute point spending
+    function handleAttributePointSpend(attributeName) {
+        const character = window.GameState?.getState().character;
+        if (!character) return;
+
+        const result = window.Character.spendAttributePoint(character, attributeName);
+        if (result.success) {
+            // Update UI
+            render();
+
+            // Update top bar
+            if (window.updateTopBar) {
+                updateTopBar(character);
+            }
+
+            // Show feedback
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(`Increased ${attributeName} by 1!`, 'success');
+            }
+        } else {
+            // Show error
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(result.error, 'error');
+            }
+        }
+    }
+
+    // Set up event listeners for attribute buttons
+    function setupAttributeButtons() {
+        const buttons = document.querySelectorAll('.attribute-plus-btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const attributeName = button.getAttribute('data-attribute');
+                handleAttributePointSpend(attributeName);
+            });
+        });
     }
 
     return {
         init,
-        render
+        render,
+        setupAttributeButtons
     };
 })();
 

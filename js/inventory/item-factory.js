@@ -58,105 +58,73 @@ const Items = (() => {
         return 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
-    // Placeholder items for each equipment slot
-    const PLACEHOLDER_ITEMS = {
-        head: {
-            name: 'Iron Helm',
-            classifications: ['armor', 'head'],
-            stats: { defense: 5, weight: 3 },
-            description: 'A sturdy iron helmet that provides basic head protection.',
-            icon: '⛑️'
-        },
-        neck: {
-            name: 'Silver Amulet',
-            classifications: ['accessory', 'neck'],
-            stats: { magic: 3, charisma: 2 },
-            description: 'A mystical amulet that enhances magical abilities.',
-            icon: '📿'
-        },
-        chest: {
-            name: 'Leather Armor',
-            classifications: ['armor', 'chest'],
-            stats: { defense: 10, weight: 8 },
-            description: 'Well-crafted leather armor offering good protection.',
-            icon: '🦺'
-        },
-        hands: {
-            name: 'Cloth Gloves',
-            classifications: ['armor', 'hands'],
-            stats: { dexterity: 2, weight: 1 },
-            description: 'Light gloves that allow nimble finger movements.',
-            icon: '🧤'
-        },
-        legs: {
-            name: 'Chain Leggings',
-            classifications: ['armor', 'legs'],
-            stats: { defense: 7, weight: 5 },
-            description: 'Chainmail leggings providing solid leg protection.',
-            icon: '👖'
-        },
-        feet: {
-            name: 'Leather Boots',
-            classifications: ['armor', 'feet'],
-            stats: { defense: 3, speed: 1 },
-            description: 'Comfortable boots suitable for long journeys.',
-            icon: '🥾'
-        },
-        main_hand: {
-            name: 'Iron Sword',
-            classifications: ['weapon', 'one-handed'],
-            stats: { damage: 15, weight: 4 },
-            description: 'A well-balanced iron sword with a sharp edge.',
-            icon: '⚔️'
-        },
-        off_hand: {
-            name: 'Wooden Shield',
-            classifications: ['armor', 'off_hand', 'one-handed'],
-            stats: { defense: 8, weight: 6 },
-            description: 'A sturdy wooden shield reinforced with metal bands.',
-            icon: '🛡️'
-        },
-        ring1: {
-            name: 'Gold Ring',
-            classifications: ['accessory', 'ring'],
-            stats: { charisma: 3, value: 100 },
-            description: 'A beautiful gold ring with intricate engravings.',
-            icon: '💍'
-        },
-        ring2: {
-            name: 'Ruby Ring',
-            classifications: ['accessory', 'ring'],
-            stats: { strength: 2, value: 150 },
-            description: 'A ring with a gleaming ruby that radiates power.',
-            icon: '💍'
-        },
-        cloak: {
-            name: 'Traveler\'s Cloak',
-            classifications: ['armor', 'cloak'],
-            stats: { defense: 2, stealth: 3 },
-            description: 'A hooded cloak perfect for traveling incognito.',
-            icon: '🧥'
-        }
-    };
+    // Starting item IDs for test character
+    // These reference items.json - any changes to items.json are automatically reflected
+    const STARTING_ITEM_IDS = [
+        'iron_helm',
+        'silver_amulet',
+        'leather_armor',
+        'cloth_gloves',
+        'chain_leggings',
+        'leather_boots',
+        'iron_sword',
+        'wooden_shield',
+        'gold_ring',
+        'ruby_ring',
+        'travelers_cloak'
+    ];
 
-    function createPlaceholderItem(slotKey) {
-        const template = PLACEHOLDER_ITEMS[slotKey];
-        if (!template) return null;
-
-        return createItem(template.name, null, {
-            classifications: template.classifications,
-            stats: { ...template.stats },
-            description: template.description,
-            icon: template.icon
-        });
-    }
-
+    /**
+     * Create starting items for test character
+     * These are loaded from items.json via ItemFactory
+     * @returns {Array} Array of item instances
+     */
     function createAllPlaceholderItems() {
         const items = [];
-        for (const slotKey in PLACEHOLDER_ITEMS) {
-            items.push(createPlaceholderItem(slotKey));
+
+        // Use ItemFactory to load items from JSON
+        if (window.ItemFactory) {
+            STARTING_ITEM_IDS.forEach(itemId => {
+                const item = ItemFactory.createItem(itemId);
+                if (item) {
+                    items.push(item);
+                } else {
+                    console.warn(`Items.createAllPlaceholderItems: Could not create item '${itemId}' - not found in items.json`);
+                }
+            });
+        } else {
+            console.error('Items.createAllPlaceholderItems: ItemFactory not available');
         }
+
         return items;
+    }
+
+    /**
+     * @deprecated Use ItemFactory.createItem(itemId) instead
+     * This function is kept for backwards compatibility only
+     */
+    function createPlaceholderItem(slotKey) {
+        console.warn('Items.createPlaceholderItem is deprecated - use ItemFactory.createItem(itemId) instead');
+
+        // Map old slot keys to item IDs
+        const slotToItemId = {
+            head: 'iron_helm',
+            neck: 'silver_amulet',
+            chest: 'leather_armor',
+            hands: 'cloth_gloves',
+            legs: 'chain_leggings',
+            feet: 'leather_boots',
+            main_hand: 'iron_sword',
+            off_hand: 'wooden_shield',
+            ring1: 'gold_ring',
+            ring2: 'ruby_ring',
+            cloak: 'travelers_cloak'
+        };
+
+        const itemId = slotToItemId[slotKey];
+        if (!itemId) return null;
+
+        return window.ItemFactory ? ItemFactory.createItem(itemId) : null;
     }
 
     // Helper functions for item classifications

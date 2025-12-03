@@ -212,3 +212,126 @@
         opacity: 0.9;
     }
 }
+
+/* ============================================
+   Debug Menu Styles
+   ============================================ */
+#debug-menu-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    pointer-events: none;
+}
+
+#debug-menu-modal .modal-content {
+    pointer-events: all;
+}
+
+#debug-menu-modal .modal-content {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #ff6b6b;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+}
+
+#debug-menu-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#debug-menu-modal .modal-header h2 {
+    color: #ff6b6b;
+    margin: 0;
+}
+
+#debug-menu-modal .close-btn {
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+#debug-menu-modal .close-btn:hover {
+    color: #ff6b6b;
+}
+
+.debug-menu-section {
+    margin-bottom: 20px;
+}
+
+.debug-menu-section h3 {
+    color: #ffdd57;
+    margin-bottom: 12px;
+    font-size: 16px;
+    border-bottom: 1px solid rgba(255, 221, 87, 0.3);
+    padding-bottom: 6px;
+}
+
+.debug-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.debug-buttons .btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.debug-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.debug-buttons .btn:active {
+    transform: translateY(0);
+}
+
+.debug-menu-info {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+/* Debug Feedback Animation */
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    10% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    90% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+}

@@ -47,7 +47,7 @@ const ConditionEvaluator = (() => {
             // Auto-prefix common stat shortcuts
             let fullStatPath = statName;
             if (!statName.includes('.')) {
-                if (['enemiesKilled', 'damageDealt', 'damageTaken', 'attacksMade', 'abilitiesUsed', 'combatsWon', 'combatsLost', 'combatsFled'].includes(statName)) {
+                if (['kills', 'battlesWon', 'battlesLost'].includes(statName)) {
                     fullStatPath = 'combat.' + statName;
                 } else if (['itemsCrafted', 'recipeDiscoveries'].includes(statName)) {
                     fullStatPath = 'crafting.' + statName;

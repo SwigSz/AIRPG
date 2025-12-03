@@ -108,6 +108,12 @@ const Crafting = (() => {
         }
     }
 
+    // ============================================
+    // MINI INVENTORY RENDERING
+    // ============================================
+    // ** Uses centralized InventoryUI module **
+    // See js/ui/inventory-ui.js and CLAUDE.md
+    // ============================================
     function renderMiniInventory() {
         const miniInventoryGrid = document.getElementById('crafting-mini-inventory-grid');
         if (!miniInventoryGrid) {
@@ -127,47 +133,23 @@ const Crafting = (() => {
             return;
         }
 
-        miniInventoryGrid.innerHTML = '';
+        // Get all used item IDs from crafting slots
+        const usedItemIds = getUsedItemIds();
 
-        // Use the same stacking logic as the main inventory
-        const stacks = Inventory.getStackedItems(character.inventory);
-
-        // Render stacked items
-        stacks.forEach(stack => {
-            const slot = document.createElement('div');
-            slot.className = 'mini-inventory-slot';
-            slot.dataset.itemName = stack.item.name;
-            // Store all item IDs in the stack
-            slot.dataset.itemIds = JSON.stringify(stack.items.map(i => i.id));
-
-            // Display with count if more than 1
-            const displayName = stack.quantity > 1
-                ? `${stack.item.name} x${stack.quantity}`
-                : stack.item.name;
-
-            slot.innerHTML = `
-                <div class="item-card">
-                    <span class="item-name">${displayName}</span>
-                </div>
-            `;
-
-            // Add click event to move item to crafting slot
-            slot.addEventListener('click', () => {
-                // Get the first available item from the stack
-                const availableItem = getAvailableItemFromStack(stack.items);
-                if (availableItem) {
-                    addItemToCraftingSlot(availableItem);
-                }
-            });
-
-            miniInventoryGrid.appendChild(slot);
-        });
-
-        updateMiniInventoryAvailability();
+        // Use InventoryUI module to render mini inventory
+        InventoryUI.renderMiniInventory(
+            miniInventoryGrid,
+            character,
+            (item) => {
+                // Callback when item is clicked
+                addItemToCraftingSlot(item);
+            },
+            { usedItemIds }
+        );
     }
 
-    function getAvailableItemFromStack(items) {
-        // Get all used item IDs
+    function getUsedItemIds() {
+        // Get all item IDs currently in crafting slots
         const inputSlots = document.querySelectorAll('.input-slot');
         const usedItemIds = [];
         inputSlots.forEach(slot => {
@@ -175,9 +157,7 @@ const Crafting = (() => {
                 usedItemIds.push(slot.dataset.itemId);
             }
         });
-
-        // Find first item not currently used
-        return items.find(item => !usedItemIds.includes(item.id));
+        return usedItemIds;
     }
 
     function initializeCraftingSlots() {
@@ -205,47 +185,6 @@ const Crafting = (() => {
         if (outputSlot) {
             outputSlot.addEventListener('click', collectOutput);
         }
-    }
-
-    function updateMiniInventoryAvailability() {
-        // Get all item IDs currently in crafting slots
-        const inputSlots = document.querySelectorAll('.input-slot');
-        const usedItemIds = [];
-
-        inputSlots.forEach(slot => {
-            if (!slot.classList.contains('empty') && slot.dataset.itemId) {
-                usedItemIds.push(slot.dataset.itemId);
-            }
-        });
-
-        // Update mini inventory slots based on usage
-        const miniSlots = document.querySelectorAll('.mini-inventory-slot');
-        miniSlots.forEach(slot => {
-            const itemIds = JSON.parse(slot.dataset.itemIds || '[]');
-
-            // Count how many items from this stack are currently used
-            const usedCount = itemIds.filter(id => usedItemIds.includes(id)).length;
-
-            // Hide if all instances are used
-            if (usedCount >= itemIds.length) {
-                slot.classList.add('used');
-            } else {
-                slot.classList.remove('used');
-            }
-
-            // Update the display count
-            const totalCount = itemIds.length;
-            const availableCount = totalCount - usedCount;
-            const itemName = slot.dataset.itemName;
-
-            if (availableCount > 0) {
-                const displayName = totalCount > 1
-                    ? `${itemName} x${availableCount}`
-                    : itemName;
-
-                slot.querySelector('.item-name').textContent = displayName;
-            }
-        });
     }
 
     function addItemToCraftingSlot(item) {
@@ -282,11 +221,11 @@ const Crafting = (() => {
             delete emptySlot.dataset.itemId;
             delete emptySlot.dataset.itemName;
             emptySlot.removeEventListener('click', removeItem);
-            updateMiniInventoryAvailability();
+            renderMiniInventory();
         });
 
         console.log(`Added ${item.name} to crafting slot`);
-        updateMiniInventoryAvailability();
+        renderMiniInventory();
     }
 
     function attemptCraft() {
@@ -654,7 +593,7 @@ const Crafting = (() => {
             delete slot.dataset.itemId;
             delete slot.dataset.itemName;
         });
-        updateMiniInventoryAvailability();
+        renderMiniInventory();
     }
 
     return {

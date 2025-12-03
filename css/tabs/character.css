@@ -362,6 +362,14 @@
     font-size: 1rem;
 }
 
+/* Equipment Bonus Display */
+.equipment-bonus {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-left: 0.25rem;
+}
+
 .traits-list {
     display: flex;
     flex-direction: column;
@@ -377,4 +385,66 @@
 
 .trait-item.empty {
     border-style: dashed;
+}
+
+/* Attribute Points Badge */
+.attribute-points-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    margin-left: 0.5rem;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.8);
+    }
+}
+
+/* Attribute Plus Button */
+.attribute-plus-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 0.5rem;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.attribute-plus-btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.5);
+}
+
+.attribute-plus-btn:active {
+    transform: scale(0.95);
+}
+
+/* Stat item with tooltip */
+.stat-item[title] {
+    cursor: help;
+    position: relative;
+}
+
+.stat-item[title]:hover {
+    background-color: #1e293b;
 }

@@ -44,6 +44,26 @@
       "id": "two-handed",
       "name": "Two-Handed",
       "description": "Requires both hands to equip, preventing use of off-hand items"
+    },
+    {
+      "id": "melee",
+      "name": "Melee",
+      "description": "Close-range weapons that require physical proximity to the target"
+    },
+    {
+      "id": "ranged",
+      "name": "Ranged",
+      "description": "Weapons that attack from a distance using projectiles"
+    },
+    {
+      "id": "magic",
+      "name": "Magic",
+      "description": "Weapons that channel magical energy to attack"
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "description": "Defensive equipment that blocks incoming attacks"
     }
   ],
   "slots": [

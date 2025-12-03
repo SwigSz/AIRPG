@@ -47,8 +47,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize research tree system
     if (window.Research) await Research.init();
 
+    // Initialize map system
+    if (window.Map) Map.init();
+
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
+
+    // Initialize debug menu (after character is loaded)
+    // Will be initialized after character load
+    if (window.DebugMenu) {
+        // Wait for character to be available
+        setTimeout(() => {
+            const character = GameState.getState().character;
+            if (character) {
+                DebugMenu.init(character);
+            }
+        }, 100);
+    }
 
     // Start autosave (every 30 seconds)
     if (window.SaveSystem) {
@@ -61,6 +76,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (savedState && savedState.character) {
             GameState.setState(savedState);
             displayCharacterData();
+
+            // Restore map state (player position and resources)
+            if (window.Map && window.Map.restoreState) {
+                Map.restoreState();
+            }
 
             // Restore combat if it was active
             if (window.CombatManager && savedState.combat && savedState.combat.isActive) {
@@ -95,15 +115,8 @@ function initializeTestCharacter() {
         age: 25,
         skills: [woodcuttingSkill],
         inventory: Inventory.create(),
-        equipment: Equipment.create(),
-        stats: {
-            strength: 10,
-            dexterity: 8,
-            constitution: 12,
-            intelligence: 7,
-            wisdom: 6,
-            charisma: 9
-        }
+        equipment: Equipment.create()
+        // Stats will default to 0 for all attributes
     });
 
     // Add placeholder items to inventory
@@ -137,41 +150,43 @@ function initializeTestCharacter() {
         if (defenseElixir) Inventory.addItem(testCharacter.inventory, defenseElixir);
     }
 
-    // Add crafting test items (individual items that will stack in the UI)
-    const stick1 = Items.createItem('Stick', null, {
-        classifications: ['material'],
-        description: 'A sturdy stick.',
-        icon: '🪵'
-    });
-    const stick2 = Items.createItem('Stick', null, {
-        classifications: ['material'],
-        description: 'A sturdy stick.',
-        icon: '🪵'
-    });
-    const rock1 = Items.createItem('Rock', null, {
-        classifications: ['material'],
-        description: 'A heavy rock.',
-        icon: '🪨'
-    });
-    const rock2 = Items.createItem('Rock', null, {
-        classifications: ['material'],
-        description: 'A heavy rock.',
-        icon: '🪨'
-    });
+    // Add test greatsword from ItemFactory (uses proper item ID)
+    const greatsword = ItemFactory.createItem('greatsword');
+    if (greatsword) {
+        Inventory.addItem(testCharacter.inventory, greatsword);
+    }
 
-    // Add test greatsword
-    const greatsword = Items.createItem('Greatsword', null, {
-        classifications: ['weapon', 'two-handed'],
-        description: 'A massive two-handed sword that deals devastating damage.',
-        icon: '⚔️',
-        stats: { damage: 30, weight: 12 }
-    });
+    // Add ranged weapons for testing
+    const shortbow = ItemFactory.createItem('shortbow');
+    if (shortbow) {
+        Inventory.addItem(testCharacter.inventory, shortbow);
+    }
 
-    Inventory.addItem(testCharacter.inventory, stick1);
-    Inventory.addItem(testCharacter.inventory, stick2);
-    Inventory.addItem(testCharacter.inventory, rock1);
-    Inventory.addItem(testCharacter.inventory, rock2);
-    Inventory.addItem(testCharacter.inventory, greatsword);
+    const huntingBow = ItemFactory.createItem('hunting_bow');
+    if (huntingBow) {
+        Inventory.addItem(testCharacter.inventory, huntingBow);
+    }
+
+    const crossbow = ItemFactory.createItem('crossbow');
+    if (crossbow) {
+        Inventory.addItem(testCharacter.inventory, crossbow);
+    }
+
+    // Add magic weapons for testing
+    const woodenWand = ItemFactory.createItem('wooden_wand');
+    if (woodenWand) {
+        Inventory.addItem(testCharacter.inventory, woodenWand);
+    }
+
+    const crystalStaff = ItemFactory.createItem('crystal_staff');
+    if (crystalStaff) {
+        Inventory.addItem(testCharacter.inventory, crystalStaff);
+    }
+
+    const arcaneTome = ItemFactory.createItem('arcane_tome');
+    if (arcaneTome) {
+        Inventory.addItem(testCharacter.inventory, arcaneTome);
+    }
 
     // Store in game state
     GameState.updateProperty('character', testCharacter);
@@ -203,6 +218,12 @@ function displayCharacterData() {
     renderInventoryUI();
     renderEquipmentUI();
 
+    // Setup inventory controls (filter, search, sort)
+    const inventoryGrid = document.getElementById('inventory-grid');
+    if (inventoryGrid && window.InventoryUI) {
+        InventoryUI.setupInventoryControls(inventoryGrid, character, handleItemAction);
+    }
+
     // Render mini inventory if crafting module is available
     if (window.Crafting) {
         Crafting.renderMiniInventory();
@@ -233,7 +254,35 @@ function updateTopBar(character) {
     if (ageEl) ageEl.textContent = `Age: --`;
     if (levelEl) levelEl.textContent = `Lvl: ${character.level}`;
 
-    // Update XP bar in character tab
+    // Initialize HP/Mana if they don't exist (for old saves)
+    if (character.hp === undefined) character.hp = 100;
+    if (character.maxHp === undefined) character.maxHp = 100;
+    if (character.mana === undefined) character.mana = 10;
+    if (character.maxMana === undefined) character.maxMana = 10;
+
+    // Update Health Bar
+    const healthBar = document.querySelector('.health-bar');
+    const healthLabel = document.querySelector('#status-bars .status-bar-container:nth-child(1) label');
+    if (healthBar) {
+        const healthPercent = (character.hp / character.maxHp) * 100;
+        healthBar.style.width = `${healthPercent}%`;
+    }
+    if (healthLabel) {
+        healthLabel.textContent = `Health: ${character.hp}/${character.maxHp}`;
+    }
+
+    // Update Mana Bar
+    const manaBar = document.querySelector('.mana-bar');
+    const manaLabel = document.querySelector('#status-bars .status-bar-container:nth-child(2) label');
+    if (manaBar) {
+        const manaPercent = (character.mana / character.maxMana) * 100;
+        manaBar.style.width = `${manaPercent}%`;
+    }
+    if (manaLabel) {
+        manaLabel.textContent = `Mana: ${character.mana}/${character.maxMana}`;
+    }
+
+    // Update XP bar in OLD character tab (legacy support)
     const xpProgress = Character.getXPProgress(character);
     const characterLevelDisplay = document.getElementById('character-level-display');
     const characterXpBar = document.getElementById('character-xp-bar');
@@ -249,14 +298,18 @@ function updateTopBar(character) {
         characterXpText.textContent = `${xpProgress.current} / ${xpProgress.needed} XP`;
     }
 
-    // Update character stats in character tab
-    updateCharacterStats(character);
+    // Update OLD character tab stats (legacy support - only updates the OLD character tab)
+    updateOldCharacterTabStats(character);
 }
 
-// Update character stats display in character tab
-function updateCharacterStats(character) {
-    const statsList = document.querySelector('.stats-list');
-    if (!statsList || !character.stats) return;
+// Update character stats display in OLD character tab ONLY (not the new CharacterUI Stats tab)
+function updateOldCharacterTabStats(character) {
+    // Only select stats-list that's a direct descendant of character-stats (the old location)
+    const oldCharacterStats = document.querySelector('#character-tab .character-stats');
+    if (!oldCharacterStats || !character.stats) return;
+
+    const statsList = oldCharacterStats.querySelector('.stats-list');
+    if (!statsList) return;
 
     const stats = character.stats;
     const statValues = statsList.querySelectorAll('.stat-value');
@@ -296,6 +349,9 @@ function displaySkills(skills) {
 // ============================================
 // INVENTORY UI SYSTEM
 // ============================================
+// ** All inventory rendering uses js/ui/inventory-ui.js **
+// See CLAUDE.md and inventory-ui.js for documentation
+// ============================================
 
 // Render inventory grid (dynamic slots based on items)
 function renderInventoryUI() {
@@ -303,20 +359,9 @@ function renderInventoryUI() {
     if (!character) return;
 
     const inventoryGrid = document.getElementById('inventory-grid');
-    inventoryGrid.innerHTML = '';
 
-    // Get stacked items from inventory
-    const stacks = Inventory.getStackedItems(character.inventory);
-
-    // Create slots for each stack
-    stacks.forEach((stack, index) => {
-        const slot = document.createElement('div');
-        slot.className = 'inventory-slot';
-        slot.dataset.slotIndex = index;
-
-        renderItemInSlot(slot, stack.item, 'inventory', stack);
-        inventoryGrid.appendChild(slot);
-    });
+    // Use InventoryUI module to render the grid
+    InventoryUI.renderInventoryGrid(inventoryGrid, character, handleItemAction);
 
     // Always update mini inventory when inventory changes
     if (window.Crafting) {
@@ -330,162 +375,30 @@ function renderEquipmentUI() {
     if (!character) return;
 
     const equipmentSlotsContainer = document.querySelector('.equipment-slots');
-    equipmentSlotsContainer.innerHTML = '';
 
-    // Define slot order and labels
-    const slots = [
-        { key: 'head', label: 'Head' },
-        { key: 'neck', label: 'Neck' },
-        { key: 'chest', label: 'Chest' },
-        { key: 'hands', label: 'Hands' },
-        { key: 'legs', label: 'Legs' },
-        { key: 'feet', label: 'Feet' },
-        { key: 'main_hand', label: 'Main Hand' },
-        { key: 'off_hand', label: 'Off Hand' },
-        { key: 'ring1', label: 'Ring 1' },
-        { key: 'ring2', label: 'Ring 2' },
-        { key: 'cloak', label: 'Cloak' }
-    ];
-
-    // Check if main hand has a two-handed weapon
-    const mainHandItem = character.equipment.main_hand;
-    const isTwoHandedEquipped = mainHandItem && mainHandItem.classifications && mainHandItem.classifications.includes('two-handed');
-
-    slots.forEach(({ key, label }) => {
-        // Skip off_hand slot if two-handed weapon is equipped
-        if (key === 'off_hand' && isTwoHandedEquipped) {
-            return;
-        }
-
-        const item = character.equipment[key];
-        const slotElement = document.createElement('div');
-        slotElement.dataset.slot = key;
-
-        if (item) {
-            slotElement.className = 'equipment-slot occupied';
-
-            // Special rendering for two-handed weapons in main hand
-            if (key === 'main_hand' && isTwoHandedEquipped) {
-                renderItemInSlot(slotElement, item, 'equipment', null, key, true);
-            } else {
-                renderItemInSlot(slotElement, item, 'equipment', null, key);
-            }
-        } else {
-            slotElement.className = 'equipment-slot empty';
-            slotElement.textContent = label;
-        }
-
-        equipmentSlotsContainer.appendChild(slotElement);
-    });
+    // Use InventoryUI module to render equipment slots
+    InventoryUI.renderEquipmentSlots(equipmentSlotsContainer, character, handleItemAction);
 }
 
-// Render an item in a slot
-function renderItemInSlot(slotElement, item, context, stack = null, equipSlot = null, isTwoHanded = false) {
-    slotElement.classList.remove('empty');
-
-    if (context === 'equipment') {
-        slotElement.classList.add('occupied');
-
-        // Get the slot label - show "Both Hands" for two-handed weapons
-        let slotLabel = equipSlot ? equipSlot.replace('_', ' ') : '';
-        if (isTwoHanded) {
-            slotLabel = 'Both Hands';
-        }
-
-        slotElement.innerHTML = `
-            <div class="equipment-slot-content">
-                <span class="equipment-slot-icon">${item.icon}</span>
-                <div class="equipment-slot-info">
-                    <div class="equipment-slot-name">${item.name}</div>
-                    <div class="equipment-slot-label">${slotLabel}</div>
-                </div>
-            </div>
-            <div class="item-actions">
-                <button class="item-action-btn unequip" data-action="unequip">Unequip</button>
-                <button class="item-action-btn toss" data-action="toss">Toss</button>
-                <button class="item-action-btn info" data-action="info">Info</button>
-            </div>
-        `;
-
-        // Store item ID in dataset
-        slotElement.dataset.itemId = item.id;
-
-        // Attach event listeners to buttons
-        const actionsDiv = slotElement.querySelector('.item-actions');
-        attachItemEventListeners(actionsDiv, item, context, equipSlot, stack);
-    } else {
-        // Display quantity if it's a stack with multiple items
-        const displayName = stack && stack.quantity > 1
-            ? `${item.name} x${stack.quantity}`
-            : item.name;
-
-        // Check if item is consumable
-        const isConsumable = item.classifications && item.classifications.includes('consumable');
-
-        // Build action buttons based on item type
-        let actionButtonsHTML = '';
-        if (isConsumable) {
-            actionButtonsHTML = `
-                <button class="item-action-btn use" data-action="use">Use</button>
-                <button class="item-action-btn toss" data-action="toss">Toss</button>
-                <button class="item-action-btn info" data-action="info">Info</button>
-            `;
-        } else {
-            actionButtonsHTML = `
-                <button class="item-action-btn equip" data-action="equip">Equip</button>
-                <button class="item-action-btn toss" data-action="toss">Toss</button>
-                <button class="item-action-btn info" data-action="info">Info</button>
-            `;
-        }
-
-        slotElement.innerHTML = `
-            <div class="item-card">
-                <span class="item-icon">${item.icon}</span>
-                <span class="item-name">${displayName}</span>
-            </div>
-            <div class="item-actions">
-                ${actionButtonsHTML}
-            </div>
-        `;
-
-        // Store item ID in dataset (use first item in stack)
-        slotElement.dataset.itemId = item.id;
-
-        // Attach event listeners to buttons
-        const actionsDiv = slotElement.querySelector('.item-actions');
-        attachItemEventListeners(actionsDiv, item, context, null, stack);
+// Handle item actions from InventoryUI callbacks
+function handleItemAction(action, item, context, slot = null, stack = null) {
+    switch(action) {
+        case 'equip':
+            equipItemFromInventory(item.id);
+            break;
+        case 'unequip':
+            unequipItemToInventory(slot);
+            break;
+        case 'use':
+            useConsumableItem(item.id);
+            break;
+        case 'toss':
+            discardItem(item.id, context, slot, stack);
+            break;
+        case 'info':
+            InventoryUI.showItemDetailsModal(item);
+            break;
     }
-}
-
-// Attach event listeners to item action buttons
-function attachItemEventListeners(actionsDiv, item, context, slot = null, stack = null) {
-    // Get all action buttons
-    const actionButtons = actionsDiv.querySelectorAll('.item-action-btn');
-
-    actionButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const action = button.dataset.action;
-
-            switch(action) {
-                case 'equip':
-                    equipItemFromInventory(item.id);
-                    break;
-                case 'unequip':
-                    unequipItemToInventory(slot);
-                    break;
-                case 'use':
-                    useConsumableItem(item.id);
-                    break;
-                case 'toss':
-                    discardItem(item.id, context, slot, stack);
-                    break;
-                case 'info':
-                    showItemDetailsModal(item);
-                    break;
-            }
-        });
-    });
 }
 
 // Equip item from inventory
@@ -495,9 +408,15 @@ function equipItemFromInventory(itemId) {
 
     const success = Inventory.equipItemFromInventory(character, itemId);
     if (success) {
+        // Recalculate derived stats
+        if (window.CharacterStats) {
+            CharacterStats.applyToCharacter(character);
+        }
+
         // Update UI
         renderInventoryUI();
         renderEquipmentUI();
+        updateTopBar(character);
 
         // Auto-save
         SaveSystem.save();
@@ -511,9 +430,15 @@ function unequipItemToInventory(slot) {
 
     const success = Inventory.unequipItemToInventory(character, slot);
     if (success) {
+        // Recalculate derived stats
+        if (window.CharacterStats) {
+            CharacterStats.applyToCharacter(character);
+        }
+
         // Update UI
         renderInventoryUI();
         renderEquipmentUI();
+        updateTopBar(character);
 
         // Auto-save
         SaveSystem.save();
@@ -600,62 +525,47 @@ function discardItem(itemId, context, slot, stack = null) {
     SaveSystem.save();
 }
 
-// Show Item Details Modal
-function showItemDetailsModal(item) {
-    const modal = document.getElementById('item-details-modal');
-    const modalName = document.getElementById('modal-item-name');
-    const modalDescription = document.getElementById('modal-item-description');
-    const modalStatsContent = document.getElementById('modal-stats-content');
-
-    // Set content
-    modalName.textContent = item.name;
-    modalDescription.textContent = item.description;
-
-    // Build stats HTML
-    let statsHTML = '';
-    if (item.stats && Object.keys(item.stats).length > 0) {
-        for (const [key, value] of Object.entries(item.stats)) {
-            const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-            statsHTML += `<div><strong>${capitalizedKey}:</strong> ${value}</div>`;
-        }
-    }
-
-    // Display classifications instead of type
-    if (item.classifications && item.classifications.length > 0) {
-        const formattedClassifications = item.classifications.map(c => {
-            // Capitalize and replace underscores with spaces
-            return c.split(/[-_]/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-');
-        }).join(', ');
-        statsHTML += `<div><strong>Type:</strong> ${formattedClassifications}</div>`;
-    }
-
-    modalStatsContent.innerHTML = statsHTML;
-
-    // Show modal
-    modal.style.display = 'flex';
-}
-
-// Close modal when clicking X or outside
+// Initialize inventory modal handlers (delegated to InventoryUI)
 document.addEventListener('DOMContentLoaded', () => {
+    InventoryUI.initModalHandlers();
+
+    // Setup modal Discard and Close buttons
     const modal = document.getElementById('item-details-modal');
-    const closeBtn = modal.querySelector('.modal-close');
+    const modalTossBtn = document.getElementById('modal-toss-btn');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
 
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+    if (modalTossBtn) {
+        modalTossBtn.addEventListener('click', () => {
+            const itemId = modal.dataset.itemId;
+            if (itemId) {
+                // Get character and find item
+                const character = GameState.getState().character;
+                const item = Inventory.getItem(character.inventory, itemId);
 
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
+                if (item) {
+                    // Show confirmation dialog
+                    const confirmToss = document.getElementById('confirm-toss-toggle')?.checked !== false;
+                    if (confirmToss) {
+                        if (!confirm(`Discard ${item.name}?`)) {
+                            return;
+                        }
+                    }
+
+                    // Discard the item
+                    discardItem(itemId, 'inventory', null, null);
+
+                    // Close modal
+                    modal.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', () => {
             modal.style.display = 'none';
-        }
-    });
-
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            modal.style.display = 'none';
-        }
-    });
+        });
+    }
 });
 
 // Save/Load Controls Initialization
