@@ -244,7 +244,7 @@ function updateTopBar(character) {
         manaLabel.textContent = `Mana: ${character.mana}/${character.maxMana}`;
     }
 
-    // Update XP bar in character tab
+    // Update XP bar in OLD character tab (legacy support)
     const xpProgress = Character.getXPProgress(character);
     const characterLevelDisplay = document.getElementById('character-level-display');
     const characterXpBar = document.getElementById('character-xp-bar');
@@ -260,14 +260,18 @@ function updateTopBar(character) {
         characterXpText.textContent = `${xpProgress.current} / ${xpProgress.needed} XP`;
     }
 
-    // Update character stats in character tab
-    updateCharacterStats(character);
+    // Update OLD character tab stats (legacy support - only updates the OLD character tab)
+    updateOldCharacterTabStats(character);
 }
 
-// Update character stats display in character tab
-function updateCharacterStats(character) {
-    const statsList = document.querySelector('.stats-list');
-    if (!statsList || !character.stats) return;
+// Update character stats display in OLD character tab ONLY (not the new CharacterUI Stats tab)
+function updateOldCharacterTabStats(character) {
+    // Only select stats-list that's a direct descendant of character-stats (the old location)
+    const oldCharacterStats = document.querySelector('#character-tab .character-stats');
+    if (!oldCharacterStats || !character.stats) return;
+
+    const statsList = oldCharacterStats.querySelector('.stats-list');
+    if (!statsList) return;
 
     const stats = character.stats;
     const statValues = statsList.querySelectorAll('.stat-value');
