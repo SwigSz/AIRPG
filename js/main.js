@@ -150,41 +150,11 @@ function initializeTestCharacter() {
         if (defenseElixir) Inventory.addItem(testCharacter.inventory, defenseElixir);
     }
 
-    // Add crafting test items (individual items that will stack in the UI)
-    const stick1 = Items.createItem('Stick', null, {
-        classifications: ['material'],
-        description: 'A sturdy stick.',
-        icon: '🪵'
-    });
-    const stick2 = Items.createItem('Stick', null, {
-        classifications: ['material'],
-        description: 'A sturdy stick.',
-        icon: '🪵'
-    });
-    const rock1 = Items.createItem('Rock', null, {
-        classifications: ['material'],
-        description: 'A heavy rock.',
-        icon: '🪨'
-    });
-    const rock2 = Items.createItem('Rock', null, {
-        classifications: ['material'],
-        description: 'A heavy rock.',
-        icon: '🪨'
-    });
-
-    // Add test greatsword
-    const greatsword = Items.createItem('Greatsword', null, {
-        classifications: ['weapon', 'two-handed'],
-        description: 'A massive two-handed sword that deals devastating damage.',
-        icon: '⚔️',
-        stats: { damage: 30, weight: 12 }
-    });
-
-    Inventory.addItem(testCharacter.inventory, stick1);
-    Inventory.addItem(testCharacter.inventory, stick2);
-    Inventory.addItem(testCharacter.inventory, rock1);
-    Inventory.addItem(testCharacter.inventory, rock2);
-    Inventory.addItem(testCharacter.inventory, greatsword);
+    // Add test greatsword from ItemFactory (uses proper item ID)
+    const greatsword = ItemFactory.createItem('greatsword');
+    if (greatsword) {
+        Inventory.addItem(testCharacter.inventory, greatsword);
+    }
 
     // Store in game state
     GameState.updateProperty('character', testCharacter);

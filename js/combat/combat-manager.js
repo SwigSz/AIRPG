@@ -177,24 +177,14 @@ const CombatManager = (() => {
 
     // Get current attack damage for a combatant
     function getCurrentAttack(combatant) {
-        // For players, dynamically calculate from equipment
+        // For players, use centralized damage calculation system
         if (combatant.isPlayer) {
             const character = GameState.getState().character;
-            if (character) {
-                const baseAttack = 5; // Unarmed base damage
-                const weaponDamage = getEquippedWeaponDamage(character);
-                let finalDamage = weaponDamage || baseAttack;
-
-                // Apply melee attack multiplier if using a melee weapon
-                const mainHandItem = character.equipment.main_hand || character.equipment.mainHand;
-                if (mainHandItem && mainHandItem.weaponType === 'melee') {
-                    const meleeMultiplier = character.meleeAttack || 1.0;
-                    finalDamage = Math.floor(finalDamage * meleeMultiplier);
-                }
-
-                return finalDamage;
+            if (character && window.DamageCalculator) {
+                // Use DamageCalculator for proper damage type multipliers
+                return DamageCalculator.calculateCurrentWeaponDamage(character);
             }
-            // Fallback to stored attack value
+            // Fallback if DamageCalculator not loaded
             return combatant.attack || combatant.baseAttack || 5;
         }
         // For enemies, use their static attack value

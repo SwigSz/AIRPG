@@ -104,7 +104,7 @@ const Items = (() => {
         },
         main_hand: {
             name: 'Iron Sword',
-            classifications: ['weapon', 'one-handed'],
+            classifications: ['weapon', 'one-handed', 'melee'],
             stats: { damage: 15, weight: 4 },
             description: 'A well-balanced iron sword with a sharp edge.',
             icon: '⚔️'

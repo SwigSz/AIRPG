@@ -175,9 +175,133 @@ After centralization:
 
 ---
 
+## Combat Systems Architecture
+
+### Centralized Damage Calculator
+
+**CRITICAL: All damage calculations MUST use the DamageCalculator module.**
+
+#### Module Location
+`js/combat/damage-calculator.js`
+
+#### Architecture Pattern
+```
+DAMAGE CALCULATION FLOW
+├── Weapon Classification Detection (melee/ranged/magic)
+├── Attribute Multiplier (from CharacterStats)
+├── Additional Bonuses (skills, buffs, passives) [ADDITIVE]
+└── Final Damage = Base Damage × Total Multiplier
+```
+
+#### Core Principles
+
+1. **Damage Type Detection**: Weapons are classified by checking their `classifications` array in items.json
+   - Example: `["weapon", "one-handed", "melee"]`
+   - Supported types: `melee`, `ranged`, `magic`
+   - Weapons without a damage type classification receive NO multipliers
+
+2. **Additive Bonus Stacking**: All damage bonuses add together (NOT multiply)
+   - Base: 100% (1.0)
+   - Attribute bonus: +2% per point (from CharacterStats)
+   - Skill bonus: +15% (example)
+   - Total: 100% + attribute% + skill% = final multiplier
+
+3. **Extensibility for Modding**: New damage sources can be added in `getAdditionalBonuses()`
+   - Skills with damage bonuses
+   - Temporary buffs
+   - Equipment passive effects
+   - Traits/achievements
+
+#### Usage Rules
+
+**❌ DO NOT:**
+- Calculate damage manually in combat code
+- Apply multipliers directly in combat-manager.js
+- Hardcode damage type checks
+- Use multiplicative stacking for bonuses
+
+**✅ DO:**
+- Always use `DamageCalculator.calculateCurrentWeaponDamage(character)`
+- Add new damage types to `DAMAGE_TYPES` constant
+- Add new bonus sources to `getAdditionalBonuses()` function
+- Keep bonuses additive unless explicitly designed otherwise
+
+#### Quick Reference
+
+**Calculate current weapon damage:**
+```javascript
+const damage = DamageCalculator.calculateCurrentWeaponDamage(character);
+```
+
+**Calculate specific weapon damage with breakdown:**
+```javascript
+const result = DamageCalculator.calculateWeaponDamage(character, weapon, baseDamage);
+// Returns: { damage, damageType, multiplier, breakdown }
+```
+
+**Get damage multiplier only:**
+```javascript
+const multiplier = DamageCalculator.calculateDamageMultiplier(character, 'melee');
+```
+
+**Detect weapon damage type:**
+```javascript
+const damageType = DamageCalculator.getWeaponDamageType(weapon);
+// Returns: 'melee', 'ranged', 'magic', or null
+```
+
+#### Adding New Damage Types (Modding)
+
+1. Add new type to `DAMAGE_TYPES` constant
+2. Add detection logic to `getWeaponDamageType()`
+3. Add attribute mapping to `getAttributeMultiplier()` (if needed)
+4. Update weapon classifications in items.json
+
+Example:
+```javascript
+// In damage-calculator.js
+const DAMAGE_TYPES = {
+    MELEE: 'melee',
+    RANGED: 'ranged',
+    MAGIC: 'magic',
+    HOLY: 'holy'  // New damage type
+};
+```
+
+#### Adding New Bonus Sources (Modding)
+
+All bonus sources should be added to `getAdditionalBonuses()` in damage-calculator.js:
+
+```javascript
+function getAdditionalBonuses(character, damageType) {
+    let bonusMultiplier = 0;
+
+    // Skill bonuses
+    if (character.skills?.sword_mastery?.active && damageType === 'melee') {
+        bonusMultiplier += 0.15; // +15% melee damage
+    }
+
+    // Buff bonuses
+    if (character.buffs) {
+        character.buffs.forEach(buff => {
+            if (buff.damageBonus && buff.damageType === damageType) {
+                bonusMultiplier += buff.damageBonus;
+            }
+        });
+    }
+
+    return bonusMultiplier;
+}
+```
+
+**See `js/combat/damage-calculator.js` for detailed implementation and modding examples.**
+
+---
+
 ## Notes
 - This file will be appended with additional reminders and guidelines as development progresses
 - Always maintain backward compatibility when updating JSON structures
 - Include clear comments in sample entries for modder guidance
 - When creating new data-driven systems, follow the JSON loading pattern above
 - When displaying inventory, ALWAYS use the InventoryUI module
+- When calculating damage, ALWAYS use the DamageCalculator module
