@@ -183,7 +183,16 @@ const CombatManager = (() => {
             if (character) {
                 const baseAttack = 5; // Unarmed base damage
                 const weaponDamage = getEquippedWeaponDamage(character);
-                return weaponDamage || baseAttack;
+                let finalDamage = weaponDamage || baseAttack;
+
+                // Apply melee attack multiplier if using a melee weapon
+                const mainHandItem = character.equipment.main_hand || character.equipment.mainHand;
+                if (mainHandItem && mainHandItem.weaponType === 'melee') {
+                    const meleeMultiplier = character.meleeAttack || 1.0;
+                    finalDamage = Math.floor(finalDamage * meleeMultiplier);
+                }
+
+                return finalDamage;
             }
             // Fallback to stored attack value
             return combatant.attack || combatant.baseAttack || 5;
@@ -194,17 +203,59 @@ const CombatManager = (() => {
 
     // Perform a basic attack
     function performAttack(attacker, target) {
+        // Check for evasion (only for players as targets)
+        if (target.isPlayer) {
+            const character = GameState.getState().character;
+            if (character && character.evasion > 0) {
+                const evasionRoll = Math.random() * 100; // Roll 0-100
+                if (evasionRoll < character.evasion) {
+                    logCombat(`${target.name} evaded ${attacker.name}'s attack!`);
+                    renderCombatUI();
+                    checkCombatEnd();
+                    return; // Attack completely missed
+                }
+            }
+        }
+
         // Get current attack value (dynamically for players)
         const attackValue = getCurrentAttack(attacker);
-        const damage = Math.max(1, attackValue - target.defense);
+        let damage = Math.max(1, attackValue - target.defense);
+
+        // Check for crit (only for players)
+        let isCrit = false;
+        if (attacker.isPlayer) {
+            const character = GameState.getState().character;
+            if (character && character.critChance > 0) {
+                const critRoll = Math.random() * 100; // Roll 0-100
+                if (critRoll < character.critChance) {
+                    isCrit = true;
+                    damage = damage * 2; // Double damage on crit
+                }
+            }
+        }
 
         target.hp = Math.max(0, target.hp - damage);
 
-        logCombat(`${attacker.name} attacks ${target.name} for ${damage} damage!`);
+        if (isCrit) {
+            logCombat(`${attacker.name} attacks ${target.name} for ${damage} damage! CRITICAL HIT!`);
+        } else {
+            logCombat(`${attacker.name} attacks ${target.name} for ${damage} damage!`);
+        }
 
         if (target.hp <= 0) {
             target.isAlive = false;
             logCombat(`${target.name} has been defeated!`);
+        }
+
+        // Update character HP in real-time if target is the player
+        if (target.isPlayer) {
+            const character = GameState.getState().character;
+            if (character) {
+                character.hp = target.hp;
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
+            }
         }
 
         renderCombatUI();
@@ -223,6 +274,17 @@ const CombatManager = (() => {
             if (target.hp <= 0) {
                 target.isAlive = false;
                 logCombat(`${target.name} has been defeated!`);
+            }
+        }
+
+        // Update character HP in real-time if target is the player
+        if (target.isPlayer) {
+            const character = GameState.getState().character;
+            if (character) {
+                character.hp = target.hp;
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
             }
         }
 
@@ -276,6 +338,22 @@ const CombatManager = (() => {
 
         // Save references before clearing state
         const combatants = combatState.combatants;
+
+        // Save player's HP back to character profile BEFORE clearing combat state
+        const playerCombatant = combatants.find(c => c.isPlayer);
+        if (playerCombatant) {
+            const character = GameState.getState().character;
+            if (character) {
+                // Update character's HP to match their combat HP
+                character.hp = Math.max(0, playerCombatant.hp);
+                character.maxHp = playerCombatant.maxHp;
+
+                // Update the top bar immediately to show new HP
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
+            }
+        }
 
         combatState.isActive = false;
 
@@ -723,6 +801,17 @@ const CombatManager = (() => {
 
             logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
 
+            // Update character HP in real-time if target is the player
+            if (target.isPlayer) {
+                const character = GameState.getState().character;
+                if (character) {
+                    character.hp = target.hp;
+                    if (window.updateTopBar) {
+                        updateTopBar(character);
+                    }
+                }
+            }
+
             // Track ability usage
             if (window.StatsTracker) {
                 StatsTracker.incrementStat('combat.abilitiesUsed', 1);
@@ -808,6 +897,17 @@ const CombatManager = (() => {
 
                 logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
 
+                // Update character HP in real-time if target is the player
+                if (target.isPlayer) {
+                    const character = GameState.getState().character;
+                    if (character) {
+                        character.hp = target.hp;
+                        if (window.updateTopBar) {
+                            updateTopBar(character);
+                        }
+                    }
+                }
+
                 if (window.StatsTracker) {
                     StatsTracker.incrementStat('combat.abilitiesUsed', 1);
                 }
@@ -890,18 +990,24 @@ const CombatManager = (() => {
             return;
         }
 
+        // Initialize HP/Mana if they don't exist (for old saves)
+        if (character.hp === undefined) character.hp = 100;
+        if (character.maxHp === undefined) character.maxHp = 100;
+        if (character.mana === undefined) character.mana = 10;
+        if (character.maxMana === undefined) character.maxMana = 10;
+
         // Calculate player's attack damage based on equipped weapon
         const baseAttack = 5; // Unarmed base damage
         const weaponDamage = getEquippedWeaponDamage(character);
         const playerAttack = weaponDamage || baseAttack;
 
-        // Use the actual character object as the player combatant
+        // Use the actual character object as the player combatant with PERSISTENT HP
         const player = {
             ...character,
             isPlayer: true,
-            isAlive: true,
-            hp: 100,
-            maxHp: 100,
+            isAlive: character.hp > 0,
+            hp: character.hp,
+            maxHp: character.maxHp,
             attack: playerAttack,
             baseAttack: baseAttack, // Store base for reference
             defense: 5,

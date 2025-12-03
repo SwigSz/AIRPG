@@ -103,15 +103,8 @@ function initializeTestCharacter() {
         age: 25,
         skills: [woodcuttingSkill],
         inventory: Inventory.create(),
-        equipment: Equipment.create(),
-        stats: {
-            strength: 10,
-            dexterity: 8,
-            constitution: 12,
-            intelligence: 7,
-            wisdom: 6,
-            charisma: 9
-        }
+        equipment: Equipment.create()
+        // Stats will default to 0 for all attributes
     });
 
     // Add placeholder items to inventory
@@ -241,6 +234,34 @@ function updateTopBar(character) {
     if (ageEl) ageEl.textContent = `Age: --`;
     if (levelEl) levelEl.textContent = `Lvl: ${character.level}`;
 
+    // Initialize HP/Mana if they don't exist (for old saves)
+    if (character.hp === undefined) character.hp = 100;
+    if (character.maxHp === undefined) character.maxHp = 100;
+    if (character.mana === undefined) character.mana = 10;
+    if (character.maxMana === undefined) character.maxMana = 10;
+
+    // Update Health Bar
+    const healthBar = document.querySelector('.health-bar');
+    const healthLabel = document.querySelector('#status-bars .status-bar-container:nth-child(1) label');
+    if (healthBar) {
+        const healthPercent = (character.hp / character.maxHp) * 100;
+        healthBar.style.width = `${healthPercent}%`;
+    }
+    if (healthLabel) {
+        healthLabel.textContent = `Health: ${character.hp}/${character.maxHp}`;
+    }
+
+    // Update Mana Bar
+    const manaBar = document.querySelector('.mana-bar');
+    const manaLabel = document.querySelector('#status-bars .status-bar-container:nth-child(2) label');
+    if (manaBar) {
+        const manaPercent = (character.mana / character.maxMana) * 100;
+        manaBar.style.width = `${manaPercent}%`;
+    }
+    if (manaLabel) {
+        manaLabel.textContent = `Mana: ${character.mana}/${character.maxMana}`;
+    }
+
     // Update XP bar in character tab
     const xpProgress = Character.getXPProgress(character);
     const characterLevelDisplay = document.getElementById('character-level-display');
@@ -363,9 +384,15 @@ function equipItemFromInventory(itemId) {
 
     const success = Inventory.equipItemFromInventory(character, itemId);
     if (success) {
+        // Recalculate derived stats
+        if (window.CharacterStats) {
+            CharacterStats.applyToCharacter(character);
+        }
+
         // Update UI
         renderInventoryUI();
         renderEquipmentUI();
+        updateTopBar(character);
 
         // Auto-save
         SaveSystem.save();
@@ -379,9 +406,15 @@ function unequipItemToInventory(slot) {
 
     const success = Inventory.unequipItemToInventory(character, slot);
     if (success) {
+        // Recalculate derived stats
+        if (window.CharacterStats) {
+            CharacterStats.applyToCharacter(character);
+        }
+
         // Update UI
         renderInventoryUI();
         renderEquipmentUI();
+        updateTopBar(character);
 
         // Auto-save
         SaveSystem.save();

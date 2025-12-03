@@ -901,18 +901,24 @@ const Map = (() => {
             return;
         }
 
+        // Initialize HP/Mana if they don't exist (for old saves)
+        if (character.hp === undefined) character.hp = 100;
+        if (character.maxHp === undefined) character.maxHp = 100;
+        if (character.mana === undefined) character.mana = 10;
+        if (character.maxMana === undefined) character.maxMana = 10;
+
         // Calculate player's attack damage based on equipped weapon
         const baseAttack = 5; // Unarmed base damage
         const weaponDamage = window.CombatManager ? getEquippedWeaponDamage(character) : null;
         const playerAttack = weaponDamage || baseAttack;
 
-        // Convert character to combatant format
+        // Convert character to combatant format with PERSISTENT HP
         const player = {
             ...character,
             isPlayer: true,
-            isAlive: true,
-            hp: 100,
-            maxHp: 100,
+            isAlive: character.hp > 0,
+            hp: character.hp,
+            maxHp: character.maxHp,
             attack: playerAttack,
             baseAttack: baseAttack,
             defense: 5,

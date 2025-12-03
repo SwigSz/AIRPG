@@ -10,7 +10,8 @@
       "stats": {
         "hp": 50,
         "maxHp": 50,
-        "defense": 3
+        "defense": 3,
+        "evasion": null
       },
       "attack": {
         "name": "bump",
@@ -43,7 +44,8 @@
       "stats": {
         "hp": 30,
         "maxHp": 30,
-        "defense": 2
+        "defense": 2,
+        "evasion": null
       },
       "attack": {
         "name": "rusty dagger",
@@ -76,7 +78,8 @@
       "stats": {
         "hp": 35,
         "maxHp": 35,
-        "defense": 1
+        "defense": 1,
+        "evasion": null
       },
       "attack": {
         "name": "bite",
@@ -109,7 +112,8 @@
       "stats": {
         "hp": 20,
         "maxHp": 20,
-        "defense": 0
+        "defense": 0,
+        "evasion": null
       },
       "attack": {
         "name": "gnaw",
@@ -142,7 +146,8 @@
       "stats": {
         "hp": 40,
         "maxHp": 40,
-        "defense": 2
+        "defense": 2,
+        "evasion": null
       },
       "attack": {
         "name": "rusty blade",
@@ -175,7 +180,8 @@
       "stats": {
         "hp": 25,
         "maxHp": 25,
-        "defense": 0
+        "defense": 0,
+        "evasion": null
       },
       "attack": {
         "name": "dive",
@@ -203,7 +209,8 @@
       "stats": {
         "hp": 45,
         "maxHp": 45,
-        "defense": 3
+        "defense": 3,
+        "evasion": null
       },
       "attack": {
         "name": "slash",
