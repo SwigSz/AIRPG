@@ -6,7 +6,7 @@ const Inventory = (() => {
     function create() {
         return {
             items: [],
-            capacity: 64 // 8x8 grid
+            capacity: 256 // 16x16 grid potential (dynamic rendering)
         };
     }
 

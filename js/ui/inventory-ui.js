@@ -130,6 +130,14 @@ const JavaScriptMap = Map;
 
 const InventoryUI = (() => {
     // ============================================
+    // MODULE STATE (for filtering and sorting)
+    // ============================================
+
+    let currentFilter = 'all';
+    let currentSort = 'default';
+    let searchQuery = '';
+
+    // ============================================
     // CORE RENDERING FUNCTIONS
     // ============================================
 
@@ -145,13 +153,25 @@ const InventoryUI = (() => {
         containerElement.innerHTML = '';
 
         // Get stacked items from inventory
-        const stacks = Inventory.getStackedItems(character.inventory);
+        let stacks = Inventory.getStackedItems(character.inventory);
+
+        // Apply filters and sorting
+        stacks = applyFiltersAndSort(stacks);
+
+        // Update inventory count
+        updateInventoryCount(character);
 
         // Create slots for each stack
         stacks.forEach((stack, index) => {
             const slot = document.createElement('div');
             slot.className = 'inventory-slot';
             slot.dataset.slotIndex = index;
+
+            // Get primary category for visual indicator
+            const primaryCategory = stack.item.classifications && stack.item.classifications.length > 0
+                ? stack.item.classifications[0]
+                : 'unknown';
+            slot.dataset.category = primaryCategory;
 
             renderItemInSlot(slot, stack.item, 'inventory', stack, null, false, onItemAction);
             containerElement.appendChild(slot);
@@ -386,47 +406,63 @@ const InventoryUI = (() => {
                 attachItemEventListeners(actionsDiv, item, context, equipSlot, stack, onItemAction);
             }
         } else {
-            // Display quantity if it's a stack with multiple items
-            const displayName = stack && stack.quantity > 1
-                ? `${item.name} x${stack.quantity}`
-                : item.name;
-
-            // Check if item is consumable
+            // Check item classifications
             const isConsumable = item.classifications && item.classifications.includes('consumable');
+            const isMaterial = item.classifications && item.classifications.includes('material');
+            const isEquipable = item.classifications && (
+                item.classifications.includes('weapon') ||
+                item.classifications.includes('armor') ||
+                item.classifications.includes('accessory') ||
+                item.classifications.includes('off_hand')
+            );
 
-            // Build action buttons based on item type
-            let actionButtonsHTML = '';
-            if (isConsumable) {
-                actionButtonsHTML = `
-                    <button class="item-action-btn use" data-action="use">Use</button>
-                    <button class="item-action-btn toss" data-action="toss">Toss</button>
-                    <button class="item-action-btn info" data-action="info">Info</button>
-                `;
-            } else {
-                actionButtonsHTML = `
-                    <button class="item-action-btn equip" data-action="equip">Equip</button>
-                    <button class="item-action-btn toss" data-action="toss">Toss</button>
-                    <button class="item-action-btn info" data-action="info">Info</button>
-                `;
+            // Quantity badge (only show if > 1)
+            const quantityBadgeHTML = stack && stack.quantity > 1
+                ? `<div class="quantity-badge">${stack.quantity}</div>`
+                : '';
+
+            // Build single action button based on item type
+            let actionButtonHTML = '';
+            if (isMaterial) {
+                actionButtonHTML = '<div class="item-material-label">Material</div>';
+            } else if (isConsumable) {
+                actionButtonHTML = '<button class="item-primary-btn use" data-action="use">Use</button>';
+            } else if (isEquipable) {
+                actionButtonHTML = '<button class="item-primary-btn equip" data-action="equip">Equip</button>';
             }
 
             slotElement.innerHTML = `
-                <div class="item-card">
+                ${quantityBadgeHTML}
+                <div class="item-card" data-action="info">
                     <span class="item-icon">${item.icon}</span>
-                    <span class="item-name">${displayName}</span>
+                    <span class="item-name">${item.name}</span>
                 </div>
-                <div class="item-actions">
-                    ${actionButtonsHTML}
-                </div>
+                ${actionButtonHTML}
             `;
 
             // Store item ID in dataset (use first item in stack)
             slotElement.dataset.itemId = item.id;
 
-            // Attach event listeners to buttons
+            // Attach event listeners
             if (onItemAction) {
-                const actionsDiv = slotElement.querySelector('.item-actions');
-                attachItemEventListeners(actionsDiv, item, context, null, stack, onItemAction);
+                // Item card click shows info modal
+                const itemCard = slotElement.querySelector('.item-card');
+                if (itemCard) {
+                    itemCard.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        onItemAction('info', item, context, null, stack);
+                    });
+                }
+
+                // Primary button action
+                const primaryBtn = slotElement.querySelector('.item-primary-btn');
+                if (primaryBtn) {
+                    primaryBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const action = primaryBtn.dataset.action;
+                        onItemAction(action, item, context, null, stack);
+                    });
+                }
             }
         }
     }
@@ -478,10 +514,108 @@ const InventoryUI = (() => {
     }
 
     /**
+     * Apply filters and sorting to item stacks
+     * @private
+     */
+    function applyFiltersAndSort(stacks) {
+        let filtered = [...stacks];
+
+        // Apply category filter
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(stack => {
+                return stack.item.classifications &&
+                       stack.item.classifications.includes(currentFilter);
+            });
+        }
+
+        // Apply search filter
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase().trim();
+            filtered = filtered.filter(stack => {
+                return stack.item.name.toLowerCase().includes(query);
+            });
+        }
+
+        // Apply sorting
+        if (currentSort === 'name-asc') {
+            filtered.sort((a, b) => a.item.name.localeCompare(b.item.name));
+        } else if (currentSort === 'name-desc') {
+            filtered.sort((a, b) => b.item.name.localeCompare(a.item.name));
+        } else if (currentSort === 'type') {
+            filtered.sort((a, b) => {
+                const typeA = a.item.classifications && a.item.classifications[0] || 'unknown';
+                const typeB = b.item.classifications && b.item.classifications[0] || 'unknown';
+                return typeA.localeCompare(typeB);
+            });
+        }
+        // 'default' sort maintains original order
+
+        return filtered;
+    }
+
+    /**
+     * Update inventory count display
+     * @private
+     */
+    function updateInventoryCount(character) {
+        const countDisplay = document.getElementById('inventory-count-display');
+        if (countDisplay && character && character.inventory) {
+            const current = character.inventory.items.length;
+            const capacity = character.inventory.capacity;
+            countDisplay.textContent = `${current} / ${capacity}`;
+        }
+    }
+
+    /**
+     * Setup inventory controls (search, filter, sort)
+     * @param {HTMLElement} container - The inventory grid container
+     * @param {Object} character - The character object
+     * @param {Function} onItemAction - Callback for item actions
+     */
+    function setupInventoryControls(container, character, onItemAction) {
+        const searchInput = document.getElementById('inventory-search');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const sortSelect = document.getElementById('sort-select');
+
+        if (!searchInput || !filterButtons || !sortSelect) {
+            console.warn('Inventory control elements not found');
+            return;
+        }
+
+        // Search input
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderInventoryGrid(container, character, onItemAction);
+        });
+
+        // Filter buttons
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update filter
+                currentFilter = btn.dataset.filter;
+                renderInventoryGrid(container, character, onItemAction);
+            });
+        });
+
+        // Sort dropdown
+        sortSelect.addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            renderInventoryGrid(container, character, onItemAction);
+        });
+
+        // Initial count update
+        updateInventoryCount(character);
+    }
+
+    /**
      * Show item details modal
      * @param {Object} item - The item to display
      */
-    function showItemDetailsModal(item) {
+    function showItemDetailsModal(item, onItemAction = null) {
         const modal = document.getElementById('item-details-modal');
         const modalName = document.getElementById('modal-item-name');
         const modalDescription = document.getElementById('modal-item-description');
@@ -515,6 +649,9 @@ const InventoryUI = (() => {
         }
 
         modalStatsContent.innerHTML = statsHTML;
+
+        // Store item in modal dataset for Discard button
+        modal.dataset.itemId = item.id;
 
         // Show modal
         modal.style.display = 'flex';
@@ -562,7 +699,9 @@ const InventoryUI = (() => {
         // Utility functions
         showItemDetailsModal,
         initModalHandlers,
-        createItemStacks
+        createItemStacks,
+        setupInventoryControls,
+        updateInventoryCount
     };
 })();
 

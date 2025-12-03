@@ -562,7 +562,12 @@ const Map = (() => {
 
             // Show notification
             if (window.NotificationManager) {
-                NotificationManager.show(`+1 ${resourceConfig.itemName}`, 'success');
+                NotificationManager.showNotification({
+                    type: 'success',
+                    icon: '✓',
+                    title: 'Resource Gathered',
+                    message: `+1 ${resourceConfig.itemName}`
+                });
             }
 
             // Update inventory UI

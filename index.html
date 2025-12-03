@@ -417,8 +417,34 @@
                                     <span class="toggle-label">Confirm before tossing</span>
                                 </label>
                             </div>
+
+                            <!-- Inventory Controls -->
+                            <div class="inventory-controls">
+                                <input type="text" id="inventory-search" placeholder="🔍 Search inventory..." />
+
+                                <div class="filter-buttons">
+                                    <button class="filter-btn active" data-filter="all">All</button>
+                                    <button class="filter-btn" data-filter="weapon">⚔️ Weapons</button>
+                                    <button class="filter-btn" data-filter="armor">🛡️ Armor</button>
+                                    <button class="filter-btn" data-filter="accessory">💍 Accessories</button>
+                                    <button class="filter-btn" data-filter="consumable">🧪 Consumables</button>
+                                    <button class="filter-btn" data-filter="material">🪨 Materials</button>
+                                </div>
+
+                                <select id="sort-select" class="sort-dropdown">
+                                    <option value="default">Sort: Default</option>
+                                    <option value="name-asc">Sort: Name (A-Z)</option>
+                                    <option value="name-desc">Sort: Name (Z-A)</option>
+                                    <option value="type">Sort: Type</option>
+                                </select>
+
+                                <div class="inventory-count">
+                                    <span id="inventory-count-display">0 / 256</span>
+                                </div>
+                            </div>
+
                             <div class="inventory-grid" id="inventory-grid">
-                                <!-- 8x8 grid = 64 slots, populated dynamically -->
+                                <!-- Dynamically rendered slots based on items -->
                             </div>
                         </div>
                     </div>
@@ -553,6 +579,10 @@
             <div id="modal-item-stats" class="item-stats-section">
                 <h3>Stats</h3>
                 <div id="modal-stats-content"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="modal-toss-btn" class="modal-action-btn danger">Discard Item</button>
+                <button id="modal-close-btn" class="modal-action-btn">Close</button>
             </div>
         </div>
     </div>

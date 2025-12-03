@@ -218,6 +218,12 @@ function displayCharacterData() {
     renderInventoryUI();
     renderEquipmentUI();
 
+    // Setup inventory controls (filter, search, sort)
+    const inventoryGrid = document.getElementById('inventory-grid');
+    if (inventoryGrid && window.InventoryUI) {
+        InventoryUI.setupInventoryControls(inventoryGrid, character, handleItemAction);
+    }
+
     // Render mini inventory if crafting module is available
     if (window.Crafting) {
         Crafting.renderMiniInventory();
@@ -522,6 +528,44 @@ function discardItem(itemId, context, slot, stack = null) {
 // Initialize inventory modal handlers (delegated to InventoryUI)
 document.addEventListener('DOMContentLoaded', () => {
     InventoryUI.initModalHandlers();
+
+    // Setup modal Discard and Close buttons
+    const modal = document.getElementById('item-details-modal');
+    const modalTossBtn = document.getElementById('modal-toss-btn');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    if (modalTossBtn) {
+        modalTossBtn.addEventListener('click', () => {
+            const itemId = modal.dataset.itemId;
+            if (itemId) {
+                // Get character and find item
+                const character = GameState.getState().character;
+                const item = Inventory.getItem(character.inventory, itemId);
+
+                if (item) {
+                    // Show confirmation dialog
+                    const confirmToss = document.getElementById('confirm-toss-toggle')?.checked !== false;
+                    if (confirmToss) {
+                        if (!confirm(`Discard ${item.name}?`)) {
+                            return;
+                        }
+                    }
+
+                    // Discard the item
+                    discardItem(itemId, 'inventory', null, null);
+
+                    // Close modal
+                    modal.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
 });
 
 // Save/Load Controls Initialization

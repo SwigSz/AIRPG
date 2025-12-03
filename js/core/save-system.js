@@ -33,8 +33,18 @@ const SaveSystem = (() => {
             }
 
             const parsed = JSON.parse(saveData);
+            const state = parsed.state;
+
+            // Migrate old saves to new inventory capacity
+            if (state.character && state.character.inventory) {
+                if (state.character.inventory.capacity === 64) {
+                    console.log('Migrating inventory capacity from 64 to 256');
+                    state.character.inventory.capacity = 256;
+                }
+            }
+
             // Game loaded successfully
-            return parsed.state;
+            return state;
         } catch (error) {
             console.error('Failed to load game:', error);
             return null;
@@ -103,6 +113,14 @@ const SaveSystem = (() => {
                         // Validate save data structure
                         if (!saveData.version || !saveData.state) {
                             throw new Error('Invalid save file format');
+                        }
+
+                        // Migrate old saves to new inventory capacity
+                        if (saveData.state.character && saveData.state.character.inventory) {
+                            if (saveData.state.character.inventory.capacity === 64) {
+                                console.log('Migrating imported save: inventory capacity from 64 to 256');
+                                saveData.state.character.inventory.capacity = 256;
+                            }
                         }
 
                         // Load the state
