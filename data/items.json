@@ -95,8 +95,7 @@
       "name": "Iron Sword",
       "icon": "⚔️",
       "description": "A well-balanced iron sword with a sharp edge.",
-      "classifications": ["weapon", "one-handed"],
-      "weaponType": "melee",
+      "classifications": ["weapon", "one-handed", "melee"],
       "rarity": "common",
       "stats": {
         "damage": 15,
@@ -114,8 +113,7 @@
       "name": "Greatsword",
       "icon": "⚔️",
       "description": "A massive two-handed sword that deals devastating damage.",
-      "classifications": ["weapon", "two-handed"],
-      "weaponType": "melee",
+      "classifications": ["weapon", "two-handed", "melee"],
       "rarity": "uncommon",
       "stats": {
         "damage": 30,
@@ -285,8 +283,7 @@
       "name": "Rusty Sword",
       "icon": "🗡️",
       "description": "An old, rusty sword. Barely functional but better than nothing.",
-      "classifications": ["weapon", "one-handed"],
-      "weaponType": "melee",
+      "classifications": ["weapon", "one-handed", "melee"],
       "rarity": "common",
       "stats": {
         "damage": 8,
@@ -304,8 +301,7 @@
       "name": "Rusty Dagger",
       "icon": "🗡️",
       "description": "A crude, rusted dagger. Still sharp enough to pierce.",
-      "classifications": ["weapon", "one-handed"],
-      "weaponType": "melee",
+      "classifications": ["weapon", "one-handed", "melee"],
       "rarity": "common",
       "stats": {
         "damage": 6,
