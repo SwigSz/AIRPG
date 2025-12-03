@@ -75,6 +75,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const savedState = SaveSystem.load();
         if (savedState && savedState.character) {
             GameState.setState(savedState);
+
+            // Recalculate stats after loading (in case formulas changed)
+            if (window.CharacterStats && savedState.character) {
+                CharacterStats.applyToCharacter(savedState.character);
+            }
+
             displayCharacterData();
 
             // Restore map state (player position and resources)
@@ -190,6 +196,11 @@ function initializeTestCharacter() {
 
     // Store in game state
     GameState.updateProperty('character', testCharacter);
+
+    // Calculate initial stats (defense, HP, etc.)
+    if (window.CharacterStats) {
+        CharacterStats.applyToCharacter(testCharacter);
+    }
 
     // Create test settlement
     const testSettlement = Settlement.create('New Haven');

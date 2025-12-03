@@ -19,7 +19,8 @@
       "Bash(powershell -Command \"Remove-Item -LiteralPath ''.\\nul'' -Force\")",
       "Bash(git add:*)",
       "Bash(dir:*)",
-      "Bash(if exist index.html echo \"Game file found - ready to test\")"
+      "Bash(if exist index.html echo \"Game file found - ready to test\")",
+      "Bash(powershell -Command \"Get-Process | Where-Object {$_MainWindowTitle -like ''*AI-RPG*'' -or $_MainWindowTitle -like ''*index.html*''} | ForEach-Object { $_CloseMainWindow() | Out-Null; Start-Sleep -Milliseconds 100; if (!$_HasExited) { Stop-Process $_-Force } }\")"
     ],
     "deny": [],
     "ask": []

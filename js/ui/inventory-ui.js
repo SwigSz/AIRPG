@@ -634,8 +634,15 @@ const InventoryUI = (() => {
         let statsHTML = '';
         if (item.stats && Object.keys(item.stats).length > 0) {
             for (const [key, value] of Object.entries(item.stats)) {
-                const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-                statsHTML += `<div><strong>${capitalizedKey}:</strong> ${value}</div>`;
+                // Format stat names properly
+                let formattedKey = key;
+                if (key === 'blockPower') {
+                    formattedKey = 'Block Power';
+                } else {
+                    // Convert camelCase to Title Case
+                    formattedKey = key.charAt(0).toUpperCase() + key.slice(1);
+                }
+                statsHTML += `<div><strong>${formattedKey}:</strong> ${value}</div>`;
             }
         }
 

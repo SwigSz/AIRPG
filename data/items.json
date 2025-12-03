@@ -137,11 +137,11 @@
       "id": "wooden_shield",
       "name": "Wooden Shield",
       "icon": "🛡️",
-      "description": "A sturdy wooden shield reinforced with metal bands.",
+      "description": "A sturdy wooden shield that can block incoming attacks. Blocks 10 damage when blocking.",
       "classifications": ["off_hand", "one-handed", "shield"],
       "rarity": "common",
       "stats": {
-        "defense": 8,
+        "blockPower": 10,
         "constitution": 2,
         "weight": 6
       },

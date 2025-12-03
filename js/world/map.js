@@ -926,7 +926,7 @@ const Map = (() => {
             maxHp: character.maxHp,
             attack: playerAttack,
             baseAttack: baseAttack,
-            defense: 5,
+            defense: character.defense || 0,
             speed: 15,
             initiative: 0
         };
@@ -953,7 +953,8 @@ const Map = (() => {
         const enemy = {
             ...enemyInstance,
             speed: 10,
-            attack: window.EnemyFactory ? window.EnemyFactory.calculateEnemyAttack(enemyInstance) : enemyInstance.attack,
+            // Keep the attack object intact (don't overwrite with static value)
+            // attack property already copied from enemyInstance spread
             xpReward: enemyInstance.xpReward || 0
         };
 

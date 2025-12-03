@@ -73,6 +73,11 @@ const Inventory = (() => {
             });
         }
 
+        // Recalculate character stats after equipment change
+        if (window.CharacterStats) {
+            CharacterStats.applyToCharacter(character);
+        }
+
         return true;
     }
 
@@ -90,6 +95,12 @@ const Inventory = (() => {
         }
 
         addItem(character.inventory, item);
+
+        // Recalculate character stats after equipment change
+        if (window.CharacterStats) {
+            CharacterStats.applyToCharacter(character);
+        }
+
         return true;
     }
 

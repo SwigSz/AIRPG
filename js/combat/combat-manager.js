@@ -242,7 +242,14 @@ const CombatManager = (() => {
             // Fallback if DamageCalculator not loaded
             return combatant.attack || combatant.baseAttack || 5;
         }
-        // For enemies, use their static attack value
+        // For enemies, roll damage from their attack damage range
+        if (combatant.attack && typeof combatant.attack === 'object' && combatant.attack.damage) {
+            // Enemy has attack object with damage string (e.g., "2~5")
+            if (window.EnemyFactory) {
+                return EnemyFactory.rollDamage(combatant.attack.damage);
+            }
+        }
+        // Fallback to static attack value if no damage range found
         return combatant.attack || 10;
     }
 
@@ -286,6 +293,20 @@ const CombatManager = (() => {
                     damage = damage * 2; // Double damage on crit
                 }
             }
+        }
+
+        // Apply block reduction if target is blocking
+        if (target.isBlocking) {
+            const blockAmount = target.blockAmount || 5;
+            const reducedDamage = Math.max(0, damage - blockAmount);
+            const blockedAmount = damage - reducedDamage;
+            damage = reducedDamage;
+
+            logCombat(`${target.name} blocked ${blockedAmount} damage!`);
+
+            // Clear blocking status after use
+            target.isBlocking = false;
+            target.blockAmount = 0;
         }
 
         // Store old HP for animation
@@ -635,8 +656,19 @@ const CombatManager = (() => {
             }
 
             const enemyDefense = enemy.defense || 0;
-            const enemyAttackMin = Math.max(1, enemy.attack - 2);
-            const enemyAttackMax = enemy.attack + 2;
+
+            // Parse enemy damage range from attack object
+            let enemyAttackMin = 1;
+            let enemyAttackMax = 1;
+            if (enemy.attack && typeof enemy.attack === 'object' && enemy.attack.damage) {
+                const damageRange = window.EnemyFactory ? EnemyFactory.parseDamage(enemy.attack.damage) : { min: 1, max: 1 };
+                enemyAttackMin = damageRange.min;
+                enemyAttackMax = damageRange.max;
+            } else if (typeof enemy.attack === 'number') {
+                // Fallback for old format
+                enemyAttackMin = Math.max(1, enemy.attack - 2);
+                enemyAttackMax = enemy.attack + 2;
+            }
 
             enemyCard.innerHTML = `
                 <div class="combatant-name">${enemy.name}</div>
@@ -1052,8 +1084,29 @@ const CombatManager = (() => {
 
     // Perform defend action
     function performDefend(character) {
-        logCombat(`${character.name} takes a defensive stance!`);
-        // Could add defense buff here in future
+        // Calculate block amount: base 5 + shield blockPower if equipped
+        let blockAmount = 5; // Base block amount
+
+        // Check if player has a shield equipped
+        if (character.isPlayer) {
+            const gameCharacter = GameState.getState().character;
+            if (gameCharacter && gameCharacter.equipment && gameCharacter.equipment.off_hand) {
+                const offHandItem = gameCharacter.equipment.off_hand;
+                // Check if the off-hand item is a shield
+                if (offHandItem.classifications && offHandItem.classifications.includes('shield')) {
+                    // Add shield's block power
+                    if (offHandItem.stats && offHandItem.stats.blockPower) {
+                        blockAmount += offHandItem.stats.blockPower;
+                    }
+                }
+            }
+        }
+
+        // Set blocking status
+        character.isBlocking = true;
+        character.blockAmount = blockAmount;
+
+        logCombat(`${character.name} takes a defensive stance! (Will block ${blockAmount} damage)`);
 
         // End turn only if combat is still active
         if (combatState && combatState.isActive) {
@@ -1134,7 +1187,7 @@ const CombatManager = (() => {
             maxHp: character.maxHp,
             attack: playerAttack,
             baseAttack: baseAttack, // Store base for reference
-            defense: 5,
+            defense: character.defense || 0,
             speed: 15,
             initiative: 0
         };
@@ -1160,7 +1213,8 @@ const CombatManager = (() => {
         const enemy = {
             ...enemyInstance,
             speed: 10,
-            attack: EnemyFactory.calculateEnemyAttack(enemyInstance),
+            // Keep the attack object intact (don't overwrite with static value)
+            // attack property already copied from enemyInstance spread
             xpReward: enemyInstance.xpReward || 0
         };
 
@@ -1185,6 +1239,25 @@ const CombatManager = (() => {
             combatState = savedCombat;
             pendingAction = savedCombat.pendingAction;
             isProcessingTurn = false; // Reset turn processing flag on restore
+
+            // Migrate old enemy format to new format
+            if (combatState.combatants) {
+                combatState.combatants.forEach(combatant => {
+                    // If enemy has old format (attack is a number), migrate to new format
+                    if (!combatant.isPlayer && typeof combatant.attack === 'number') {
+                        const oldAttack = combatant.attack;
+                        // Recreate enemy from template to get proper attack object
+                        if (combatant.templateId && window.EnemyFactory) {
+                            const freshEnemy = EnemyFactory.createEnemy(combatant.templateId);
+                            if (freshEnemy) {
+                                // Keep current HP and alive status, but update attack structure
+                                combatant.attack = freshEnemy.attack;
+                                combatant.defense = freshEnemy.defense; // Also update defense in case it was wrong
+                            }
+                        }
+                    }
+                });
+            }
 
             // Show combat view
             toggleCombatView(true);
