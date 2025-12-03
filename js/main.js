@@ -65,6 +65,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             GameState.setState(savedState);
             displayCharacterData();
 
+            // Restore map state (player position and resources)
+            if (window.Map && window.Map.restoreState) {
+                Map.restoreState();
+            }
+
             // Restore combat if it was active
             if (window.CombatManager && savedState.combat && savedState.combat.isActive) {
                 CombatManager.restoreCombatState();

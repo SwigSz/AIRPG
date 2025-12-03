@@ -277,6 +277,42 @@
       "usableInCombat": true,
       "stackable": true,
       "value": 100
+    },
+    {
+      "id": "rusty_sword",
+      "name": "Rusty Sword",
+      "icon": "🗡️",
+      "description": "An old, rusty sword. Barely functional but better than nothing.",
+      "classifications": ["weapon", "one-handed"],
+      "rarity": "common",
+      "stats": {
+        "damage": 8,
+        "weight": 3
+      },
+      "requirements": {
+        "strength": 5,
+        "level": 1
+      },
+      "stackable": false,
+      "value": 15
+    },
+    {
+      "id": "rusty_dagger",
+      "name": "Rusty Dagger",
+      "icon": "🗡️",
+      "description": "A crude, rusted dagger. Still sharp enough to pierce.",
+      "classifications": ["weapon", "one-handed"],
+      "rarity": "common",
+      "stats": {
+        "damage": 6,
+        "weight": 2
+      },
+      "requirements": {
+        "strength": 3,
+        "level": 1
+      },
+      "stackable": false,
+      "value": 10
     }
   ]
 }

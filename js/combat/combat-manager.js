@@ -373,6 +373,15 @@ const CombatManager = (() => {
                 }
             }
 
+            // Handle map encounter based on combat result
+            if (window.Map) {
+                if (result === 'victory') {
+                    window.Map.handleCombatVictory();
+                } else if (result === 'flee' || result === 'defeat') {
+                    window.Map.handleCombatFleeOrDefeat();
+                }
+            }
+
             // Auto-save after combat
             if (window.SaveSystem) {
                 SaveSystem.save();
@@ -387,17 +396,16 @@ const CombatManager = (() => {
         }
     }
 
-    // Toggle combat view
+    // Toggle combat view - Shows/hides overlay on top of map
     function toggleCombatView(show) {
-        const mapView = document.querySelector('.map-view');
-        const combatView = document.querySelector('.combat-view');
+        const combatOverlay = document.querySelector('.combat-overlay');
 
         if (show) {
-            mapView.classList.remove('active');
-            combatView.classList.add('active');
+            // Show combat overlay on top of map
+            combatOverlay.classList.add('active');
         } else {
-            combatView.classList.remove('active');
-            mapView.classList.add('active');
+            // Hide combat overlay, revealing map underneath
+            combatOverlay.classList.remove('active');
         }
     }
 

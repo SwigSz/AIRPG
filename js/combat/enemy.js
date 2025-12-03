@@ -75,6 +75,14 @@ const EnemyDatabase = (() => {
         return Object.keys(ENEMIES);
     }
 
+    // Get enemies by biome
+    function getEnemiesByBiome(biome) {
+        return Object.keys(ENEMIES).filter(enemyId => {
+            const enemy = ENEMIES[enemyId];
+            return enemy.biome && enemy.biome.includes(biome);
+        });
+    }
+
     // Add new enemy to database
     function addEnemy(enemyData) {
         if (!enemyData.id) {
@@ -96,6 +104,7 @@ const EnemyDatabase = (() => {
         init,
         getEnemyTemplate,
         getAllEnemyIds,
+        getEnemiesByBiome,
         addEnemy
     };
 })();

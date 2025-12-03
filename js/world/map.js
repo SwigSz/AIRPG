@@ -84,6 +84,17 @@ const Map = (() => {
         }
     };
 
+    // Combat Encounter Configuration
+    const COMBAT_ENCOUNTERS = {
+        enemy: {
+            name: 'Enemy',
+            color: '#8b0000',
+            icon: '⚔️',
+            description: 'A hostile creature ready for combat',
+            respawnTime: 30000 // 30 seconds in milliseconds
+        }
+    };
+
     const GRID_LINE_COLOR = '#000000';
     const GRID_LINE_WIDTH = 0.5;
     const PLAYER_COLOR = '#f4c430';
@@ -210,13 +221,17 @@ const Map = (() => {
                     walkable: biomeConfig.walkable,
                     x: x,
                     y: y,
-                    resource: null // Will be populated with resource data if applicable
+                    resource: null, // Will be populated with resource data if applicable
+                    combatEncounter: null // Will be populated with combat encounter data if applicable
                 };
             }
         }
 
         // Place resource nodes manually in specific locations
         placeResources();
+
+        // Place combat encounters in each biome
+        placeCombatEncounters();
     }
 
     /**
@@ -268,6 +283,50 @@ const Map = (() => {
             type: resourceType,
             amount: amount || resourceConfig.defaultAmount,
             maxAmount: amount || resourceConfig.defaultAmount
+        };
+    }
+
+    /**
+     * Place combat encounters at specific tile locations (one per biome for testing)
+     */
+    function placeCombatEncounters() {
+        // One combat encounter per biome for testing
+        addCombatEncounter(4, 5, 'forest');    // Forest biome
+        addCombatEncounter(14, 4, 'desert');   // Desert biome
+        addCombatEncounter(5, 15, 'tundra');   // Tundra biome
+        addCombatEncounter(15, 15, 'swamp');   // Swamp biome
+        addCombatEncounter(11, 11, 'plains');  // Plains biome
+    }
+
+    /**
+     * Add a combat encounter to a specific tile
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @param {string} biome - Biome type for enemy selection
+     */
+    function addCombatEncounter(x, y, biome) {
+        if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+            console.warn(`Cannot place combat encounter at (${x}, ${y}) - out of bounds`);
+            return;
+        }
+
+        const tile = grid[y][x];
+        if (!tile.walkable) {
+            console.warn(`Cannot place combat encounter at (${x}, ${y}) - tile is not walkable`);
+            return;
+        }
+
+        const encounterConfig = COMBAT_ENCOUNTERS.enemy;
+        if (!encounterConfig) {
+            console.warn(`Unknown combat encounter type`);
+            return;
+        }
+
+        tile.combatEncounter = {
+            type: 'enemy',
+            biome: biome,
+            active: true,
+            respawnTimer: null
         };
     }
 
@@ -634,6 +693,9 @@ const Map = (() => {
         // Draw resource nodes
         drawResources();
 
+        // Draw combat encounters
+        drawCombatEncounters();
+
         // Draw player
         drawPlayer();
     }
@@ -715,6 +777,42 @@ const Map = (() => {
     }
 
     /**
+     * Draw combat encounter nodes on tiles that have them
+     */
+    function drawCombatEncounters() {
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                const tile = grid[y][x];
+                if (tile.combatEncounter && tile.combatEncounter.active) {
+                    const encounterConfig = COMBAT_ENCOUNTERS.enemy;
+                    if (!encounterConfig) continue;
+
+                    // Draw darker red overlay on tile
+                    ctx.fillStyle = encounterConfig.color;
+                    ctx.globalAlpha = 0.4;
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    ctx.globalAlpha = 1.0;
+
+                    // Draw combat icon centered on tile
+                    const iconSize = Math.max(tileSize * 0.6, 14);
+                    ctx.font = `${iconSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    const centerX = x * tileSize + tileSize / 2;
+                    const centerY = y * tileSize + tileSize / 2;
+
+                    ctx.fillText(encounterConfig.icon, centerX, centerY);
+                }
+            }
+        }
+
+        // Reset text alignment for other drawing operations
+        ctx.textAlign = 'start';
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    /**
      * Draw player as a yellow circle
      */
     function drawPlayer() {
@@ -752,10 +850,114 @@ const Map = (() => {
         // Save to game state
         savePlayerPosition();
 
+        // Check for combat encounter
+        if (targetTile.combatEncounter && targetTile.combatEncounter.active) {
+            initiateCombatEncounter(newX, newY);
+        }
+
         // Re-render
         render();
 
         return true;
+    }
+
+    /**
+     * Initiate a combat encounter from a map tile
+     * @param {number} x - X coordinate of encounter
+     * @param {number} y - Y coordinate of encounter
+     */
+    function initiateCombatEncounter(x, y) {
+        const tile = getTile(x, y);
+        if (!tile || !tile.combatEncounter || !tile.combatEncounter.active) {
+            return;
+        }
+
+        // Get enemies for this biome
+        const biome = tile.combatEncounter.biome;
+        const availableEnemies = window.EnemyDatabase ? window.EnemyDatabase.getEnemiesByBiome(biome) : [];
+
+        if (!availableEnemies || availableEnemies.length === 0) {
+            console.error(`No enemies available for biome: ${biome}`);
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(`No enemies found in this area!`, 'info');
+            }
+            return;
+        }
+
+        // Randomly select an enemy from this biome
+        const randomEnemyId = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
+
+        // Create the enemy
+        const enemyInstance = window.EnemyFactory ? window.EnemyFactory.createEnemy(randomEnemyId) : null;
+        if (!enemyInstance) {
+            console.error(`Failed to create enemy: ${randomEnemyId}`);
+            return;
+        }
+
+        // Get the player character
+        const character = window.GameState?.getState()?.character;
+        if (!character) {
+            console.error('No character found');
+            return;
+        }
+
+        // Calculate player's attack damage based on equipped weapon
+        const baseAttack = 5; // Unarmed base damage
+        const weaponDamage = window.CombatManager ? getEquippedWeaponDamage(character) : null;
+        const playerAttack = weaponDamage || baseAttack;
+
+        // Convert character to combatant format
+        const player = {
+            ...character,
+            isPlayer: true,
+            isAlive: true,
+            hp: 100,
+            maxHp: 100,
+            attack: playerAttack,
+            baseAttack: baseAttack,
+            defense: 5,
+            speed: 15,
+            initiative: 0
+        };
+
+        // Helper function to get equipped weapon damage (copied from combat-manager)
+        function getEquippedWeaponDamage(char) {
+            const weapon = char.equipment?.mainHand;
+            if (!weapon || !weapon.damage) {
+                return null;
+            }
+
+            // Parse damage string like "5~10" or just "5"
+            if (typeof weapon.damage === 'string') {
+                if (weapon.damage.includes('~')) {
+                    const [min, max] = weapon.damage.split('~').map(Number);
+                    return Math.floor(Math.random() * (max - min + 1)) + min;
+                }
+                return parseInt(weapon.damage);
+            }
+            return weapon.damage;
+        }
+
+        // Convert enemy instance to combatant format
+        const enemy = {
+            ...enemyInstance,
+            speed: 10,
+            attack: window.EnemyFactory ? window.EnemyFactory.calculateEnemyAttack(enemyInstance) : enemyInstance.attack,
+            xpReward: enemyInstance.xpReward || 0
+        };
+
+        // Store the encounter location for potential respawn
+        if (!window.GameState.getState().world) {
+            window.GameState.updateProperty('world', {});
+        }
+        const worldState = window.GameState.getState().world;
+        worldState.lastEncounterLocation = { x, y };
+        window.GameState.updateProperty('world', worldState);
+
+        // Start combat using CombatManager
+        if (window.CombatManager) {
+            window.CombatManager.startCombat([player], [enemy]);
+        }
     }
 
     /**
@@ -877,7 +1079,28 @@ const Map = (() => {
             }
         }
 
+        // Extract tiles with combat encounters for saving
+        const combatEncounterTiles = [];
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                const tile = grid[y][x];
+                if (tile.combatEncounter) {
+                    combatEncounterTiles.push({
+                        x: x,
+                        y: y,
+                        combatEncounter: {
+                            type: tile.combatEncounter.type,
+                            biome: tile.combatEncounter.biome,
+                            active: tile.combatEncounter.active
+                            // Note: respawnTimer is not saved (will be null on reload)
+                        }
+                    });
+                }
+            }
+        }
+
         worldState.resourceTiles = resourceTiles;
+        worldState.combatEncounterTiles = combatEncounterTiles;
         window.GameState.updateProperty('world', worldState);
 
         // Auto-save
@@ -891,17 +1114,127 @@ const Map = (() => {
      */
     function loadGridState() {
         const state = window.GameState?.getState();
-        if (!state || !state.world || !state.world.resourceTiles) {
+        if (!state || !state.world) {
             return;
         }
 
-        // Restore resource tiles
-        state.world.resourceTiles.forEach(savedTile => {
-            const tile = grid[savedTile.y][savedTile.x];
-            if (tile) {
-                tile.resource = { ...savedTile.resource };
+        // First, clear all resources from the grid
+        // This ensures depleted resources don't reappear
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                if (grid[y] && grid[y][x]) {
+                    grid[y][x].resource = null;
+                }
             }
-        });
+        }
+
+        // Then restore only the saved resource tiles
+        if (state.world.resourceTiles) {
+            state.world.resourceTiles.forEach(savedTile => {
+                const tile = grid[savedTile.y][savedTile.x];
+                if (tile) {
+                    tile.resource = { ...savedTile.resource };
+                }
+            });
+        }
+
+        // Restore combat encounter tiles
+        if (state.world.combatEncounterTiles) {
+            state.world.combatEncounterTiles.forEach(savedTile => {
+                const tile = grid[savedTile.y][savedTile.x];
+                if (tile && tile.combatEncounter) {
+                    // Update the active state from saved data
+                    tile.combatEncounter.active = savedTile.combatEncounter.active;
+                }
+            });
+        }
+    }
+
+    /**
+     * Handle combat victory - despawn encounter and start respawn timer
+     */
+    function handleCombatVictory() {
+        const worldState = window.GameState?.getState()?.world;
+        if (!worldState || !worldState.lastEncounterLocation) {
+            return;
+        }
+
+        const { x, y } = worldState.lastEncounterLocation;
+        const tile = getTile(x, y);
+
+        if (tile && tile.combatEncounter) {
+            // Deactivate the encounter
+            tile.combatEncounter.active = false;
+
+            // Start respawn timer
+            const respawnTime = COMBAT_ENCOUNTERS.enemy.respawnTime;
+            tile.combatEncounter.respawnTimer = setTimeout(() => {
+                respawnCombatEncounter(x, y);
+            }, respawnTime);
+
+            // Save grid state
+            saveGridState();
+
+            // Re-render to remove the encounter icon
+            render();
+
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(`Enemy defeated! It will respawn in ${respawnTime / 1000} seconds.`, 'info');
+            }
+        }
+
+        // Clear the last encounter location
+        worldState.lastEncounterLocation = null;
+        window.GameState.updateProperty('world', worldState);
+    }
+
+    /**
+     * Handle combat flee or defeat - reset player to origin
+     */
+    function handleCombatFleeOrDefeat() {
+        const origin = { x: 10, y: 10 }; // Map origin point
+
+        // Move player back to origin
+        playerPosition = { ...origin };
+        savePlayerPosition();
+
+        // Re-render map
+        render();
+
+        if (window.ActivityLog) {
+            ActivityLog.addMessage(`Returned to safe location at (${origin.x}, ${origin.y})`, 'info');
+        }
+
+        // Clear the last encounter location
+        const worldState = window.GameState?.getState()?.world;
+        if (worldState) {
+            worldState.lastEncounterLocation = null;
+            window.GameState.updateProperty('world', worldState);
+        }
+    }
+
+    /**
+     * Respawn a combat encounter at the given coordinates
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     */
+    function respawnCombatEncounter(x, y) {
+        const tile = getTile(x, y);
+
+        if (tile && tile.combatEncounter) {
+            tile.combatEncounter.active = true;
+            tile.combatEncounter.respawnTimer = null;
+
+            // Save grid state
+            saveGridState();
+
+            // Re-render to show the encounter icon again
+            render();
+
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(`An enemy has appeared at (${x}, ${y})!`, 'combat');
+            }
+        }
     }
 
     /**
@@ -913,10 +1246,32 @@ const Map = (() => {
         render();
     }
 
+    /**
+     * Restore map state from saved game data
+     * Called after save data is loaded into GameState
+     */
+    function restoreState() {
+        if (!isInitialized) return;
+
+        console.log('Map: Restoring state from save data...');
+
+        // Reload player position from game state
+        loadPlayerPosition();
+
+        // Reload grid state (resources) from game state
+        loadGridState();
+
+        // Re-render with restored state
+        render();
+
+        console.log('Map: State restored successfully');
+    }
+
     return {
         init,
         render,
         refresh,
+        restoreState,
         getPlayerPosition,
         movePlayer,
         getTile,
@@ -925,7 +1280,9 @@ const Map = (() => {
         getAllBiomes,
         getResourceConfig,
         getAllResources,
-        harvestResource
+        harvestResource,
+        handleCombatVictory,
+        handleCombatFleeOrDefeat
     };
 })();
 

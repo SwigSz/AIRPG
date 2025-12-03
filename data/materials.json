@@ -54,6 +54,105 @@
       "rarity": "uncommon",
       "value": 10,
       "sources": ["iron_vein", "mine"]
+    },
+    {
+      "id": "wolf_pelt",
+      "name": "Wolf Pelt",
+      "icon": "🐺",
+      "description": "A sturdy wolf pelt suitable for crafting.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 8,
+      "sources": ["wolf"]
+    },
+    {
+      "id": "raw_meat",
+      "name": "Raw Meat",
+      "icon": "🥩",
+      "description": "Fresh meat from a hunted animal. Can be cooked.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 3,
+      "sources": ["wolf", "beast"]
+    },
+    {
+      "id": "rat_tail",
+      "name": "Rat Tail",
+      "icon": "🐀",
+      "description": "A diseased rat tail. Some alchemists might want this.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 2,
+      "sources": ["giant_rat"]
+    },
+    {
+      "id": "diseased_meat",
+      "name": "Diseased Meat",
+      "icon": "🦠",
+      "description": "Rotten, diseased meat. Not suitable for consumption.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 1,
+      "sources": ["giant_rat"]
+    },
+    {
+      "id": "bone",
+      "name": "Bone",
+      "icon": "🦴",
+      "description": "A weathered bone. Useful for crafting.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 4,
+      "sources": ["skeleton", "undead"]
+    },
+    {
+      "id": "bat_wing",
+      "name": "Bat Wing",
+      "icon": "🦇",
+      "description": "A leathery bat wing used in alchemy.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 5,
+      "sources": ["cave_bat"]
+    },
+    {
+      "id": "leather_scraps",
+      "name": "Leather Scraps",
+      "icon": "🧵",
+      "description": "Small pieces of leather that can be used for repairs.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 3,
+      "sources": ["bandit", "humanoid"]
+    },
+    {
+      "id": "copper_coin",
+      "name": "Copper Coin",
+      "icon": "🪙",
+      "description": "A simple copper coin used as currency.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 1,
+      "sources": ["bandit", "goblin", "humanoid"]
+    },
+    {
+      "id": "goblin_ear",
+      "name": "Goblin Ear",
+      "icon": "👂",
+      "description": "A goblin's ear. Proof of a bounty kill.",
+      "type": "material",
+      "stackable": true,
+      "rarity": "common",
+      "value": 5,
+      "sources": ["goblin"]
     }
   ]
 }
