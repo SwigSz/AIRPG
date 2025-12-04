@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.GameState) GameState.init();
     if (window.EventSystem) EventSystem.init();
     if (window.TimeManager) TimeManager.init();
+    if (window.TimeSystem) TimeSystem.init();
 
     // Initialize stats tracker
     if (window.StatsTracker) StatsTracker.init();
@@ -82,6 +83,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             displayCharacterData();
+
+            // Restore time system state
+            if (window.TimeSystem && savedState.time) {
+                TimeSystem.loadSaveData(savedState.time);
+            }
+
+            // Restore settlement state for time system
+            if (window.TimeSystem && savedState.character && savedState.character.inSettlement) {
+                TimeSystem.setInSettlement(true);
+            }
 
             // Restore map state (player position and resources)
             if (window.Map && window.Map.restoreState) {

@@ -10,6 +10,12 @@ const SaveSystem = (() => {
     function save(isAutosave = false) {
         try {
             const state = GameState.getState();
+
+            // Save time system data
+            if (window.TimeSystem) {
+                state.time = TimeSystem.getSaveData();
+            }
+
             const saveData = {
                 version: '1.0.0',
                 timestamp: Date.now(),

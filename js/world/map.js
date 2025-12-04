@@ -700,6 +700,11 @@ const Map = (() => {
         // Set inSettlement flag
         character.inSettlement = true;
 
+        // Enable accelerated time in settlement
+        if (window.TimeSystem) {
+            window.TimeSystem.setInSettlement(true);
+        }
+
         // Update settlement tab visibility
         if (window.TabManager) {
             window.TabManager.updateSettlementTabVisibility();
@@ -731,6 +736,11 @@ const Map = (() => {
 
         // Clear inSettlement flag
         character.inSettlement = false;
+
+        // Disable accelerated time in settlement
+        if (window.TimeSystem) {
+            window.TimeSystem.setInSettlement(false);
+        }
 
         // Update settlement tab visibility
         if (window.TabManager) {
@@ -1254,6 +1264,11 @@ const Map = (() => {
         // Save to game state
         savePlayerPosition();
 
+        // Advance time by 1 day for moving a tile
+        if (window.TimeSystem) {
+            TimeSystem.advanceDays(1);
+        }
+
         // Check for combat encounter
         if (targetTile.combatEncounter && targetTile.combatEncounter.active) {
             initiateCombatEncounter(newX, newY);
@@ -1460,6 +1475,11 @@ const Map = (() => {
 
         // Save state
         saveGridState();
+
+        // Advance time by 0.5 days for harvesting
+        if (window.TimeSystem) {
+            TimeSystem.advanceDays(0.5);
+        }
 
         return {
             type: tile.resource ? tile.resource.type : null,
