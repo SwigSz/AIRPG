@@ -46,12 +46,25 @@ const CombatManager = (() => {
     // Show floating damage number on combatant card
     function showFloatingDamage(combatantId, amount, type) {
         const targetCard = document.querySelector(`[data-combatant-id="${combatantId}"]`);
-        if (!targetCard) return;
+        if (!targetCard) {
+            console.warn(`[Combat] Could not find card with ID: ${combatantId}`);
+            return;
+        }
 
         const floatEl = document.createElement('div');
         floatEl.className = `damage-float ${type}`;
-        floatEl.textContent = type === 'miss' ? 'EVADED' : (type === 'heal' ? `+${amount}` : `-${amount}`);
 
+        if (type === 'miss') {
+            floatEl.textContent = 'EVADED';
+        } else if (type === 'heal') {
+            floatEl.textContent = `+${amount}`;
+        } else if (type === 'crit') {
+            floatEl.textContent = `CRIT! -${amount}`;
+        } else {
+            floatEl.textContent = `-${amount}`;
+        }
+
+        console.log(`[Combat] Showing ${type} indicator on ${combatantId}: "${floatEl.textContent}"`);
         targetCard.appendChild(floatEl);
 
         // Remove element after animation completes
@@ -263,18 +276,32 @@ const CombatManager = (() => {
             targetCardId = `enemy-${targetIndex}`;
         }
 
-        // Check for evasion (only for players as targets)
-        if (target.isPlayer) {
-            const character = GameState.getState().character;
-            if (character && character.evasion > 0) {
-                const evasionRoll = Math.random() * 100; // Roll 0-100
-                if (evasionRoll < character.evasion) {
-                    logCombat(`${target.name} evaded ${attacker.name}'s attack!`);
+        // Check for evasion (works for both players and enemies)
+        // Note: Cannot evade while blocking (bracing for impact)
+        let targetEvasion = 0;
+        if (!target.isBlocking) {
+            if (target.isPlayer) {
+                const character = GameState.getState().character;
+                targetEvasion = character?.evasion || 0;
+            } else {
+                // Enemies can have evasion too
+                targetEvasion = target.evasion || 0;
+            }
+        }
+
+        if (targetEvasion > 0) {
+            const evasionRoll = Math.random() * 100; // Roll 0-100
+            if (evasionRoll < targetEvasion) {
+                logCombat(`${target.name} evaded ${attacker.name}'s attack!`);
+                renderCombatUI();
+
+                // Show floating damage AFTER rendering (same as normal damage)
+                requestAnimationFrame(() => {
                     showFloatingDamage(targetCardId, 0, 'miss');
-                    renderCombatUI();
-                    checkCombatEnd();
-                    return; // Attack completely missed
-                }
+                });
+
+                checkCombatEnd();
+                return; // Attack completely missed
             }
         }
 
@@ -282,16 +309,23 @@ const CombatManager = (() => {
         const attackValue = getCurrentAttack(attacker);
         let damage = Math.max(1, attackValue - target.defense);
 
-        // Check for crit (only for players)
+        // Check for crit (works for both players and enemies)
         let isCrit = false;
+        let attackerCritChance = 0;
+
         if (attacker.isPlayer) {
             const character = GameState.getState().character;
-            if (character && character.critChance > 0) {
-                const critRoll = Math.random() * 100; // Roll 0-100
-                if (critRoll < character.critChance) {
-                    isCrit = true;
-                    damage = damage * 2; // Double damage on crit
-                }
+            attackerCritChance = character?.critChance || 0;
+        } else {
+            // Enemies can have crit chance too
+            attackerCritChance = attacker.critChance || 0;
+        }
+
+        if (attackerCritChance > 0) {
+            const critRoll = Math.random() * 100; // Roll 0-100
+            if (critRoll < attackerCritChance) {
+                isCrit = true;
+                damage = damage * 2; // Double damage on crit
             }
         }
 
@@ -339,7 +373,8 @@ const CombatManager = (() => {
 
         // Show floating damage number and animate HP AFTER rendering
         requestAnimationFrame(() => {
-            showFloatingDamage(targetCardId, damage, 'damage');
+            const damageType = isCrit ? 'crit' : 'damage';
+            showFloatingDamage(targetCardId, damage, damageType);
             animateHPDamage(targetCardId, oldHP, target.hp, target.maxHp);
         });
 
@@ -1114,12 +1149,45 @@ const CombatManager = (() => {
         }
     }
 
+    // Show flee result indicator
+    function showFleeIndicator(success) {
+        const fleeBtn = document.getElementById('flee-btn');
+        if (!fleeBtn) return;
+
+        // Create indicator element
+        const indicator = document.createElement('div');
+        indicator.className = `flee-indicator ${success ? 'success' : 'failure'}`;
+        indicator.textContent = success ? 'ESCAPED!' : 'FAILED!';
+
+        // Position above the button
+        const btnRect = fleeBtn.getBoundingClientRect();
+        const actionsRect = fleeBtn.parentElement.getBoundingClientRect();
+
+        indicator.style.left = `${btnRect.left - actionsRect.left + (btnRect.width / 2)}px`;
+        indicator.style.top = `${btnRect.top - actionsRect.top - 40}px`;
+
+        fleeBtn.parentElement.appendChild(indicator);
+
+        // Remove after animation
+        setTimeout(() => {
+            indicator.remove();
+        }, 2000);
+    }
+
     // Attempt to flee combat
     function attemptFlee() {
         const fleeChance = Math.random();
-        if (fleeChance > 0.5) {
+        const success = fleeChance > 0.5;
+
+        // Show visual indicator
+        showFleeIndicator(success);
+
+        if (success) {
             logCombat('Successfully fled from combat!');
-            endCombat('flee');
+            // Delay combat end to let player see the indicator
+            setTimeout(() => {
+                endCombat('flee');
+            }, 1000);
         } else {
             logCombat('Failed to flee!');
 

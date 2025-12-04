@@ -45,7 +45,8 @@
         "hp": 30,
         "maxHp": 30,
         "defense": 2,
-        "evasion": null
+        "evasion": 5,
+        "critChance": 10
       },
       "attack": {
         "name": "rusty dagger",
@@ -79,7 +80,8 @@
         "hp": 35,
         "maxHp": 35,
         "defense": 1,
-        "evasion": null
+        "evasion": 8,
+        "critChance": 12
       },
       "attack": {
         "name": "bite",

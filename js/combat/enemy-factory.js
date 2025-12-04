@@ -43,6 +43,8 @@ const EnemyFactory = (() => {
             hp: template.stats?.hp || template.hp || 10,
             maxHp: template.stats?.maxHp || template.stats?.hp || template.hp || 10,
             defense: template.stats?.defense || template.defense || 0,
+            evasion: template.stats?.evasion || 0,
+            critChance: template.stats?.critChance || 0,
             attack: {
                 name: template.attack?.name || 'strike',
                 kind: template.attack?.kind || 'blunt',
