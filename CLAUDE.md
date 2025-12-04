@@ -69,6 +69,78 @@ When you need to edit specific functionality, look in these locations:
 
 ---
 
+## Hot-Reload System
+
+### How It Works
+
+The game is designed to support **hot-reloading** of content. When you add new items, recipes, research nodes, or enemies to the JSON files, players can simply **refresh the page** to see the new content WITHOUT losing their progress.
+
+### What Gets Hot-Reloaded
+
+✅ **Automatically reloaded on every page refresh:**
+- Items (`data/items.json`)
+- Materials (`data/materials.json`)
+- Recipes (`data/recipes.json`)
+- Research nodes (`data/research-tree.json`)
+- Enemies (`data/enemies.json`)
+- Abilities (`data/abilities.json`)
+- Skills (`data/skills.json`)
+- Spells (`data/spells.json`)
+
+✅ **Player progress preserved in save file:**
+- Discovered recipes (which recipes the player has found)
+- Crafted items history (tracking first-time crafts)
+- Researched nodes (completed research)
+- Character stats, inventory, equipment
+- Settlement resources and upgrades
+- Quest progress
+
+### How Player Progress is Stored
+
+All player progress is stored in **GameState** and saved to a single save file in localStorage under the key `ai_rpg_save`. This includes:
+
+- `state.discoveredRecipes` - Array of recipe IDs the player has discovered
+- `state.craftedItems` - Array of item names the player has crafted before
+- `state.researchedNodes` - Array of research node IDs completed
+- `state.craftingHistory` - Array of item names crafted (for research unlocks)
+
+**Migration:** Old saves that stored `discoveredRecipes` and `craftedItems` in separate localStorage keys are automatically migrated to GameState on load.
+
+### Adding New Content (Developer Guide)
+
+When adding new content to JSON files:
+
+1. **Add the new entry** to the appropriate JSON file (items.json, recipes.json, etc.)
+2. **No code changes needed** - the game will load it automatically
+3. **Player saves are safe** - existing progress is preserved
+4. **Test by refreshing** - just reload the page to see your changes
+
+**Example: Adding a new item**
+```json
+// In data/items.json
+{
+  "id": "new_sword",
+  "name": "New Sword",
+  "classifications": ["weapon", "one-handed", "melee"],
+  "stats": { "damage": 15 }
+}
+```
+Save the file → Refresh the game → New item is available!
+
+### Important Rules
+
+**❌ DO NOT:**
+- Store game data in separate localStorage keys (use GameState)
+- Hardcode item/recipe/enemy data in JavaScript
+- Cache JSON data across page loads
+
+**✅ DO:**
+- Load all content from JSON files on init
+- Store player progress in GameState
+- Use migration logic in save-system.js for breaking changes
+
+---
+
 ## Project Structure Guidelines
 
 ### Data Files Architecture

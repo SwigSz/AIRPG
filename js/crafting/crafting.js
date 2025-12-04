@@ -58,12 +58,29 @@ const Crafting = (() => {
     }
 
     function loadDiscoveredRecipes() {
+        // Load from GameState (new method)
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state && state.discoveredRecipes && Array.isArray(state.discoveredRecipes)) {
+            discoveredRecipes = state.discoveredRecipes.map(id => recipes.find(r => r.id === id)).filter(r => r);
+            console.log(`Loaded ${discoveredRecipes.length} discovered recipes from GameState`);
+            return;
+        }
+
+        // MIGRATION: Try loading from old localStorage location
         const saved = localStorage.getItem('discoveredRecipes');
         if (saved) {
             try {
                 const recipeIds = JSON.parse(saved);
                 discoveredRecipes = recipeIds.map(id => recipes.find(r => r.id === id)).filter(r => r);
-                // Discovered recipes loaded
+
+                // Migrate to GameState
+                if (state) {
+                    state.discoveredRecipes = recipeIds;
+                    console.log(`Migrated ${recipeIds.length} discovered recipes from localStorage to GameState`);
+                }
+
+                // Clear old localStorage
+                localStorage.removeItem('discoveredRecipes');
             } catch (error) {
                 console.error('Failed to load discovered recipes:', error);
                 discoveredRecipes = [];
@@ -75,15 +92,42 @@ const Crafting = (() => {
 
     function saveDiscoveredRecipes() {
         const recipeIds = discoveredRecipes.map(r => r.id);
-        localStorage.setItem('discoveredRecipes', JSON.stringify(recipeIds));
+
+        // Save to GameState (new method)
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state) {
+            state.discoveredRecipes = recipeIds;
+
+            // Trigger main save system
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
+        }
     }
 
     function loadCraftedItems() {
+        // Load from GameState (new method)
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state && state.craftedItems && Array.isArray(state.craftedItems)) {
+            craftedItems = state.craftedItems;
+            console.log(`Loaded ${craftedItems.length} crafted items from GameState`);
+            return;
+        }
+
+        // MIGRATION: Try loading from old localStorage location
         const saved = localStorage.getItem('craftedItems');
         if (saved) {
             try {
                 craftedItems = JSON.parse(saved);
-                // Previously crafted items loaded
+
+                // Migrate to GameState
+                if (state) {
+                    state.craftedItems = craftedItems;
+                    console.log(`Migrated ${craftedItems.length} crafted items from localStorage to GameState`);
+                }
+
+                // Clear old localStorage
+                localStorage.removeItem('craftedItems');
             } catch (error) {
                 console.error('Failed to load crafted items:', error);
                 craftedItems = [];
@@ -94,7 +138,16 @@ const Crafting = (() => {
     }
 
     function saveCraftedItems() {
-        localStorage.setItem('craftedItems', JSON.stringify(craftedItems));
+        // Save to GameState (new method)
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state) {
+            state.craftedItems = craftedItems;
+
+            // Trigger main save system
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
+        }
     }
 
     function isNewItem(itemName) {

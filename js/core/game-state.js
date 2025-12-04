@@ -18,7 +18,9 @@ const GameState = (() => {
         researchedNodes: [],
         campLocation: null,
         time: null,
-        activeResearch: null // { nodeId, startDay, daysRequired, isPaused }
+        activeResearch: null, // { nodeId, startDay, daysRequired, isPaused }
+        discoveredRecipes: [], // Recipe IDs the player has discovered
+        craftedItems: [] // Item names that have been crafted before
     };
 
     function init() {
@@ -62,7 +64,9 @@ const GameState = (() => {
             craftingHistory: [],
             researchedNodes: [],
             campLocation: null,
-            activeResearch: null
+            activeResearch: null,
+            discoveredRecipes: [],
+            craftedItems: []
         };
     }
 

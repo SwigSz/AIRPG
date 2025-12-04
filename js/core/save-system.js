@@ -61,6 +61,37 @@ const SaveSystem = (() => {
                 }
             }
 
+            // Migrate discoveredRecipes and craftedItems from localStorage to GameState
+            if (!state.discoveredRecipes || !Array.isArray(state.discoveredRecipes)) {
+                const oldDiscoveredRecipes = localStorage.getItem('discoveredRecipes');
+                if (oldDiscoveredRecipes) {
+                    try {
+                        state.discoveredRecipes = JSON.parse(oldDiscoveredRecipes);
+                        console.log('Migrated discoveredRecipes from localStorage to GameState');
+                        localStorage.removeItem('discoveredRecipes');
+                    } catch (error) {
+                        state.discoveredRecipes = [];
+                    }
+                } else {
+                    state.discoveredRecipes = [];
+                }
+            }
+
+            if (!state.craftedItems || !Array.isArray(state.craftedItems)) {
+                const oldCraftedItems = localStorage.getItem('craftedItems');
+                if (oldCraftedItems) {
+                    try {
+                        state.craftedItems = JSON.parse(oldCraftedItems);
+                        console.log('Migrated craftedItems from localStorage to GameState');
+                        localStorage.removeItem('craftedItems');
+                    } catch (error) {
+                        state.craftedItems = [];
+                    }
+                } else {
+                    state.craftedItems = [];
+                }
+            }
+
             // Game loaded successfully
             return state;
         } catch (error) {
@@ -141,6 +172,14 @@ const SaveSystem = (() => {
                             }
                         }
 
+                        // Migrate discoveredRecipes and craftedItems
+                        if (!saveData.state.discoveredRecipes || !Array.isArray(saveData.state.discoveredRecipes)) {
+                            saveData.state.discoveredRecipes = [];
+                        }
+                        if (!saveData.state.craftedItems || !Array.isArray(saveData.state.craftedItems)) {
+                            saveData.state.craftedItems = [];
+                        }
+
                         // Load the state
                         GameState.setState(saveData.state);
 
@@ -169,8 +208,9 @@ const SaveSystem = (() => {
 
     function wipeData() {
         try {
-            // Clear localStorage completely (including discovered recipes, crafted items, and last tab)
+            // Clear localStorage completely
             localStorage.removeItem(SAVE_KEY);
+            // Legacy cleanup (these should no longer be used but clean them anyway)
             localStorage.removeItem('discoveredRecipes');
             localStorage.removeItem('craftedItems');
             localStorage.removeItem('lastActiveTab');

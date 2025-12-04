@@ -308,8 +308,11 @@ const Research = (() => {
         const startBtn = modal.querySelector('#start-research-btn');
         if (startBtn) {
             startBtn.addEventListener('click', () => {
-                startResearch(nodeId);
-                document.body.removeChild(modal);
+                const canAfford = checkCanAffordResearch(nodeId);
+                if (canAfford) {
+                    startResearch(nodeId);
+                    document.body.removeChild(modal);
+                }
             });
         }
 
