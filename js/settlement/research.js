@@ -140,11 +140,20 @@ const Research = (() => {
         }
 
         researchedNodes.add(nodeId);
+
+        // Handle recipe unlocks if this node unlocks recipes
+        const node = treeData.nodes[nodeId];
+        if (node && node.unlocksRecipes && node.unlocksRecipes.length > 0) {
+            console.log(`Research ${nodeId} unlocks recipes:`, node.unlocksRecipes);
+            // Recipes are now unlockable through the research system
+            // The crafting system will check Research.hasResearched() to allow crafting
+        }
+
         render();
 
         // Emit event if EventSystem exists
         if (window.EventSystem) {
-            EventSystem.emit('research-completed', { nodeId });
+            EventSystem.emit('research-completed', { nodeId, node });
         }
     }
 
@@ -186,6 +195,46 @@ const Research = (() => {
 
     function hasResearched(nodeId) {
         return researchedNodes.has(nodeId);
+    }
+
+    // Check all nodes and auto-complete any that have their requirements met
+    function checkAndAutoCompleteNodes() {
+        let anyCompleted = false;
+
+        for (const nodeId in treeData.nodes) {
+            const node = treeData.nodes[nodeId];
+
+            // Skip if already researched
+            if (hasResearched(nodeId)) {
+                continue;
+            }
+
+            // Check if this node should auto-complete (has item requirements met)
+            if (node.itemRequirements && node.itemRequirements.length > 0) {
+                if (isAvailable(nodeId)) {
+                    console.log(`Auto-completing research node: ${node.name}`);
+                    researchedNodes.add(nodeId);
+
+                    // Handle recipe unlocks
+                    if (node.unlocksRecipes && node.unlocksRecipes.length > 0) {
+                        console.log(`Research ${nodeId} unlocks recipes:`, node.unlocksRecipes);
+                    }
+
+                    // Emit event
+                    if (window.EventSystem) {
+                        EventSystem.emit('research-completed', { nodeId, node });
+                    }
+
+                    anyCompleted = true;
+                }
+            }
+        }
+
+        if (anyCompleted) {
+            render();
+        }
+
+        return anyCompleted;
     }
 
     function reset() {
@@ -366,6 +415,7 @@ const Research = (() => {
         isAvailable,
         clickNode,
         hasResearched,
+        checkAndAutoCompleteNodes,
         reset
     };
 })();

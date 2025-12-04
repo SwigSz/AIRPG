@@ -258,18 +258,14 @@ const Crafting = (() => {
 
             // Check if there's already an item in the output slot
             const outputSlot = document.querySelector('.output-slot');
-            if (!outputSlot.classList.contains('empty') && outputSlot.dataset.craftedItem) {
+            if (!outputSlot.classList.contains('empty') && outputSlot.dataset.craftedItemId) {
                 // Auto-collect the previous crafted item
-                const previousItemTemplate = JSON.parse(outputSlot.dataset.craftedItem);
-                const previousItem = Items.createItem(previousItemTemplate.name, previousItemTemplate.type, {
-                    description: previousItemTemplate.description,
-                    icon: previousItemTemplate.icon,
-                    slot: previousItemTemplate.slot || null,
-                    stats: previousItemTemplate.stats || {},
-                    classifications: previousItemTemplate.classifications || []
-                });
-                Inventory.addItem(character.inventory, previousItem);
-                console.log('Auto-collected previous crafted item:', previousItem.name);
+                const previousItemId = outputSlot.dataset.craftedItemId;
+                const previousItem = ItemFactory.createItem(previousItemId);
+                if (previousItem) {
+                    Inventory.addItem(character.inventory, previousItem);
+                    console.log('Auto-collected previous crafted item:', previousItem.name);
+                }
             }
 
             // Remove items from inventory immediately
@@ -280,14 +276,22 @@ const Crafting = (() => {
             // Clear all input slots immediately
             clearAllSlots();
 
+            // Get the item template to display the name
+            const itemTemplate = ItemFactory.getItemTemplate(matchedRecipe.outputItemId);
+            if (!itemTemplate) {
+                console.error('Could not find item template for:', matchedRecipe.outputItemId);
+                alert('Error: Recipe output item not found in items.json!');
+                return;
+            }
+
             // Show output in center slot
             outputSlot.innerHTML = `
                 <div class="item-card">
-                    <span class="item-name">${matchedRecipe.output.name}</span>
+                    <span class="item-name">${itemTemplate.name}</span>
                 </div>
             `;
             outputSlot.classList.remove('empty');
-            outputSlot.dataset.craftedItem = JSON.stringify(matchedRecipe.output);
+            outputSlot.dataset.craftedItemId = matchedRecipe.outputItemId;
 
             // Update inventory displays
             renderMiniInventory();
@@ -325,7 +329,7 @@ const Crafting = (() => {
             }
 
             // Show crafted item modal
-            showCraftedItemModal(matchedRecipe.output);
+            showCraftedItemModal(itemTemplate);
         } else {
             console.log('No matching recipe found');
             alert('No recipe matches this combination!');
@@ -334,10 +338,23 @@ const Crafting = (() => {
 
     function findMatchingRecipe(craftingItems) {
         for (let recipe of recipes) {
-            // Count required items
+            // Check if recipe requires research and if it's unlocked
+            if (recipe.unlockRequirements && recipe.unlockRequirements.research) {
+                const requiredResearch = recipe.unlockRequirements.research;
+                // Check if research is completed
+                if (window.Research && !Research.hasResearched(requiredResearch)) {
+                    // Recipe is locked behind research
+                    continue;
+                }
+            }
+
+            // Count required items (look up names from ItemFactory)
             const requiredCounts = {};
             recipe.inputs.forEach(input => {
-                requiredCounts[input.name] = input.count;
+                const itemTemplate = ItemFactory.getItemTemplate(input.itemId);
+                if (itemTemplate) {
+                    requiredCounts[itemTemplate.name] = input.count;
+                }
             });
 
             // Count crafted items
@@ -366,11 +383,17 @@ const Crafting = (() => {
 
     function collectOutput() {
         const outputSlot = document.querySelector('.output-slot');
-        if (outputSlot.classList.contains('empty') || !outputSlot.dataset.craftedItem) {
+        if (outputSlot.classList.contains('empty') || !outputSlot.dataset.craftedItemId) {
             return;
         }
 
-        const craftedItemTemplate = JSON.parse(outputSlot.dataset.craftedItem);
+        const craftedItemId = outputSlot.dataset.craftedItemId;
+        const craftedItemTemplate = ItemFactory.getItemTemplate(craftedItemId);
+
+        if (!craftedItemTemplate) {
+            console.error('Could not find item template for:', craftedItemId);
+            return;
+        }
 
         // Show crafted item modal instead of auto-collecting
         showCraftedItemModal(craftedItemTemplate);
@@ -464,14 +487,13 @@ const Crafting = (() => {
     function takeCraftedItem(itemTemplate) {
         const character = GameState.getState().character;
 
-        // Create a proper item with unique ID using Items.createItem
-        const craftedItem = Items.createItem(itemTemplate.name, itemTemplate.type, {
-            description: itemTemplate.description,
-            icon: itemTemplate.icon,
-            slot: itemTemplate.slot || null,
-            stats: itemTemplate.stats || {},
-            classifications: itemTemplate.classifications || []
-        });
+        // Create a proper item with unique ID using ItemFactory
+        const craftedItem = ItemFactory.createItem(itemTemplate.id);
+
+        if (!craftedItem) {
+            console.error('Failed to create item:', itemTemplate.id);
+            return;
+        }
 
         // Mark this item as crafted (for "New item created!" tracking)
         markItemAsCrafted(craftedItem.name);
@@ -484,6 +506,11 @@ const Crafting = (() => {
             GameState.addToCraftingHistory(craftedItem.name);
         }
 
+        // Check for auto-completing research nodes
+        if (window.Research && window.Research.checkAndAutoCompleteNodes) {
+            Research.checkAndAutoCompleteNodes();
+        }
+
         // Trigger research tree update if it exists
         if (window.Research && window.Research.render) {
             Research.render();
@@ -493,7 +520,7 @@ const Crafting = (() => {
         const outputSlot = document.querySelector('.output-slot');
         outputSlot.innerHTML = '';
         outputSlot.classList.add('empty');
-        delete outputSlot.dataset.craftedItem;
+        delete outputSlot.dataset.craftedItemId;
 
         // Re-render inventory displays
         renderMiniInventory();
@@ -512,18 +539,22 @@ const Crafting = (() => {
     function discardCraftedItem() {
         // Get the item template before clearing
         const outputSlot = document.querySelector('.output-slot');
-        const craftedItemTemplate = JSON.parse(outputSlot.dataset.craftedItem || '{}');
+        const craftedItemId = outputSlot.dataset.craftedItemId;
 
-        // Mark this item as crafted even though it's being discarded
-        // (so the "New item created!" banner won't show again)
-        if (craftedItemTemplate.name) {
-            markItemAsCrafted(craftedItemTemplate.name);
+        if (craftedItemId) {
+            const craftedItemTemplate = ItemFactory.getItemTemplate(craftedItemId);
+
+            // Mark this item as crafted even though it's being discarded
+            // (so the "New item created!" banner won't show again)
+            if (craftedItemTemplate && craftedItemTemplate.name) {
+                markItemAsCrafted(craftedItemTemplate.name);
+            }
         }
 
         // Clear output slot without adding to inventory
         outputSlot.innerHTML = '';
         outputSlot.classList.add('empty');
-        delete outputSlot.dataset.craftedItem;
+        delete outputSlot.dataset.craftedItemId;
 
         // Save game
         if (window.SaveSystem) {
@@ -567,7 +598,12 @@ const Crafting = (() => {
             recipe.inputs.forEach(input => {
                 const ingredientItem = document.createElement('div');
                 ingredientItem.className = 'recipe-ingredient-item';
-                ingredientItem.textContent = `${input.name} x${input.count}`;
+
+                // Look up item name from ItemFactory
+                const itemTemplate = ItemFactory.getItemTemplate(input.itemId);
+                const itemName = itemTemplate ? itemTemplate.name : input.itemId;
+
+                ingredientItem.textContent = `${itemName} x${input.count}`;
                 ingredientsList.appendChild(ingredientItem);
             });
 

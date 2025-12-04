@@ -177,22 +177,37 @@ const ItemFactory = (() => {
     let itemDatabase = {};
 
     async function init() {
-        console.log('ItemFactory: Loading items from items.json...');
+        console.log('ItemFactory: Loading items from items.json and materials.json...');
         try {
-            const response = await fetch('data/items.json');
-            const data = await response.json();
+            // Load items
+            const itemsResponse = await fetch('data/items.json');
+            const itemsData = await itemsResponse.json();
 
             // Store items in a map for quick lookup
-            if (data.items && Array.isArray(data.items)) {
-                data.items.forEach(item => {
+            if (itemsData.items && Array.isArray(itemsData.items)) {
+                itemsData.items.forEach(item => {
                     itemDatabase[item.id] = item;
                 });
-                console.log(`ItemFactory: Loaded ${data.items.length} items`);
+                console.log(`ItemFactory: Loaded ${itemsData.items.length} items`);
             } else {
                 console.error('ItemFactory: Invalid items.json format');
             }
+
+            // Load materials
+            const materialsResponse = await fetch('data/materials.json');
+            const materialsData = await materialsResponse.json();
+
+            // Store materials in the same map
+            if (materialsData.materials && Array.isArray(materialsData.materials)) {
+                materialsData.materials.forEach(material => {
+                    itemDatabase[material.id] = material;
+                });
+                console.log(`ItemFactory: Loaded ${materialsData.materials.length} materials`);
+            } else {
+                console.error('ItemFactory: Invalid materials.json format');
+            }
         } catch (error) {
-            console.error('ItemFactory: Failed to load items.json', error);
+            console.error('ItemFactory: Failed to load item data', error);
         }
     }
 

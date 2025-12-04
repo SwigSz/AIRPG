@@ -64,6 +64,11 @@
       "id": "shield",
       "name": "Shield",
       "description": "Defensive equipment that blocks incoming attacks"
+    },
+    {
+      "id": "craftable",
+      "name": "Craftable",
+      "description": "Item can be crafted using the crafting system (hidden from player)"
     }
   ],
   "slots": [

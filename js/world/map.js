@@ -60,8 +60,8 @@ const Map = (() => {
             color: '#1a3a0f',
             icon: '🌲',
             defaultAmount: 5,
-            description: 'A sturdy tree that can be harvested for wood',
-            itemName: 'Wood',
+            description: 'A sturdy tree that can be harvested for sticks',
+            itemName: 'Stick',
             gatherVerb: 'chopped'
         },
         rock: {
@@ -69,8 +69,8 @@ const Map = (() => {
             color: '#666666',
             icon: '🪨',
             defaultAmount: 5,
-            description: 'A large stone deposit containing valuable minerals',
-            itemName: 'Stone',
+            description: 'A large stone deposit containing valuable rocks',
+            itemName: 'Rock',
             gatherVerb: 'mined'
         },
         bush: {
