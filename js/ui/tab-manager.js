@@ -7,6 +7,7 @@ const TabManager = (() => {
 
     function init() {
         initializeTabSwitching();
+        updateSettlementTabVisibility();
         setInitialTab();
     }
 
@@ -77,10 +78,26 @@ const TabManager = (() => {
         return currentTab;
     }
 
+    /**
+     * Update settlement tab visibility based on character.inSettlement
+     */
+    function updateSettlementTabVisibility() {
+        const settlementButton = document.querySelector('[data-tab="settlement"]');
+        if (!settlementButton) return;
+
+        const character = window.GameState?.getState()?.character;
+        if (character && character.inSettlement) {
+            settlementButton.style.display = 'flex';
+        } else {
+            settlementButton.style.display = 'none';
+        }
+    }
+
     return {
         init,
         switchTab,
-        getCurrentTab
+        getCurrentTab,
+        updateSettlementTabVisibility
     };
 })();
 

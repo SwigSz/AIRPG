@@ -49,7 +49,8 @@ const Character = (() => {
             defense: options.defense !== undefined ? options.defense : 0,
             evasion: options.evasion !== undefined ? options.evasion : 0,
             critChance: options.critChance !== undefined ? options.critChance : 0,
-            carryCapacity: options.carryCapacity !== undefined ? options.carryCapacity : 40
+            carryCapacity: options.carryCapacity !== undefined ? options.carryCapacity : 40,
+            inSettlement: options.inSettlement !== undefined ? options.inSettlement : false
         };
 
         // Apply stat calculations if CharacterStats is available

@@ -335,3 +335,22 @@
         transform: translateX(-50%) translateY(-10px);
     }
 }
+
+/* Camp Modal */
+.camp-modal {
+    max-width: 400px;
+    text-align: center;
+}
+
+.camp-modal h2 {
+    color: #f59e0b;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+}
+
+.camp-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}

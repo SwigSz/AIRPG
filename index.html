@@ -337,7 +337,13 @@
                 <div class="tab-content" id="map-tab">
                     <!-- Normal Map View -->
                     <div class="map-view active">
+                        <button id="set-camp-btn" class="set-camp-btn">⛺ Set Up Camp Here</button>
                         <div class="map-placeholder">Map View</div>
+
+                        <!-- In Settlement Overlay -->
+                        <div class="in-settlement-overlay" style="display: none;">
+                            <button id="leave-camp-btn" class="leave-camp-btn">Leave Camp</button>
+                        </div>
                     </div>
 
                     <!-- Combat Overlay (sits on top of map-view) -->
@@ -605,6 +611,17 @@
             <div class="crafted-item-actions">
                 <button class="modal-btn modal-btn-secondary" id="discard-crafted-btn">Discard</button>
                 <button class="modal-btn modal-btn-primary" id="take-crafted-btn">Take</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enter Camp Modal -->
+    <div id="enter-camp-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content camp-modal">
+            <h2>Enter Camp?</h2>
+            <div class="camp-modal-actions">
+                <button class="modal-btn modal-btn-secondary" id="enter-camp-no-btn">No</button>
+                <button class="modal-btn modal-btn-primary" id="enter-camp-yes-btn">Yes</button>
             </div>
         </div>
     </div>

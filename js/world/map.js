@@ -105,6 +105,7 @@ const Map = (() => {
     let ctx = null;
     let grid = [];
     let playerPosition = { x: 10, y: 10 };
+    let campLocation = null;
     let tileSize = 0;
     let isInitialized = false;
     let keydownHandler = null;
@@ -133,9 +134,24 @@ const Map = (() => {
             canvas.style.width = '100%';
             canvas.style.height = '100%';
 
+            // Save elements before clearing
+            const campButton = document.getElementById('set-camp-btn');
+            const settlementOverlay = document.querySelector('.in-settlement-overlay');
+
             // Clear placeholder and add canvas
             mapView.innerHTML = '';
+
+            // Re-add camp button if it existed
+            if (campButton) {
+                mapView.appendChild(campButton);
+            }
+
             mapView.appendChild(canvas);
+
+            // Re-add settlement overlay if it existed
+            if (settlementOverlay) {
+                mapView.appendChild(settlementOverlay);
+            }
         }
 
         ctx = canvas.getContext('2d');
@@ -157,6 +173,18 @@ const Map = (() => {
 
         // Set up tab visibility handler
         setupTabVisibilityHandler();
+
+        // Set up camp button handler
+        setupCampButtonHandler();
+
+        // Load camp location from game state
+        loadCampLocation();
+
+        // Update in-settlement overlay on init
+        updateInSettlementOverlay();
+
+        // Set up leave camp button
+        setupLeaveCampButton();
 
         // Initial render
         resizeCanvas();
@@ -429,6 +457,338 @@ const Map = (() => {
     }
 
     /**
+     * Set up camp button click handler
+     */
+    function setupCampButtonHandler() {
+        const campButton = document.getElementById('set-camp-btn');
+        if (!campButton) {
+            console.warn('Map: Camp button not found');
+            return;
+        }
+
+        campButton.addEventListener('click', () => {
+            placeCamp();
+        });
+
+        // Update button visibility based on camp state
+        updateCampButtonVisibility();
+    }
+
+    /**
+     * Update camp button visibility
+     */
+    function updateCampButtonVisibility() {
+        const campButton = document.getElementById('set-camp-btn');
+        if (!campButton) return;
+
+        if (campLocation) {
+            campButton.classList.add('hidden');
+        } else {
+            campButton.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Place camp at current player position
+     */
+    function placeCamp() {
+        if (campLocation) {
+            if (window.ActivityLog) {
+                ActivityLog.addMessage('Camp has already been placed', 'info');
+            }
+            return;
+        }
+
+        // Check if there's a resource on this tile
+        const tile = getTile(playerPosition.x, playerPosition.y);
+        if (tile && tile.resource) {
+            // Show confirmation modal for resource destruction
+            showResourceDestructionModal();
+            return;
+        }
+
+        // No resource, proceed with placement
+        confirmCampPlacement();
+    }
+
+    /**
+     * Show modal warning about resource destruction
+     */
+    function showResourceDestructionModal() {
+        const modal = document.getElementById('enter-camp-modal');
+        if (!modal) return;
+
+        // Reuse the enter camp modal but change the text
+        const modalContent = modal.querySelector('.camp-modal');
+        const heading = modalContent.querySelector('h2');
+        const yesBtn = document.getElementById('enter-camp-yes-btn');
+        const noBtn = document.getElementById('enter-camp-no-btn');
+
+        // Store original text
+        const originalHeading = heading.textContent;
+
+        // Update modal text
+        heading.textContent = 'Placing a camp on this tile will destroy the resource here. Continue?';
+
+        modal.style.display = 'flex';
+
+        // Remove old listeners
+        const newYesBtn = yesBtn.cloneNode(true);
+        const newNoBtn = noBtn.cloneNode(true);
+        yesBtn.replaceWith(newYesBtn);
+        noBtn.replaceWith(newNoBtn);
+
+        // Yes button - destroy resource and place camp
+        newYesBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            heading.textContent = originalHeading; // Restore original text
+
+            // Remove the resource
+            const tile = getTile(playerPosition.x, playerPosition.y);
+            if (tile && tile.resource) {
+                tile.resource = null;
+                saveGridState();
+            }
+
+            // Place the camp
+            confirmCampPlacement();
+        });
+
+        // No button - cancel placement
+        newNoBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            heading.textContent = originalHeading; // Restore original text
+
+            if (window.ActivityLog) {
+                ActivityLog.addMessage('Camp placement cancelled', 'info');
+            }
+        });
+
+        // Keyboard handlers
+        const keyHandler = (e) => {
+            if (e.key === 'Enter') {
+                modal.style.display = 'none';
+                heading.textContent = originalHeading;
+                document.removeEventListener('keydown', keyHandler);
+
+                // Remove the resource
+                const tile = getTile(playerPosition.x, playerPosition.y);
+                if (tile && tile.resource) {
+                    tile.resource = null;
+                    saveGridState();
+                }
+
+                confirmCampPlacement();
+            } else if (e.key === 'Escape') {
+                modal.style.display = 'none';
+                heading.textContent = originalHeading;
+                document.removeEventListener('keydown', keyHandler);
+
+                if (window.ActivityLog) {
+                    ActivityLog.addMessage('Camp placement cancelled', 'info');
+                }
+            }
+        };
+
+        document.addEventListener('keydown', keyHandler);
+    }
+
+    /**
+     * Confirm and execute camp placement
+     */
+    function confirmCampPlacement() {
+        // Place camp at current player position
+        campLocation = {
+            x: playerPosition.x,
+            y: playerPosition.y,
+            isPlaced: true
+        };
+
+        // Save to game state
+        if (window.GameState) {
+            window.GameState.updateProperty('campLocation', campLocation);
+        }
+
+        // Auto-save
+        if (window.SaveSystem) {
+            window.SaveSystem.save();
+        }
+
+        // Update button visibility
+        updateCampButtonVisibility();
+
+        // Log to activity
+        if (window.ActivityLog) {
+            ActivityLog.addMessage(`Camp established at (${campLocation.x}, ${campLocation.y})`, 'info');
+        }
+
+        // Re-render to show camp marker
+        render();
+    }
+
+    /**
+     * Load camp location from game state
+     */
+    function loadCampLocation() {
+        const state = window.GameState?.getState();
+        if (state && state.campLocation) {
+            campLocation = { ...state.campLocation };
+            updateCampButtonVisibility();
+        }
+    }
+
+    /**
+     * Check if player is standing on camp
+     */
+    function isStandingOnCamp() {
+        if (!campLocation || !campLocation.isPlaced) return false;
+        return playerPosition.x === campLocation.x && playerPosition.y === campLocation.y;
+    }
+
+    /**
+     * Show enter camp modal
+     */
+    function showEnterCampModal() {
+        const modal = document.getElementById('enter-camp-modal');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+
+        // Set up button handlers
+        const yesBtn = document.getElementById('enter-camp-yes-btn');
+        const noBtn = document.getElementById('enter-camp-no-btn');
+
+        // Remove old listeners (if any)
+        const newYesBtn = yesBtn.cloneNode(true);
+        const newNoBtn = noBtn.cloneNode(true);
+        yesBtn.replaceWith(newYesBtn);
+        noBtn.replaceWith(newNoBtn);
+
+        // Yes button - enter camp
+        newYesBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            enterCamp();
+        });
+
+        // No button - close modal
+        newNoBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // Set up keyboard handlers
+        const keyHandler = (e) => {
+            if (e.key === 'Enter') {
+                modal.style.display = 'none';
+                document.removeEventListener('keydown', keyHandler);
+                enterCamp();
+            } else if (e.key === 'Escape') {
+                modal.style.display = 'none';
+                document.removeEventListener('keydown', keyHandler);
+            }
+        };
+
+        document.addEventListener('keydown', keyHandler);
+    }
+
+    /**
+     * Enter the camp (settlement)
+     */
+    function enterCamp() {
+        const character = window.GameState?.getState()?.character;
+        if (!character) return;
+
+        // Set inSettlement flag
+        character.inSettlement = true;
+
+        // Update settlement tab visibility
+        if (window.TabManager) {
+            window.TabManager.updateSettlementTabVisibility();
+        }
+
+        // Show in-settlement overlay
+        updateInSettlementOverlay();
+
+        // Set up leave camp button
+        setupLeaveCampButton();
+
+        // Auto-save
+        if (window.SaveSystem) {
+            window.SaveSystem.save();
+        }
+
+        // Log to activity
+        if (window.ActivityLog) {
+            ActivityLog.addMessage('Entered camp', 'info');
+        }
+    }
+
+    /**
+     * Leave the camp (settlement)
+     */
+    function leaveCamp() {
+        const character = window.GameState?.getState()?.character;
+        if (!character) return;
+
+        // Clear inSettlement flag
+        character.inSettlement = false;
+
+        // Update settlement tab visibility
+        if (window.TabManager) {
+            window.TabManager.updateSettlementTabVisibility();
+        }
+
+        // Switch to map tab if currently on settlement tab
+        if (window.TabManager && window.TabManager.getCurrentTab() === 'settlement') {
+            window.TabManager.switchTab('map');
+        }
+
+        // Hide in-settlement overlay
+        updateInSettlementOverlay();
+
+        // Auto-save
+        if (window.SaveSystem) {
+            window.SaveSystem.save();
+        }
+
+        // Log to activity
+        if (window.ActivityLog) {
+            ActivityLog.addMessage('Left camp', 'info');
+        }
+    }
+
+    /**
+     * Update in-settlement overlay visibility
+     */
+    function updateInSettlementOverlay() {
+        const overlay = document.querySelector('.in-settlement-overlay');
+        if (!overlay) return;
+
+        const character = window.GameState?.getState()?.character;
+        if (character && character.inSettlement) {
+            overlay.style.display = 'flex';
+        } else {
+            overlay.style.display = 'none';
+        }
+    }
+
+    /**
+     * Set up leave camp button
+     */
+    function setupLeaveCampButton() {
+        const leaveCampBtn = document.getElementById('leave-camp-btn');
+        if (!leaveCampBtn) return;
+
+        // Remove old listener
+        const newBtn = leaveCampBtn.cloneNode(true);
+        leaveCampBtn.replaceWith(newBtn);
+
+        // Add click handler
+        newBtn.addEventListener('click', () => {
+            leaveCamp();
+        });
+    }
+
+    /**
      * Set up keyboard controls for player movement
      */
     function setupKeyboardControls() {
@@ -448,6 +808,12 @@ const Map = (() => {
             // Check if we're in combat view (don't allow map movement during combat)
             const combatView = document.querySelector('.combat-view');
             if (combatView && combatView.classList.contains('active')) {
+                return;
+            }
+
+            // Check if we're in settlement (don't allow map movement when in camp)
+            const character = window.GameState?.getState()?.character;
+            if (character && character.inSettlement) {
                 return;
             }
 
@@ -480,9 +846,14 @@ const Map = (() => {
                     break;
                 case ' ':
                 case 'spacebar':
-                    // Handle resource gathering
                     event.preventDefault();
-                    gatherResourceAtPlayerPosition();
+                    // Check if standing on camp
+                    if (isStandingOnCamp()) {
+                        showEnterCampModal();
+                    } else {
+                        // Handle resource gathering
+                        gatherResourceAtPlayerPosition();
+                    }
                     return;
             }
 
@@ -701,6 +1072,9 @@ const Map = (() => {
         // Draw combat encounters
         drawCombatEncounters();
 
+        // Draw camp (before player so player can stand on camp)
+        drawCamp();
+
         // Draw player
         drawPlayer();
     }
@@ -813,6 +1187,31 @@ const Map = (() => {
         }
 
         // Reset text alignment for other drawing operations
+        ctx.textAlign = 'start';
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    /**
+     * Draw camp marker if camp has been placed
+     */
+    function drawCamp() {
+        if (!campLocation || !campLocation.isPlaced) return;
+
+        const x = campLocation.x;
+        const y = campLocation.y;
+
+        // Draw camp icon centered on tile (slightly smaller than player)
+        const iconSize = Math.max(tileSize * 0.8, 16);
+        ctx.font = `${iconSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const centerX = x * tileSize + tileSize / 2;
+        const centerY = y * tileSize + tileSize / 2;
+
+        ctx.fillText('⛺', centerX, centerY);
+
+        // Reset text alignment
         ctx.textAlign = 'start';
         ctx.textBaseline = 'alphabetic';
     }
@@ -1274,6 +1673,17 @@ const Map = (() => {
 
         // Reload grid state (resources) from game state
         loadGridState();
+
+        // Reload camp location from game state
+        loadCampLocation();
+
+        // Update in-settlement overlay
+        updateInSettlementOverlay();
+
+        // Update settlement tab visibility
+        if (window.TabManager) {
+            window.TabManager.updateSettlementTabVisibility();
+        }
 
         // Re-render with restored state
         render();

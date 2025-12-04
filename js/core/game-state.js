@@ -14,7 +14,8 @@ const GameState = (() => {
         quests: [],
         achievements: [],
         combat: null,
-        craftingHistory: []
+        craftingHistory: [],
+        campLocation: null
     };
 
     function init() {
@@ -55,7 +56,8 @@ const GameState = (() => {
             quests: [],
             achievements: [],
             combat: null,
-            craftingHistory: []
+            craftingHistory: [],
+            campLocation: null
         };
     }
 
