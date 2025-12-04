@@ -710,6 +710,11 @@ const Map = (() => {
             window.TabManager.updateSettlementTabVisibility();
         }
 
+        // Resume research if paused
+        if (window.Research && window.Research.onSettlementEnter) {
+            window.Research.onSettlementEnter();
+        }
+
         // Show in-settlement overlay
         updateInSettlementOverlay();
 
@@ -745,6 +750,11 @@ const Map = (() => {
         // Update settlement tab visibility
         if (window.TabManager) {
             window.TabManager.updateSettlementTabVisibility();
+        }
+
+        // Pause research when leaving settlement
+        if (window.Research && window.Research.onSettlementExit) {
+            window.Research.onSettlementExit();
         }
 
         // Switch to map tab if currently on settlement tab

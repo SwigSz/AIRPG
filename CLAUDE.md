@@ -32,14 +32,15 @@ When you need to edit specific functionality, look in these locations:
 
 ### World & Map
 - **Map system**: `js/world/map.js` - World map, movement, encounters
-- **Settlements**: `js/world/settlement.js` - Settlement management
+- **Settlements**: `js/settlement/settlement.js` - Settlement management and resources
 - **Settlement upgrades**: `data/settlement-upgrades.json` - Upgrade definitions
+- **Settlement detection**: `character.inSettlement` flag - Boolean property on character object that determines if player is in settlement (used for tab visibility and research progress)
 
 ### Crafting & Research
 - **Crafting system**: `js/crafting/crafting.js` - Crafting logic and UI
 - **Recipes**: `data/recipes.json` - All crafting recipes
-- **Research system**: `js/research/research.js` - Research/tech tree logic
-- **Research data**: `data/research.json` - Research definitions
+- **Research system**: `js/settlement/research.js` - Research/tech tree logic
+- **Research data**: `data/research-tree.json` - Research node definitions
 
 ### UI Components
 - **UI Manager**: `js/ui/ui-manager.js` - UI panel management

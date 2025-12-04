@@ -15,8 +15,10 @@ const GameState = (() => {
         achievements: [],
         combat: null,
         craftingHistory: [],
+        researchedNodes: [],
         campLocation: null,
-        time: null
+        time: null,
+        activeResearch: null // { nodeId, startDay, daysRequired, isPaused }
     };
 
     function init() {
@@ -58,7 +60,9 @@ const GameState = (() => {
             achievements: [],
             combat: null,
             craftingHistory: [],
-            campLocation: null
+            researchedNodes: [],
+            campLocation: null,
+            activeResearch: null
         };
     }
 

@@ -16,6 +16,11 @@ const SaveSystem = (() => {
                 state.time = TimeSystem.getSaveData();
             }
 
+            // Debug: Log active research if present
+            if (state.activeResearch && !isAutosave) {
+                console.log('💾 Saving active research:', state.activeResearch);
+            }
+
             const saveData = {
                 version: '1.0.0',
                 timestamp: Date.now(),
@@ -40,6 +45,13 @@ const SaveSystem = (() => {
 
             const parsed = JSON.parse(saveData);
             const state = parsed.state;
+
+            // Debug: Log active research if present
+            if (state.activeResearch) {
+                console.log('📂 Loading active research:', state.activeResearch);
+            } else {
+                console.log('📂 No active research in save data');
+            }
 
             // Migrate old saves to new inventory capacity
             if (state.character && state.character.inventory) {

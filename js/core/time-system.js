@@ -97,6 +97,11 @@ const TimeSystem = {
             window.Settlement.onTimeAdvance(daysAdvanced);
         }
 
+        // Update research progress
+        if (window.Research && window.Research.updateResearchProgress) {
+            window.Research.updateResearchProgress();
+        }
+
         // Trigger UI update
         this.updateUI();
     },

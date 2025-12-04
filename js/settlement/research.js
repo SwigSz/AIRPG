@@ -41,8 +41,42 @@ const Research = (() => {
         createTooltip();
 
         await loadTree();
+        loadResearchedNodes();
+
+        // Check for any nodes that should be auto-completed on load
+        checkAndAutoCompleteNodes();
+
+        // Check if there's active research from a loaded save
+        const state = window.GameState ? window.GameState.getState() : null;
+        console.log('🔬 Research.init() - checking for activeResearch:', state ? state.activeResearch : 'no state');
+        if (state && state.activeResearch) {
+            console.log('🔬 Restored active research from save:', state.activeResearch);
+        } else {
+            console.log('🔬 No active research found during init');
+        }
+
         setupEventListeners();
         render();
+
+        // Start animation loop for progress updates
+        startAnimationLoop();
+    }
+
+    function startAnimationLoop() {
+        setInterval(() => {
+            const state = window.GameState ? window.GameState.getState() : null;
+            // Always render if there's active research (paused or not) to show current state
+            // This ensures the completion state shows immediately
+            if (state && (state.activeResearch || hasActiveResearchInProgress())) {
+                render();
+            }
+        }, 50); // Update 20 times per second for fluid animation
+    }
+
+    function hasActiveResearchInProgress() {
+        // Check if any node is currently being researched
+        const state = window.GameState ? window.GameState.getState() : null;
+        return state && state.activeResearch;
     }
 
     function createTooltip() {
@@ -70,6 +104,30 @@ const Research = (() => {
         } catch (error) {
             console.error('Failed to load research tree:', error);
             treeData = { nodes: {} };
+        }
+    }
+
+    function loadResearchedNodes() {
+        // Load researched nodes from GameState
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state && state.researchedNodes && Array.isArray(state.researchedNodes)) {
+            researchedNodes = new Set(state.researchedNodes);
+            console.log('Loaded researched nodes:', state.researchedNodes);
+        } else {
+            researchedNodes = new Set();
+        }
+    }
+
+    function saveResearchedNodes() {
+        // Save researched nodes to GameState
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state) {
+            state.researchedNodes = Array.from(researchedNodes);
+
+            // Trigger save if SaveSystem exists
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
         }
     }
 
@@ -139,22 +197,279 @@ const Research = (() => {
             return;
         }
 
-        researchedNodes.add(nodeId);
+        // Show detail modal instead of auto-completing
+        showResearchDetailModal(nodeId);
+    }
 
-        // Handle recipe unlocks if this node unlocks recipes
+    function showResearchDetailModal(nodeId) {
         const node = treeData.nodes[nodeId];
-        if (node && node.unlocksRecipes && node.unlocksRecipes.length > 0) {
-            console.log(`Research ${nodeId} unlocks recipes:`, node.unlocksRecipes);
-            // Recipes are now unlockable through the research system
-            // The crafting system will check Research.hasResearched() to allow crafting
+        if (!node) return;
+
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.settlement) return;
+
+        const settlement = state.settlement;
+        const activeResearch = state.activeResearch;
+
+        // Check if this research is currently active
+        const isActive = activeResearch && activeResearch.nodeId === nodeId;
+        const isPaused = isActive && activeResearch.isPaused;
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'modal-backdrop';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = 'background: #1e293b; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; max-width: 500px; color: white;';
+
+        let html = `
+            <h2 style="margin: 0 0 16px 0; color: #3b82f6; font-size: 24px;">${node.name}</h2>
+            <p style="margin: 0 0 20px 0; color: #cbd5e1; font-size: 14px;">${node.description}</p>
+        `;
+
+        // Show resource costs
+        if (node.resourceCosts) {
+            html += '<div style="margin-bottom: 20px;"><h3 style="margin: 0 0 12px 0; color: #94a3b8; font-size: 16px;">Resource Requirements:</h3>';
+
+            for (const [resource, cost] of Object.entries(node.resourceCosts)) {
+                const current = settlement.resources[resource]?.current || 0;
+                const hasEnough = current >= cost;
+                const color = hasEnough ? '#22c55e' : '#ef4444';
+                html += `<div style="margin: 6px 0; color: ${color}; font-size: 14px;">
+                    ${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${Math.floor(current)}/${cost}
+                </div>`;
+            }
+            html += '</div>';
+        }
+
+        // Show time requirement
+        if (node.timeDays) {
+            html += `<div style="margin-bottom: 20px;">
+                <h3 style="margin: 0 0 8px 0; color: #94a3b8; font-size: 16px;">Time Required:</h3>
+                <div style="color: #cbd5e1; font-size: 14px;">${node.timeDays} days (in settlement)</div>
+            </div>`;
+        }
+
+        // Show what it unlocks
+        if (node.unlocksRecipes && node.unlocksRecipes.length > 0) {
+            html += '<div style="margin-bottom: 20px;"><h3 style="margin: 0 0 8px 0; color: #94a3b8; font-size: 16px;">Unlocks:</h3>';
+            node.unlocksRecipes.forEach(recipe => {
+                html += `<div style="margin: 4px 0; color: #60a5fa; font-size: 14px;">• Recipe: ${recipe}</div>`;
+            });
+            html += '</div>';
+        }
+
+        // Show research status and buttons
+        if (isActive) {
+            const daysElapsed = Math.floor(activeResearch.daysElapsed || 0);
+            const daysRequired = node.timeDays;
+            const progress = Math.min(100, (daysElapsed / daysRequired) * 100);
+
+            html += `<div style="margin-bottom: 20px; padding: 12px; background: #0f172a; border-radius: 8px;">
+                <div style="font-size: 14px; color: #cbd5e1; margin-bottom: 8px;">Research Progress:</div>
+                <div style="font-size: 18px; color: #3b82f6; font-weight: bold;">${daysElapsed} / ${daysRequired} days</div>
+                <div style="margin-top: 8px; background: #334155; height: 20px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: #3b82f6; height: 100%; width: ${progress}%; transition: width 0.3s;"></div>
+                </div>
+                ${isPaused ? '<div style="margin-top: 8px; color: #f59e0b; font-size: 14px;">⚠ Research Paused (Leave settlement to continue elsewhere)</div>' : ''}
+            </div>`;
+        }
+
+        // Add buttons
+        html += '<div style="display: flex; gap: 12px; margin-top: 20px;">';
+
+        if (!isActive) {
+            // Check if we can afford it
+            const canAfford = checkCanAffordResearch(nodeId);
+            html += `<button id="start-research-btn" style="flex: 1; padding: 12px; background: ${canAfford ? '#3b82f6' : '#6b7280'}; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-weight: bold;">
+                Start Research
+            </button>`;
+        } else if (isPaused) {
+            html += `<button id="resume-research-btn" style="flex: 1; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold;">
+                Resume Research
+            </button>`;
+        }
+
+        html += `<button id="close-modal-btn" style="flex: 1; padding: 12px; background: #475569; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+            Close
+        </button></div>`;
+
+        modalContent.innerHTML = html;
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Event listeners
+        const closeBtn = modal.querySelector('#close-modal-btn');
+        closeBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        const startBtn = modal.querySelector('#start-research-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                startResearch(nodeId);
+                document.body.removeChild(modal);
+            });
+        }
+
+        const resumeBtn = modal.querySelector('#resume-research-btn');
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', () => {
+                resumeResearch();
+                document.body.removeChild(modal);
+            });
+        }
+
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function checkCanAffordResearch(nodeId) {
+        const node = treeData.nodes[nodeId];
+        if (!node || !node.resourceCosts) return true;
+
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.settlement) return false;
+
+        const settlement = state.settlement;
+
+        for (const [resource, cost] of Object.entries(node.resourceCosts)) {
+            const current = settlement.resources[resource]?.current || 0;
+            if (current < cost) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function startResearch(nodeId) {
+        const node = treeData.nodes[nodeId];
+        if (!node) return;
+
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.settlement) return;
+
+        // Check if we can afford it
+        if (!checkCanAffordResearch(nodeId)) {
+            console.log('Not enough resources to start research');
+            return;
+        }
+
+        // Deduct resources
+        const settlement = state.settlement;
+        if (node.resourceCosts) {
+            for (const [resource, cost] of Object.entries(node.resourceCosts)) {
+                settlement.resources[resource].current -= cost;
+            }
+        }
+
+        // Get current day from TimeSystem (with fractional hours for precise tracking)
+        const currentDay = window.TimeSystem ?
+            (TimeSystem.currentTime.day +
+             (TimeSystem.currentTime.month * TimeSystem.DAYS_PER_MONTH) +
+             (TimeSystem.currentTime.year * TimeSystem.DAYS_PER_YEAR) +
+             (TimeSystem.currentTime.hour / TimeSystem.HOURS_PER_DAY)) : 0;
+
+        // Start research
+        state.activeResearch = {
+            nodeId: nodeId,
+            startDay: currentDay,
+            daysElapsed: 0,
+            daysRequired: node.timeDays,
+            isPaused: false
+        };
+
+        // Save state
+        if (window.SaveSystem) {
+            SaveSystem.save();
+        }
+
+        // Update UI
+        if (window.Settlement) {
+            Settlement.updateUI();
         }
 
         render();
+
+        // Show notification
+        if (window.NotificationManager) {
+            NotificationManager.show(`Research started: ${node.name}`, 'info');
+        }
+
+        // Log to activity
+        if (window.ActivityLog) {
+            ActivityLog.addMessage(`Started researching: ${node.name}`, 'info');
+        }
+
+        console.log(`Started research: ${node.name}`);
+    }
+
+    function resumeResearch() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.activeResearch) return;
+
+        state.activeResearch.isPaused = false;
+
+        if (window.SaveSystem) {
+            SaveSystem.save();
+        }
+
+        render();
+        console.log('Research resumed');
+    }
+
+    function completeResearch(nodeId) {
+        const node = treeData.nodes[nodeId];
+        if (!node) return;
+
+        researchedNodes.add(nodeId);
+        saveResearchedNodes();
+
+        // Clear active research
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state) {
+            state.activeResearch = null;
+        }
+
+        // Force immediate render to show completion state
+        render();
+
+        // Handle recipe unlocks if this node unlocks recipes
+        if (node.unlocksRecipes && node.unlocksRecipes.length > 0) {
+            console.log(`Research ${nodeId} unlocks recipes:`, node.unlocksRecipes);
+
+            // Show notification for unlocked recipes
+            if (window.NotificationManager) {
+                const recipeText = node.unlocksRecipes.join(', ');
+                NotificationManager.show(`Research Complete! Unlocked: ${recipeText}`, 'success');
+            }
+        }
+
+        // Log to activity
+        if (window.ActivityLog) {
+            ActivityLog.addMessage(`Research completed: ${node.name}`, 'success');
+        }
 
         // Emit event if EventSystem exists
         if (window.EventSystem) {
             EventSystem.emit('research-completed', { nodeId, node });
         }
+
+        // Save state
+        if (window.SaveSystem) {
+            SaveSystem.save();
+        }
+
+        // Render again after a short delay to ensure state is fully updated
+        setTimeout(() => render(), 100);
+
+        console.log(`Research completed: ${node.name}`);
     }
 
     function isAvailable(nodeId) {
@@ -197,44 +512,13 @@ const Research = (() => {
         return researchedNodes.has(nodeId);
     }
 
-    // Check all nodes and auto-complete any that have their requirements met
+    // Check all nodes - this function now only triggers a re-render when item requirements change
+    // Nodes are NOT auto-completed, they only become available (unlocked) when requirements are met
     function checkAndAutoCompleteNodes() {
-        let anyCompleted = false;
-
-        for (const nodeId in treeData.nodes) {
-            const node = treeData.nodes[nodeId];
-
-            // Skip if already researched
-            if (hasResearched(nodeId)) {
-                continue;
-            }
-
-            // Check if this node should auto-complete (has item requirements met)
-            if (node.itemRequirements && node.itemRequirements.length > 0) {
-                if (isAvailable(nodeId)) {
-                    console.log(`Auto-completing research node: ${node.name}`);
-                    researchedNodes.add(nodeId);
-
-                    // Handle recipe unlocks
-                    if (node.unlocksRecipes && node.unlocksRecipes.length > 0) {
-                        console.log(`Research ${nodeId} unlocks recipes:`, node.unlocksRecipes);
-                    }
-
-                    // Emit event
-                    if (window.EventSystem) {
-                        EventSystem.emit('research-completed', { nodeId, node });
-                    }
-
-                    anyCompleted = true;
-                }
-            }
-        }
-
-        if (anyCompleted) {
-            render();
-        }
-
-        return anyCompleted;
+        // Just re-render the tree to update node states
+        // Nodes will change from gray (locked) to blue (available) when isAvailable() returns true
+        render();
+        return false;
     }
 
     function reset() {
@@ -284,6 +568,19 @@ const Research = (() => {
                 });
             }
 
+            // Show resource costs if available
+            if (node.resourceCosts && !researched) {
+                content += '<div style="font-size: 12px; color: #9ca3af; margin-top: 8px; margin-bottom: 4px;">Resources Required:</div>';
+                for (const [resource, cost] of Object.entries(node.resourceCosts)) {
+                    content += `<div style="margin-left: 8px; color: #cbd5e1; font-size: 11px;">${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${cost}</div>`;
+                }
+            }
+
+            // Show time requirement if available and not researched
+            if (node.timeDays && !researched) {
+                content += `<div style="font-size: 11px; color: #64748b; margin-top: 8px;">Time: ${node.timeDays} days (in settlement)</div>`;
+            }
+
             if (node.unlocks && node.unlocks.length > 0) {
                 content += '<div style="font-size: 12px; color: #9ca3af; margin-top: 8px; margin-bottom: 4px;">Unlocks:</div>';
                 node.unlocks.forEach(unlockId => {
@@ -293,8 +590,6 @@ const Research = (() => {
                     }
                 });
             }
-
-            content += `<div style="font-size: 11px; color: #64748b; margin-top: 8px;">Cost: ${node.cost} | Time: ${node.time}</div>`;
         }
 
         tooltip.innerHTML = content;
@@ -355,26 +650,96 @@ const Research = (() => {
         const available = isAvailable(nodeId);
         const hovered = hoveredNode === nodeId;
 
+        // Check if this is currently being researched
+        const state = window.GameState ? window.GameState.getState() : null;
+        const isActiveResearch = state && state.activeResearch && state.activeResearch.nodeId === nodeId;
+
         // Determine node color
         let fillColor;
         if (researched) {
             fillColor = COLORS.researched;
+        } else if (isActiveResearch) {
+            fillColor = '#f59e0b'; // Orange for in-progress research
         } else if (available) {
             fillColor = COLORS.available;
         } else {
             fillColor = COLORS.locked;
         }
 
-        // Draw circle
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
-        ctx.fillStyle = fillColor;
-        ctx.fill();
+        // Draw progress fill if researching (water fill effect from bottom to top)
+        if (isActiveResearch && state.activeResearch.daysElapsed >= 0) {
+            // Calculate progress with REAL-TIME interpolation for smooth, continuous filling
+            // Get current time including hours for smooth progress
+            const currentTotalDays = window.TimeSystem ?
+                (TimeSystem.currentTime.day +
+                 (TimeSystem.currentTime.month * TimeSystem.DAYS_PER_MONTH) +
+                 (TimeSystem.currentTime.year * TimeSystem.DAYS_PER_YEAR) +
+                 (TimeSystem.currentTime.hour / TimeSystem.HOURS_PER_DAY)) : 0;
+
+            const daysElapsed = currentTotalDays - state.activeResearch.startDay;
+            const rawProgress = daysElapsed / state.activeResearch.daysRequired;
+            const progress = Math.min(1, Math.max(0, rawProgress));
+
+            // Draw base circle
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+
+            // Draw water fill progress
+            if (progress > 0.001) { // Small threshold to avoid rendering artifacts
+                ctx.save();
+
+                // Create circular clipping mask
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+                ctx.clip();
+
+                // Calculate fill height (from bottom to top) with smooth easing
+                const fillHeight = NODE_RADIUS * 2 * progress;
+                const fillY = node.y + NODE_RADIUS - fillHeight;
+
+                // Add subtle gradient for more fluid appearance
+                const gradient = ctx.createLinearGradient(node.x, fillY, node.x, node.y + NODE_RADIUS);
+                gradient.addColorStop(0, '#60a5fa'); // Lighter blue at top
+                gradient.addColorStop(1, '#3b82f6'); // Darker blue at bottom
+
+                // Draw water fill rectangle with gradient
+                ctx.fillStyle = gradient;
+                ctx.fillRect(node.x - NODE_RADIUS, fillY, NODE_RADIUS * 2, fillHeight);
+
+                // Add a subtle wave effect at the top of the water
+                if (progress < 0.99) { // Don't show wave when almost complete
+                    ctx.strokeStyle = 'rgba(96, 165, 250, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    const waveY = fillY + 1;
+                    ctx.moveTo(node.x - NODE_RADIUS, waveY);
+                    // Simple sine wave
+                    for (let i = 0; i <= NODE_RADIUS * 2; i += 2) {
+                        const x = node.x - NODE_RADIUS + i;
+                        const wave = Math.sin((i / 5) + (Date.now() / 200)) * 1.5;
+                        ctx.lineTo(x, waveY + wave);
+                    }
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        } else {
+            // Draw normal circle (no active research)
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+        }
 
         // Draw hover border
         if (hovered) {
             ctx.strokeStyle = COLORS.hover;
             ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
             ctx.stroke();
         }
 
@@ -397,14 +762,68 @@ const Research = (() => {
         ctx.font = '12px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(displayName, node.x, node.y + NODE_RADIUS + 15);
+    }
 
-        // Draw hover border on top if hovered
-        if (hovered) {
-            ctx.strokeStyle = COLORS.hover;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
-            ctx.stroke();
+    function updateResearchProgress() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.activeResearch || !state.character) return;
+
+        const activeResearch = state.activeResearch;
+        const character = state.character;
+
+        // Check if player is in settlement
+        if (!character.inSettlement) {
+            // Pause research if not in settlement
+            if (!activeResearch.isPaused) {
+                activeResearch.isPaused = true;
+                console.log('Research paused - player left settlement');
+            }
+            return;
+        }
+
+        // Resume research if in settlement and paused
+        if (activeResearch.isPaused) {
+            activeResearch.isPaused = false;
+            console.log('Research resumed - player in settlement');
+        }
+
+        // Calculate days elapsed (with fractional hours for smooth progress)
+        const currentDay = window.TimeSystem ?
+            (TimeSystem.currentTime.day +
+             (TimeSystem.currentTime.month * TimeSystem.DAYS_PER_MONTH) +
+             (TimeSystem.currentTime.year * TimeSystem.DAYS_PER_YEAR) +
+             (TimeSystem.currentTime.hour / TimeSystem.HOURS_PER_DAY)) : 0;
+
+        const totalDaysElapsed = currentDay - activeResearch.startDay;
+
+        // Update days elapsed
+        activeResearch.daysElapsed = totalDaysElapsed;
+
+        // Check if research is complete
+        if (totalDaysElapsed >= activeResearch.daysRequired) {
+            completeResearch(activeResearch.nodeId);
+        }
+    }
+
+    function onSettlementEnter() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.activeResearch) return;
+
+        if (state.activeResearch.isPaused) {
+            state.activeResearch.isPaused = false;
+            console.log('Research auto-resumed on settlement entry');
+            render();
+        }
+    }
+
+    function onSettlementExit() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.activeResearch) return;
+
+        if (!state.activeResearch.isPaused) {
+            state.activeResearch.isPaused = true;
+            console.log('Research auto-paused on settlement exit');
+            render();
         }
     }
 
@@ -416,7 +835,10 @@ const Research = (() => {
         clickNode,
         hasResearched,
         checkAndAutoCompleteNodes,
-        reset
+        reset,
+        updateResearchProgress,
+        onSettlementEnter,
+        onSettlementExit
     };
 })();
 

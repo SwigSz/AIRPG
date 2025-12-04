@@ -13,130 +13,14 @@
           "mustCraft": true
         }
       ],
-      "unlocks": ["advanced_tools", "fire_making"],
+      "unlocks": [],
       "unlocksRecipes": ["stone_hammer"],
-      "cost": 50,
-      "time": 5
-    },
-    "basic_shelter": {
-      "id": "basic_shelter",
-      "name": "Basic Shelter",
-      "description": "Build simple protective structures",
-      "x": 150,
-      "y": 350,
-      "prerequisites": [],
-      "itemRequirements": [],
-      "unlocks": ["carpentry"],
-      "cost": 50,
-      "time": 5
-    },
-    "fire_making": {
-      "id": "fire_making",
-      "name": "Fire Making",
-      "description": "Master the art of creating and controlling fire",
-      "x": 350,
-      "y": 120,
-      "prerequisites": ["basic_tools"],
-      "itemRequirements": [],
-      "unlocks": ["cooking", "metallurgy"],
-      "cost": 100,
-      "time": 10
-    },
-    "advanced_tools": {
-      "id": "advanced_tools",
-      "name": "Advanced Tools",
-      "description": "Craft more efficient and durable tools",
-      "x": 350,
-      "y": 280,
-      "prerequisites": ["basic_tools"],
-      "itemRequirements": [],
-      "unlocks": ["metallurgy", "carpentry"],
-      "cost": 100,
-      "time": 10
-    },
-    "carpentry": {
-      "id": "carpentry",
-      "name": "Carpentry",
-      "description": "Work with wood to create furniture and structures",
-      "x": 350,
-      "y": 420,
-      "prerequisites": ["basic_shelter", "advanced_tools"],
-      "itemRequirements": [],
-      "unlocks": ["architecture"],
-      "cost": 150,
-      "time": 15
-    },
-    "cooking": {
-      "id": "cooking",
-      "name": "Cooking",
-      "description": "Prepare food to unlock nutritional benefits",
-      "x": 550,
-      "y": 80,
-      "prerequisites": ["fire_making"],
-      "itemRequirements": [],
-      "unlocks": ["medicine"],
-      "cost": 120,
-      "time": 12
-    },
-    "metallurgy": {
-      "id": "metallurgy",
-      "name": "Metallurgy",
-      "description": "Smelt ores and forge metal items",
-      "x": 550,
-      "y": 220,
-      "prerequisites": ["fire_making", "advanced_tools"],
-      "itemRequirements": [],
-      "unlocks": ["weapon_smithing", "engineering"],
-      "cost": 200,
-      "time": 20
-    },
-    "architecture": {
-      "id": "architecture",
-      "name": "Architecture",
-      "description": "Design and build complex structures",
-      "x": 550,
-      "y": 420,
-      "prerequisites": ["carpentry"],
-      "itemRequirements": [],
-      "unlocks": ["engineering"],
-      "cost": 180,
-      "time": 18
-    },
-    "weapon_smithing": {
-      "id": "weapon_smithing",
-      "name": "Weapon Smithing",
-      "description": "Forge powerful weapons and armor",
-      "x": 750,
-      "y": 150,
-      "prerequisites": ["metallurgy"],
-      "itemRequirements": [],
-      "unlocks": [],
-      "cost": 250,
-      "time": 25
-    },
-    "engineering": {
-      "id": "engineering",
-      "name": "Engineering",
-      "description": "Create mechanical devices and siege equipment",
-      "x": 750,
-      "y": 320,
-      "prerequisites": ["metallurgy", "architecture"],
-      "itemRequirements": [],
-      "unlocks": [],
-      "cost": 300,
-      "time": 30
-    },
-    "medicine": {
-      "id": "medicine",
-      "name": "Medicine",
-      "description": "Use herbs and knowledge to heal ailments",
-      "x": 750,
-      "y": 80,
-      "prerequisites": ["cooking"],
-      "itemRequirements": [],
-      "unlocks": [],
-      "cost": 150,
-      "time": 15
+      "resourceCosts": {
+        "wood": 20,
+        "stone": 20,
+        "food": 20
+      },
+      "timeDays": 5
     }
   }
 }
