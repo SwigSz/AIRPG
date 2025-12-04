@@ -91,6 +91,12 @@ const TimeSystem = {
         this.currentTime.day = daysInYear % this.DAYS_PER_MONTH;
         this.currentTime.year = Math.floor(totalDays / this.DAYS_PER_YEAR);
 
+        // Notify settlement of time change for resource generation
+        if (window.Settlement && window.Settlement.onTimeAdvance) {
+            const daysAdvanced = hours / this.HOURS_PER_DAY;
+            window.Settlement.onTimeAdvance(daysAdvanced);
+        }
+
         // Trigger UI update
         this.updateUI();
     },
@@ -114,11 +120,11 @@ const TimeSystem = {
 
     /**
      * Get short formatted date for top bar
-     * @returns {string} Short date (e.g., "Y0 M1 D5 14:00")
+     * @returns {string} Short date (e.g., "Time: 14:00 | Date: Y0 M1 D5")
      */
     getShortFormattedDate() {
         const hourStr = String(this.currentTime.hour).padStart(2, '0');
-        return `Y${this.currentTime.year} M${this.currentTime.month} D${this.currentTime.day} ${hourStr}:00`;
+        return `Time: ${hourStr}:00 | Date: Y${this.currentTime.year} M${this.currentTime.month} D${this.currentTime.day}`;
     },
 
     /**
@@ -152,13 +158,13 @@ const TimeSystem = {
         // Update top bar date display
         const dateElement = document.querySelector('.time-date');
         if (dateElement) {
-            dateElement.textContent = `Time: -- | Date: ${this.getShortFormattedDate()}`;
+            dateElement.textContent = this.getShortFormattedDate();
         }
 
-        // Update settlement tab date display (same format as top bar)
+        // Update settlement tab date display (no hours)
         const settlementDayElement = document.getElementById('settlement-header-day');
         if (settlementDayElement) {
-            settlementDayElement.textContent = `${this.getShortFormattedDate()}`;
+            settlementDayElement.textContent = `Y${this.currentTime.year} M${this.currentTime.month} D${this.currentTime.day}`;
         }
     },
 

@@ -503,6 +503,10 @@
     color: #22c55e;
 }
 
+.damage-float.mana {
+    color: #3b82f6;
+}
+
 .damage-float.miss {
     color: #bfdbfe;
     font-size: 2.2rem;

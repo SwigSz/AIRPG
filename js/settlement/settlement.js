@@ -121,12 +121,15 @@ const Settlement = (() => {
     }
 
     function updateResourcesPanel() {
-        updateResource('wood', state.settlement.resources.wood);
-        updateResource('stone', state.settlement.resources.stone);
-        updateResource('food', state.settlement.resources.food);
+        // Calculate current generation rates (base + buildings)
+        const currentRates = calculateResourceGenerationRates();
+
+        updateResource('wood', state.settlement.resources.wood, currentRates.wood);
+        updateResource('stone', state.settlement.resources.stone, currentRates.stone);
+        updateResource('food', state.settlement.resources.food, currentRates.food);
     }
 
-    function updateResource(name, data) {
+    function updateResource(name, data, generationRate) {
         const items = document.querySelectorAll('.resource-item');
         items.forEach(item => {
             const nameEl = item.querySelector('.resource-name');
@@ -135,9 +138,9 @@ const Settlement = (() => {
                 item.querySelector('.max').textContent = data.max;
 
                 const prodEl = item.querySelector('.resource-production');
-                const prod = data.production.toFixed(1);
-                prodEl.textContent = data.production > 0 ? `+${prod}/s` : `${prod}/s`;
-                prodEl.className = 'resource-production ' + (data.production > 0 ? 'positive' : data.production < 0 ? 'negative' : 'stable');
+                const prod = generationRate.toFixed(1);
+                prodEl.textContent = generationRate > 0 ? `+${prod}/d` : `${prod}/d`;
+                prodEl.className = 'resource-production ' + (generationRate > 0 ? 'positive' : generationRate < 0 ? 'negative' : 'stable');
             }
         });
     }
@@ -204,32 +207,76 @@ const Settlement = (() => {
     }
 
     // ============================================
-    // RESOURCE GENERATION
+    // RESOURCE GENERATION (Based on in-game time)
     // ============================================
-    let lastUpdateTime = Date.now();
-    let updateInterval = null;
+    let resourceAccumulators = {
+        wood: 0,    // 1 wood per 1 day
+        stone: 0,   // 1 stone per 3 days
+        food: 0     // 1 food per 5 days
+    };
+
+    /**
+     * Calculate total resource generation rates based on buildings
+     */
+    function calculateResourceGenerationRates() {
+        if (!state.settlement) {
+            return { wood: 0, stone: 0, food: 0 };
+        }
+
+        const rates = {
+            wood: 0,
+            stone: 0,
+            food: 0
+        };
+
+        // Add production from buildings only (no base rate)
+        for (const buildingId in state.settlement.buildings) {
+            const building = state.settlement.buildings[buildingId];
+            const buildingData = state.buildingsData.find(b => b.id === buildingId);
+
+            if (buildingData && buildingData.production && building.count > 0) {
+                // Each building produces its specified amount per day
+                for (const resource in buildingData.production) {
+                    if (rates[resource] !== undefined) {
+                        // buildingData.production[resource] is the amount per building per day
+                        rates[resource] += buildingData.production[resource] * building.count;
+                    }
+                }
+            }
+        }
+
+        return rates;
+    }
 
     function startResourceGeneration() {
-        if (updateInterval) return;
+        // No longer using real-time intervals
+        // Resources are now generated via onTimeAdvance callback
+    }
 
-        lastUpdateTime = Date.now();
-        updateInterval = setInterval(() => {
-            if (!state.settlement) return;
+    function onTimeAdvance(daysAdvanced) {
+        if (!state.settlement) return;
 
-            const now = Date.now();
-            const delta = (now - lastUpdateTime) / 1000; // Convert to seconds
-            lastUpdateTime = now;
+        // Get current generation rates (base + buildings)
+        const currentRates = calculateResourceGenerationRates();
 
-            // Update resources
-            for (const resource in state.settlement.resources) {
+        // Accumulate fractional resources based on days passed
+        for (const resource in currentRates) {
+            resourceAccumulators[resource] += currentRates[resource] * daysAdvanced;
+
+            // Convert accumulated fractional resources to whole resources
+            const wholeResources = Math.floor(resourceAccumulators[resource]);
+            if (wholeResources > 0) {
                 const r = state.settlement.resources[resource];
-                r.current += r.production * delta;
+                r.current += wholeResources;
                 r.current = Math.max(0, Math.min(r.current, r.max));
-            }
 
-            // Update UI
-            updateResourcesPanel();
-        }, 100); // Update 10 times per second
+                // Subtract the whole resources from accumulator, keep the remainder
+                resourceAccumulators[resource] -= wholeResources;
+            }
+        }
+
+        // Update UI
+        updateResourcesPanel();
     }
 
     // ============================================
@@ -239,9 +286,20 @@ const Settlement = (() => {
         init,
         create,
         updateUI,
-        getState: () => state.settlement,
+        onTimeAdvance,
+        getState: () => {
+            // Include resource accumulators in state
+            return {
+                ...state.settlement,
+                resourceAccumulators: { ...resourceAccumulators }
+            };
+        },
         setState: (s) => {
             state.settlement = s;
+            // Restore resource accumulators if they exist
+            if (s && s.resourceAccumulators) {
+                resourceAccumulators = { ...s.resourceAccumulators };
+            }
             updateUI();
         }
     };

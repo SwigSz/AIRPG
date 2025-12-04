@@ -14,6 +14,72 @@
         "multiplier": 1.5
       },
       "unlockConditions": "level>=5"
+    },
+    {
+      "id": "cleave",
+      "name": "Cleave",
+      "icon": "⚔️",
+      "description": "A sweeping attack that hits with tremendous force, dealing heavy damage.",
+      "type": "physical",
+      "cooldown": 3,
+      "manaCost": 15,
+      "damage": {
+        "base": 8,
+        "scaling": "strength",
+        "multiplier": 2.0
+      },
+      "unlockConditions": "level>=5"
+    },
+    {
+      "id": "precise_shot",
+      "name": "Precise Shot",
+      "icon": "🎯",
+      "description": "A carefully aimed attack that exploits enemy weaknesses for critical damage.",
+      "type": "physical",
+      "cooldown": 2,
+      "manaCost": 12,
+      "damage": {
+        "base": 4,
+        "scaling": "dexterity",
+        "multiplier": 1.8
+      },
+      "unlockConditions": "level>=5"
+    },
+    {
+      "id": "second_wind",
+      "name": "Second Wind",
+      "icon": "💨",
+      "description": "Draw upon inner reserves to restore health and stamina.",
+      "type": "support",
+      "cooldown": 5,
+      "manaCost": 20,
+      "healing": {
+        "base": 15,
+        "scaling": "constitution",
+        "multiplier": 0.5
+      },
+      "unlockConditions": "level>=5"
+    },
+    {
+      "id": "battle_focus",
+      "name": "Battle Focus",
+      "icon": "🧘",
+      "description": "Clear your mind and focus on the battle, restoring mana and improving accuracy.",
+      "type": "support",
+      "cooldown": 4,
+      "manaCost": 0,
+      "manaRestore": {
+        "base": 25,
+        "scaling": "intelligence",
+        "multiplier": 0.3
+      },
+      "buff": {
+        "duration": 3,
+        "effects": {
+          "accuracy": 10
+        }
+      },
+      "unlockConditions": "level>=5"
     }
   ]
 }

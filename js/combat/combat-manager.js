@@ -14,7 +14,8 @@ const CombatManager = (() => {
             turnOrder: [],
             currentTurnIndex: 0,
             turnNumber: 1,
-            isActive: false
+            isActive: false,
+            abilityCooldowns: {} // Track ability cooldowns: { abilityId: remainingTurns }
         };
     }
 
@@ -57,7 +58,9 @@ const CombatManager = (() => {
         if (type === 'miss') {
             floatEl.textContent = 'EVADED';
         } else if (type === 'heal') {
-            floatEl.textContent = `+${amount}`;
+            floatEl.textContent = `+${amount} HP`;
+        } else if (type === 'mana') {
+            floatEl.textContent = `+${amount} MP`;
         } else if (type === 'crit') {
             floatEl.textContent = `CRIT! -${amount}`;
         } else {
@@ -192,6 +195,19 @@ const CombatManager = (() => {
                 enemyAI(current);
             }, 1000);
         } else {
+            // Player's turn - reduce ability cooldowns
+            if (combatState.abilityCooldowns) {
+                Object.keys(combatState.abilityCooldowns).forEach(abilityId => {
+                    if (combatState.abilityCooldowns[abilityId] > 0) {
+                        combatState.abilityCooldowns[abilityId]--;
+                    }
+                    // Remove cooldown if it reaches 0
+                    if (combatState.abilityCooldowns[abilityId] <= 0) {
+                        delete combatState.abilityCooldowns[abilityId];
+                    }
+                });
+            }
+
             // Player's turn - unlock turn processing since we're waiting for player input
             isProcessingTurn = false;
         }
@@ -845,10 +861,27 @@ const CombatManager = (() => {
         let abilitiesHTML = '';
         if (window.AbilityManager) {
             const unlockedAbilities = AbilityManager.getUnlockedAbilities();
+            const character = GameState.getState().character;
+            const currentMana = character?.mana || 0;
 
             if (unlockedAbilities.length > 0) {
                 unlockedAbilities.forEach(ability => {
-                    abilitiesHTML += `<button class="menu-btn skill-btn" data-ability-id="${ability.id}">${ability.icon || '⚡'} ${ability.name}</button>`;
+                    const manaCost = ability.manaCost || 0;
+                    const hasEnoughMana = currentMana >= manaCost;
+                    const cooldownRemaining = combatState.abilityCooldowns?.[ability.id] || 0;
+                    const isOnCooldown = cooldownRemaining > 0;
+                    const isDisabled = !hasEnoughMana || isOnCooldown;
+                    const disabledClass = isDisabled ? 'disabled' : '';
+                    const disabledAttr = isDisabled ? 'disabled' : '';
+
+                    let displayText = `${ability.icon || '⚡'} ${ability.name}`;
+                    if (isOnCooldown) {
+                        displayText += ` (CD: ${cooldownRemaining})`;
+                    } else if (manaCost > 0) {
+                        displayText += ` (${manaCost} MP)`;
+                    }
+
+                    abilitiesHTML += `<button class="menu-btn skill-btn ${disabledClass}" data-ability-id="${ability.id}" ${disabledAttr}>${displayText}</button>`;
                 });
             } else {
                 abilitiesHTML = '<div class="action-message no-abilities">No abilities unlocked yet</div>';
@@ -947,63 +980,172 @@ const CombatManager = (() => {
     function useAbility(ability) {
         const aliveEnemies = combatState.combatants.filter(c => !c.isPlayer && c.isAlive);
         const current = getCurrentCombatant();
+        const character = GameState.getState().character;
 
-        // If only one enemy, auto-target them
-        if (aliveEnemies.length === 1) {
-            const target = aliveEnemies[0];
+        // Check if ability is on cooldown
+        if (combatState.abilityCooldowns && combatState.abilityCooldowns[ability.id]) {
+            const remainingTurns = combatState.abilityCooldowns[ability.id];
+            logCombat(`${ability.name} is on cooldown! ${remainingTurns} turn(s) remaining.`);
+            return;
+        }
 
-            // Calculate damage based on ability
-            let damage = ability.damage?.base || 0;
-            if (ability.damage?.multiplier) {
-                damage = Math.floor(damage * ability.damage.multiplier);
+        // Check if player has enough mana
+        if (ability.manaCost && ability.manaCost > 0) {
+            if (!character || character.mana < ability.manaCost) {
+                logCombat(`Not enough mana! ${ability.name} requires ${ability.manaCost} mana.`);
+                return;
+            }
+        }
+
+        // Consume mana
+        if (ability.manaCost && ability.manaCost > 0 && character) {
+            character.mana -= ability.manaCost;
+            if (character.mana < 0) character.mana = 0;
+
+            // Update top bar to reflect mana change
+            if (window.updateTopBar) {
+                updateTopBar(character);
             }
 
-            // Determine target card ID for animation
-            let targetCardId = 'player';
-            if (!target.isPlayer) {
-                const enemies = combatState.combatants.filter(c => !c.isPlayer);
-                const targetIndex = enemies.findIndex(e => e.id === target.id);
-                targetCardId = `enemy-${targetIndex}`;
+            // Save the change
+            if (window.SaveSystem) {
+                SaveSystem.save();
             }
+        }
 
-            // Store old HP for animation
-            const oldHP = target.hp;
+        // Set ability on cooldown
+        if (ability.cooldown && ability.cooldown > 0) {
+            combatState.abilityCooldowns[ability.id] = ability.cooldown;
+        }
 
-            // Apply damage
-            target.hp -= damage;
-            if (target.hp < 0) target.hp = 0;
-            if (target.hp === 0) target.isAlive = false;
+        // Check ability type
+        if (ability.type === 'support') {
+            // Support abilities target the player
+            const playerCombatant = combatState.combatants.find(c => c.isPlayer);
 
-            logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
-
-            // Update character HP in real-time if target is the player
-            if (target.isPlayer) {
-                const character = GameState.getState().character;
-                if (character) {
-                    character.hp = target.hp;
-                    if (window.updateTopBar) {
-                        updateTopBar(character);
-                    }
+            // Handle healing
+            if (ability.healing) {
+                const oldHP = playerCombatant.hp;
+                const healAmount = ability.healing.base || 0;
+                playerCombatant.hp += healAmount;
+                if (playerCombatant.hp > playerCombatant.maxHp) {
+                    playerCombatant.hp = playerCombatant.maxHp;
                 }
+
+                // Update character HP
+                character.hp = playerCombatant.hp;
+
+                logCombat(`${current.name} used ${ability.name} and restored ${healAmount} HP!`);
+
+                // Update top bar
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
+
+                renderCombatUI();
+
+                // Show floating heal number
+                requestAnimationFrame(() => {
+                    showFloatingDamage('player', healAmount, 'heal');
+                    animateHPDamage('player', oldHP, playerCombatant.hp, playerCombatant.maxHp);
+                });
             }
 
-            renderCombatUI();
+            // Handle mana restore
+            if (ability.manaRestore) {
+                const manaAmount = ability.manaRestore.base || 0;
+                character.mana += manaAmount;
+                if (character.mana > character.maxMana) {
+                    character.mana = character.maxMana;
+                }
 
-            // Show floating damage number and animate HP AFTER rendering
-            requestAnimationFrame(() => {
-                showFloatingDamage(targetCardId, damage, 'damage');
-                animateHPDamage(targetCardId, oldHP, target.hp, target.maxHp);
-            });
+                logCombat(`${current.name} used ${ability.name} and restored ${manaAmount} mana!`);
 
-            checkCombatEnd();
+                // Update top bar
+                if (window.updateTopBar) {
+                    updateTopBar(character);
+                }
 
-            // End turn - check combat end handles victory/defeat
+                renderCombatUI();
+
+                // Show floating mana number
+                requestAnimationFrame(() => {
+                    showFloatingDamage('player', manaAmount, 'mana');
+                });
+            }
+
+            // Handle buffs (if implemented in the future)
+            if (ability.buff) {
+                logCombat(`${current.name} used ${ability.name}! (Buff effects not yet implemented)`);
+            }
+
+            // Save changes
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
+
+            // End turn
             if (combatState && combatState.isActive) {
                 nextTurn();
             }
         } else {
-            // Multiple enemies, need to select target
-            initiatAction('ability', ability);
+            // Attack abilities
+            // If only one enemy, auto-target them
+            if (aliveEnemies.length === 1) {
+                const target = aliveEnemies[0];
+
+                // Calculate damage based on ability
+                let damage = ability.damage?.base || 0;
+                if (ability.damage?.multiplier) {
+                    damage = Math.floor(damage * ability.damage.multiplier);
+                }
+
+                // Determine target card ID for animation
+                let targetCardId = 'player';
+                if (!target.isPlayer) {
+                    const enemies = combatState.combatants.filter(c => !c.isPlayer);
+                    const targetIndex = enemies.findIndex(e => e.id === target.id);
+                    targetCardId = `enemy-${targetIndex}`;
+                }
+
+                // Store old HP for animation
+                const oldHP = target.hp;
+
+                // Apply damage
+                target.hp -= damage;
+                if (target.hp < 0) target.hp = 0;
+                if (target.hp === 0) target.isAlive = false;
+
+                logCombat(`${current.name} used ${ability.name} on ${target.name} for ${damage} damage!`);
+
+                // Update character HP in real-time if target is the player
+                if (target.isPlayer) {
+                    if (character) {
+                        character.hp = target.hp;
+                        if (window.updateTopBar) {
+                            updateTopBar(character);
+                        }
+                    }
+                }
+
+                renderCombatUI();
+
+                // Show floating damage number and animate HP AFTER rendering
+                requestAnimationFrame(() => {
+                    showFloatingDamage(targetCardId, damage, 'damage');
+                    animateHPDamage(targetCardId, oldHP, target.hp, target.maxHp);
+                });
+
+                checkCombatEnd();
+
+                // End turn - check combat end handles victory/defeat
+                if (combatState && combatState.isActive) {
+                    nextTurn();
+                }
+            } else {
+                // Multiple enemies, need to select target
+                initiatAction('ability', ability);
+            }
         }
     }
 

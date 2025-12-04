@@ -103,6 +103,7 @@
 /* World Info Section */
 #world-info {
     min-width: 200px;
+    width: 280px;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -111,6 +112,10 @@
 
 .time-date {
     color: #cbd5e1;
+    font-family: 'Courier New', Courier, monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .settlement-name {

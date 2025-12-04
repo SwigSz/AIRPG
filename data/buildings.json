@@ -12,9 +12,9 @@
         "food": 1
       },
       "production": {
-        "wood": 1
+        "wood": 1.0
       },
-      "productionRate": "per_second"
+      "productionRate": "per_day"
     },
     {
       "id": "stoneGenerator",
@@ -28,9 +28,9 @@
         "food": 1
       },
       "production": {
-        "stone": 1
+        "stone": 0.3
       },
-      "productionRate": "per_second"
+      "productionRate": "per_day"
     },
     {
       "id": "foodGenerator",
@@ -44,9 +44,9 @@
         "food": 1
       },
       "production": {
-        "food": 1
+        "food": 0.2
       },
-      "productionRate": "per_second"
+      "productionRate": "per_day"
     }
   ]
 }

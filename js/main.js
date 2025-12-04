@@ -84,6 +84,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             displayCharacterData();
 
+            // Check for ability unlocks (in case new abilities were added or conditions changed)
+            if (window.AbilityManager) {
+                AbilityManager.checkAndUnlockAbilities();
+            }
+
             // Restore time system state
             if (window.TimeSystem && savedState.time) {
                 TimeSystem.loadSaveData(savedState.time);
@@ -130,6 +135,7 @@ function initializeTestCharacter() {
     // Create test character with proper inventory and equipment structure
     const testCharacter = Character.create('Test Hero', {
         age: 25,
+        level: 5,
         skills: [woodcuttingSkill],
         inventory: Inventory.create(),
         equipment: Equipment.create()
@@ -220,6 +226,11 @@ function initializeTestCharacter() {
 
     // Display character data
     displayCharacterData();
+
+    // Check for initial ability unlocks
+    if (window.AbilityManager) {
+        AbilityManager.checkAndUnlockAbilities();
+    }
 
     // Auto-save the initial character
     SaveSystem.save();

@@ -60,6 +60,12 @@
     font-size: 1.1rem;
 }
 
+/* Monospace font for date to prevent text shifting */
+#settlement-header-day {
+    font-family: 'Courier New', Courier, monospace;
+    font-variant-numeric: tabular-nums;
+}
+
 /* ============================================
    SETTLEMENT TOP NAVIGATION TABS
    ============================================ */
