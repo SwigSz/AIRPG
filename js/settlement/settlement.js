@@ -266,6 +266,17 @@ const Settlement = (() => {
 
         document.getElementById('settlement-header-morale').textContent = `${s.morale}%`;
         document.getElementById('settlement-header-day').textContent = s.day;
+
+        // Update top bar settlement info (real-time updates)
+        const topBarSettlementName = document.querySelector('.settlement-name');
+        if (topBarSettlementName) {
+            topBarSettlementName.textContent = `Settlement: ${s.name}`;
+        }
+
+        const topBarPopulation = document.querySelector('.population');
+        if (topBarPopulation) {
+            topBarPopulation.textContent = `Population: ${popText}`;
+        }
     }
 
     function updateResourcesPanel() {
