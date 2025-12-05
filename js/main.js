@@ -216,6 +216,18 @@ function initializeTestCharacter() {
         Inventory.addItem(testCharacter.inventory, arcaneTome);
     }
 
+    // Add crafting materials for testing
+    const materials = ['stick', 'rock', 'fiber', 'leather', 'wolf_pelt', 'raw_meat', 'bone'];
+    materials.forEach(materialId => {
+        // Add multiple of each material for testing stacking
+        for (let i = 0; i < 5; i++) {
+            const material = ItemFactory.createItem(materialId);
+            if (material) {
+                Inventory.addItem(testCharacter.inventory, material);
+            }
+        }
+    });
+
     // Store in game state
     GameState.updateProperty('character', testCharacter);
 
@@ -262,9 +274,9 @@ function displayCharacterData() {
         InventoryUI.setupInventoryControls(inventoryGrid, character, handleItemAction);
     }
 
-    // Render mini inventory if crafting module is available
+    // Render crafting materials if crafting module is available
     if (window.Crafting) {
-        Crafting.renderMiniInventory();
+        Crafting.renderCraftingMaterials();
     }
 
     // Render character UI if available
@@ -406,9 +418,9 @@ function renderInventoryUI() {
     // Use InventoryUI module to render the grid
     InventoryUI.renderInventoryGrid(inventoryGrid, character, handleItemAction);
 
-    // Always update mini inventory when inventory changes
+    // Always update crafting materials when inventory changes
     if (window.Crafting) {
-        Crafting.renderMiniInventory();
+        Crafting.renderCraftingMaterials();
     }
 }
 

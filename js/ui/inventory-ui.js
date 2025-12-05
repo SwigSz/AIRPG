@@ -241,7 +241,7 @@ const InventoryUI = (() => {
      * @param {HTMLElement} containerElement - The DOM element to render into
      * @param {Object} character - The character object with inventory
      * @param {Function} onItemClick - Callback when item is clicked
-     * @param {Object} options - Additional options (usedItemIds for availability tracking)
+     * @param {Object} options - Additional options (usedItemIds for availability tracking, filterClassification for filtering items, searchQuery for filtering by name)
      */
     function renderMiniInventory(containerElement, character, onItemClick, options = {}) {
         if (!containerElement || !character) return;
@@ -254,10 +254,31 @@ const InventoryUI = (() => {
         // Get used item IDs from options (for crafting availability tracking)
         const usedItemIds = options.usedItemIds || [];
 
+        // Get filter classification from options (e.g., 'material' for crafting materials)
+        const filterClassification = options.filterClassification || null;
+
+        // Get search query from options
+        const searchQuery = options.searchQuery || '';
+
         // Render stacked items
         stacks.forEach(stack => {
+            // Filter by classification if specified
+            if (filterClassification && stack.item.classifications) {
+                if (!stack.item.classifications.includes(filterClassification)) {
+                    return; // Skip this item if it doesn't have the required classification
+                }
+            }
+
+            // Filter by search query if specified
+            if (searchQuery && searchQuery.trim() !== '') {
+                const query = searchQuery.toLowerCase();
+                if (!stack.item.name.toLowerCase().includes(query)) {
+                    return; // Skip this item if it doesn't match the search query
+                }
+            }
+
             const slot = document.createElement('div');
-            slot.className = 'mini-inventory-slot';
+            slot.className = 'crafting-materials-slot';
             slot.dataset.itemName = stack.item.name;
             // Store all item IDs in the stack
             slot.dataset.itemIds = JSON.stringify(stack.items.map(i => i.id));

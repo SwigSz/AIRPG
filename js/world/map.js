@@ -61,7 +61,8 @@ const Map = (() => {
             icon: '🌲',
             defaultAmount: 5,
             description: 'A sturdy tree that can be harvested for sticks',
-            itemName: 'Stick',
+            itemId: 'stick',  // Use item ID instead of name
+            itemName: 'Stick',  // Keep for display
             gatherVerb: 'chopped'
         },
         rock: {
@@ -70,7 +71,8 @@ const Map = (() => {
             icon: '🪨',
             defaultAmount: 5,
             description: 'A large stone deposit containing valuable rocks',
-            itemName: 'Rock',
+            itemId: 'rock',  // Use item ID instead of name
+            itemName: 'Rock',  // Keep for display
             gatherVerb: 'mined'
         },
         bush: {
@@ -79,6 +81,7 @@ const Map = (() => {
             icon: '🫐',
             defaultAmount: 3,
             description: 'A bush bearing edible berries',
+            itemId: 'berries',
             itemName: 'Berries',
             gatherVerb: 'gathered'
         }
@@ -932,12 +935,23 @@ const Map = (() => {
             return;
         }
 
-        // Create the resource item
-        const item = window.Items.createItem(resourceConfig.itemName, null, {
-            classifications: ['material'],
-            description: `${resourceConfig.itemName} gathered from ${resourceConfig.name.toLowerCase()}`,
-            icon: resourceConfig.icon
-        });
+        // Create the resource item using ItemFactory (unified item system)
+        if (!window.ItemFactory) {
+            console.error('ItemFactory not available - cannot create resource item');
+            return;
+        }
+
+        if (!resourceConfig.itemId) {
+            console.error(`Resource ${resourceConfig.name} is missing itemId - cannot create item`);
+            return;
+        }
+
+        const item = window.ItemFactory.createItem(resourceConfig.itemId);
+
+        if (!item) {
+            console.error(`Failed to create item with ID: ${resourceConfig.itemId}`);
+            return;
+        }
 
         // Try to add to inventory
         const success = window.Inventory.addItem(character.inventory, item);

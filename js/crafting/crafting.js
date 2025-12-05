@@ -7,6 +7,7 @@ const Crafting = (() => {
     let discoveredRecipes = []; // Recipes the player has discovered
     let recipes = []; // Recipe database loaded from JSON
     let craftedItems = []; // Track items that have been crafted before
+    let materialsSearchQuery = ''; // Search query for crafting materials
 
     async function loadRecipes() {
         try {
@@ -32,22 +33,20 @@ const Crafting = (() => {
         // Load crafted items history from localStorage
         loadCraftedItems();
 
-        // Initialize on DOM ready with a small delay
-        // Note: renderMiniInventory will be called when character is ready
-        setTimeout(() => {
-            initializeCraftingSlots();
-            initializeSubTabs();
-        }, 100);
+        // Initialize immediately - no delay needed
+        initializeCraftingSlots();
+        initializeSubTabs();
+        initializeMaterialsSearch();
 
-        // Initialize mini inventory when tab manager is ready
+        // Initialize crafting materials when tab manager is ready
         if (window.TabManager) {
-            // Listen for tab switches to update mini inventory
+            // Listen for tab switches to update crafting materials
             const originalSwitch = TabManager.switchTab;
             TabManager.switchTab = function(tabName) {
                 originalSwitch.call(TabManager, tabName);
                 if (tabName === 'crafting') {
-                    console.log('Crafting tab opened, rendering mini inventory...');
-                    setTimeout(() => renderMiniInventory(), 50);
+                    console.log('Crafting tab opened, rendering crafting materials...');
+                    renderCraftingMaterials(); // Render immediately, no delay
                     if (!initialized) {
                         initializeCraftingSlots();
                         initializeSubTabs();
@@ -67,6 +66,16 @@ const Crafting = (() => {
         });
     }
 
+    function initializeMaterialsSearch() {
+        const searchInput = document.getElementById('crafting-materials-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                materialsSearchQuery = e.target.value;
+                renderCraftingMaterials();
+            });
+        }
+    }
+
     function switchCraftingTab(tabName) {
         // Update tab buttons
         document.querySelectorAll('.crafting-nav-tab').forEach(tab => {
@@ -83,9 +92,9 @@ const Crafting = (() => {
             targetContent.classList.add('active');
         }
 
-        // Re-render mini inventory if switching to basic combining tab
+        // Re-render crafting materials if switching to basic combining tab
         if (tabName === 'basic-combining') {
-            setTimeout(() => renderMiniInventory(), 50);
+            renderCraftingMaterials(); // Render immediately, no delay
         }
     }
 
@@ -141,6 +150,7 @@ const Crafting = (() => {
         const state = window.GameState ? window.GameState.getState() : null;
         if (state && state.craftedItems && Array.isArray(state.craftedItems)) {
             craftedItems = state.craftedItems;
+            console.log(`✅ Loaded ${craftedItems.length} crafted items from GameState:`, craftedItems);
             return;
         }
 
@@ -192,15 +202,15 @@ const Crafting = (() => {
     }
 
     // ============================================
-    // MINI INVENTORY RENDERING
+    // CRAFTING MATERIALS RENDERING
     // ============================================
     // ** Uses centralized InventoryUI module **
     // See js/ui/inventory-ui.js and CLAUDE.md
     // ============================================
-    function renderMiniInventory() {
-        const miniInventoryGrid = document.getElementById('crafting-mini-inventory-grid');
-        if (!miniInventoryGrid) {
-            console.error('Mini inventory grid element not found!');
+    function renderCraftingMaterials() {
+        const craftingMaterialsGrid = document.getElementById('crafting-materials-grid');
+        if (!craftingMaterialsGrid) {
+            console.error('Crafting materials grid element not found!');
             return;
         }
 
@@ -216,18 +226,28 @@ const Crafting = (() => {
             return;
         }
 
+        // Debug: Check how many materials we have
+        const materialItems = character.inventory.items.filter(item =>
+            item.classifications && item.classifications.includes('material')
+        );
+        console.log(`Rendering ${materialItems.length} material items from inventory of ${character.inventory.items.length} total items`);
+
         // Get all used item IDs from crafting slots
         const usedItemIds = getUsedItemIds();
 
-        // Use InventoryUI module to render mini inventory
+        // Use InventoryUI module to render crafting materials, filtering for materials only
         InventoryUI.renderMiniInventory(
-            miniInventoryGrid,
+            craftingMaterialsGrid,
             character,
             (item) => {
                 // Callback when item is clicked
                 addItemToCraftingSlot(item);
             },
-            { usedItemIds }
+            {
+                usedItemIds,
+                filterClassification: 'material', // Only show items with 'material' classification
+                searchQuery: materialsSearchQuery // Filter by search query
+            }
         );
     }
 
@@ -304,11 +324,11 @@ const Crafting = (() => {
             delete emptySlot.dataset.itemId;
             delete emptySlot.dataset.itemName;
             emptySlot.removeEventListener('click', removeItem);
-            renderMiniInventory();
+            renderCraftingMaterials();
         });
 
         console.log(`Added ${item.name} to crafting slot`);
-        renderMiniInventory();
+        renderCraftingMaterials();
     }
 
     function attemptCraft() {
@@ -356,7 +376,7 @@ const Crafting = (() => {
                 Inventory.removeItem(character.inventory, itemId);
             });
 
-            // Clear all input slots immediately
+            // Clear all input slots immediately (this will also trigger renderCraftingMaterials)
             clearAllSlots();
 
             // Get the item template to display the name
@@ -376,8 +396,7 @@ const Crafting = (() => {
             outputSlot.classList.remove('empty');
             outputSlot.dataset.craftedItemId = matchedRecipe.outputItemId;
 
-            // Update inventory displays
-            renderMiniInventory();
+            // Update inventory displays (clearAllSlots already called renderCraftingMaterials, but we call it again to be safe)
             if (window.renderInventoryUI) {
                 renderInventoryUI();
             }
@@ -489,6 +508,14 @@ const Crafting = (() => {
         const takeBtn = document.getElementById('take-crafted-btn');
         const discardBtn = document.getElementById('discard-crafted-btn');
         const newItemBanner = document.getElementById('new-item-banner');
+
+        // Safety check - ensure all modal elements exist
+        if (!modal || !itemName || !itemDescription || !statsContent || !takeBtn || !discardBtn) {
+            console.error('Crafted item modal elements not found!');
+            // Fallback: auto-collect the item
+            takeCraftedItem(itemTemplate);
+            return;
+        }
 
         // Check if this is a new item (never crafted before)
         const isFirstCraft = isNewItem(itemTemplate.name);
@@ -605,7 +632,7 @@ const Crafting = (() => {
         delete outputSlot.dataset.craftedItemId;
 
         // Re-render inventory displays
-        renderMiniInventory();
+        renderCraftingMaterials();
         if (window.renderInventoryUI) {
             renderInventoryUI();
         }
@@ -654,12 +681,12 @@ const Crafting = (() => {
             delete slot.dataset.itemId;
             delete slot.dataset.itemName;
         });
-        renderMiniInventory();
+        renderCraftingMaterials();
     }
 
     return {
         init,
-        renderMiniInventory
+        renderCraftingMaterials
     };
 })();
 

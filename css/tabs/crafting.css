@@ -124,21 +124,45 @@
     gap: 2rem;
 }
 
-/* Mini Inventory Section */
-.crafting-mini-inventory {
+/* Crafting Materials Section */
+.crafting-materials {
     flex: 1;
     display: flex;
     flex-direction: column;
     height: 100%;
 }
 
-.crafting-mini-inventory h3 {
+.crafting-materials h3 {
     color: #e2e8f0;
     font-size: 1rem;
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 0.5rem 0;
 }
 
-.mini-inventory-grid {
+.crafting-materials-controls {
+    margin-bottom: 0.5rem;
+}
+
+.crafting-materials-controls input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.crafting-materials-controls input[type="text"]:focus {
+    border-color: #f59e0b;
+}
+
+.crafting-materials-controls input[type="text"]::placeholder {
+    color: #64748b;
+}
+
+.crafting-materials-grid {
     flex: 1;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(55px, 55px));
@@ -153,7 +177,7 @@
     justify-content: start;
 }
 
-.mini-inventory-slot {
+.crafting-materials-slot {
     aspect-ratio: 1;
     width: 55px;
     height: 55px;
@@ -169,16 +193,16 @@
     padding: 0.3rem;
 }
 
-.mini-inventory-slot:hover {
+.crafting-materials-slot:hover {
     border-color: #f59e0b;
     background-color: #334155;
 }
 
-.mini-inventory-slot.used {
+.crafting-materials-slot.used {
     display: none;
 }
 
-.mini-inventory-slot .item-card {
+.crafting-materials-slot .item-card {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,7 +210,7 @@
     height: 100%;
 }
 
-.mini-inventory-slot .item-name {
+.crafting-materials-slot .item-name {
     font-size: 0.75rem;
     color: #e2e8f0;
     text-align: center;
