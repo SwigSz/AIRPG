@@ -92,7 +92,6 @@ const AbilityManager = (() => {
     // Unlock an ability
     function unlockAbility(abilityId) {
         if (isAbilityUnlocked(abilityId)) {
-            console.log('AbilityManager: Ability already unlocked:', abilityId);
             return false;
         }
 

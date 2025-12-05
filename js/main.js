@@ -75,11 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (SaveSystem.hasSave()) {
         const savedState = SaveSystem.load();
         if (savedState && savedState.character) {
-            console.log('🔍 Before setState - activeResearch:', savedState.activeResearch);
             GameState.setState(savedState);
-
-            const stateAfterSet = GameState.getState();
-            console.log('🔍 After setState - activeResearch:', stateAfterSet.activeResearch);
 
             // Recalculate stats after loading (in case formulas changed)
             if (window.CharacterStats && savedState.character) {
@@ -115,11 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Check research nodes after loading save (crafting history is now loaded)
             if (window.Research && window.Research.checkAndAutoCompleteNodes) {
-                const stateBeforeResearchCheck = GameState.getState();
-                console.log('🔍 Before Research.checkAndAutoCompleteNodes - activeResearch:', stateBeforeResearchCheck.activeResearch);
                 Research.checkAndAutoCompleteNodes();
-                const stateAfterResearchCheck = GameState.getState();
-                console.log('🔍 After Research.checkAndAutoCompleteNodes - activeResearch:', stateAfterResearchCheck.activeResearch);
             }
         } else {
             // Failed to load or no character, create test character

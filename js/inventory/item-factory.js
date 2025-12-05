@@ -177,7 +177,6 @@ const ItemFactory = (() => {
     let itemDatabase = {};
 
     async function init() {
-        console.log('ItemFactory: Loading items from items.json and materials.json...');
         try {
             // Load items
             const itemsResponse = await fetch('data/items.json');
@@ -188,7 +187,6 @@ const ItemFactory = (() => {
                 itemsData.items.forEach(item => {
                     itemDatabase[item.id] = item;
                 });
-                console.log(`ItemFactory: Loaded ${itemsData.items.length} items`);
             } else {
                 console.error('ItemFactory: Invalid items.json format');
             }
@@ -202,7 +200,6 @@ const ItemFactory = (() => {
                 materialsData.materials.forEach(material => {
                     itemDatabase[material.id] = material;
                 });
-                console.log(`ItemFactory: Loaded ${materialsData.materials.length} materials`);
             } else {
                 console.error('ItemFactory: Invalid materials.json format');
             }

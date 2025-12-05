@@ -67,7 +67,6 @@ const CombatManager = (() => {
             floatEl.textContent = `-${amount}`;
         }
 
-        console.log(`[Combat] Showing ${type} indicator on ${combatantId}: "${floatEl.textContent}"`);
         targetCard.appendChild(floatEl);
 
         // Remove element after animation completes

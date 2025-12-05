@@ -62,7 +62,6 @@ const Crafting = (() => {
         const state = window.GameState ? window.GameState.getState() : null;
         if (state && state.discoveredRecipes && Array.isArray(state.discoveredRecipes)) {
             discoveredRecipes = state.discoveredRecipes.map(id => recipes.find(r => r.id === id)).filter(r => r);
-            console.log(`Loaded ${discoveredRecipes.length} discovered recipes from GameState`);
             return;
         }
 
@@ -110,7 +109,6 @@ const Crafting = (() => {
         const state = window.GameState ? window.GameState.getState() : null;
         if (state && state.craftedItems && Array.isArray(state.craftedItems)) {
             craftedItems = state.craftedItems;
-            console.log(`Loaded ${craftedItems.length} crafted items from GameState`);
             return;
         }
 

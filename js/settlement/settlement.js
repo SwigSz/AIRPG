@@ -20,7 +20,6 @@ const Settlement = (() => {
             const response = await fetch('data/resources.json');
             const data = await response.json();
             state.resourcesData = data.resources;
-            console.log('✅ Loaded resources:', state.resourcesData.map(r => r.id).join(', '));
         } catch (error) {
             console.error('Failed to load resources.json:', error);
             state.resourcesData = [];
@@ -63,11 +62,17 @@ const Settlement = (() => {
         state.settlement = {
             id: generateId(),
             name,
-            population: 10,
             morale: 100,
             day: 1,
             resources: resources,
-            buildings: buildings
+            buildings: buildings,
+            population: {
+                total: 10,
+                max: 20,
+                idle: 10,
+                assigned: {} // { buildingType: workerCount }
+            },
+            starvationDays: 0 // Days at 0 food (people leave after 3)
         };
 
         return state.settlement;
@@ -90,6 +95,9 @@ const Settlement = (() => {
 
         // Building card clicks (delegate to parent to handle dynamic content)
         document.addEventListener('click', (e) => {
+            // Check if e.target is a valid DOM element
+            if (!e.target || typeof e.target.closest !== 'function') return;
+
             const card = e.target.closest('.building-card');
             if (card && card.dataset.buildingType) {
                 const buildingType = card.dataset.buildingType;
@@ -118,6 +126,9 @@ const Settlement = (() => {
 
         // Building card hover for tooltips
         document.addEventListener('mouseenter', (e) => {
+            // Check if e.target is a valid DOM element
+            if (!e.target || typeof e.target.closest !== 'function') return;
+
             const card = e.target.closest('.building-card');
             if (card && card.dataset.buildingType) {
                 const buildingType = card.dataset.buildingType;
@@ -126,6 +137,9 @@ const Settlement = (() => {
         }, true);
 
         document.addEventListener('mouseleave', (e) => {
+            // Check if e.target is a valid DOM element
+            if (!e.target || typeof e.target.closest !== 'function') return;
+
             const card = e.target.closest('.building-card');
             if (card && card.dataset.buildingType) {
                 hideBuildingTooltip();
@@ -177,6 +191,19 @@ const Settlement = (() => {
             }
         }
 
+        // Show population cap bonus
+        if (buildingData.populationCapBonus) {
+            html += '<div style="margin-top: 12px; margin-bottom: 8px;"><strong style="color: #94a3b8;">Population:</strong></div>';
+            html += `<div style="margin-left: 12px; color: #60a5fa; font-size: 13px;">👥 +${buildingData.populationCapBonus} population cap</div>`;
+        }
+
+        // Show wanderer spawn bonus
+        if (buildingData.wandererSpawnBonus) {
+            const bonusPercent = (buildingData.wandererSpawnBonus * 100).toFixed(1);
+            html += '<div style="margin-top: 12px; margin-bottom: 8px;"><strong style="color: #94a3b8;">Wanderer Attraction:</strong></div>';
+            html += `<div style="margin-left: 12px; color: #a78bfa; font-size: 13px;">🚶 +${bonusPercent}% spawn chance per day</div>`;
+        }
+
         tooltip.innerHTML = html;
         tooltip.style.display = 'block';
 
@@ -206,6 +233,9 @@ const Settlement = (() => {
             content.classList.remove('active');
         });
         document.getElementById(`settlement-${tabName}-content`)?.classList.add('active');
+
+        // Update the UI for the newly selected tab
+        updateUI();
     }
 
     // ============================================
@@ -219,13 +249,21 @@ const Settlement = (() => {
 
         if (state.currentTab === 'buildings') {
             updateBuildingsTab();
+        } else if (state.currentTab === 'population') {
+            updatePopulationTab();
         }
     }
 
     function updateHeaderBar() {
         const s = state.settlement;
         document.getElementById('settlement-civ-name').textContent = s.name;
-        document.getElementById('settlement-header-pop').textContent = s.population;
+
+        // Support both old and new population format
+        const popText = s.population?.total !== undefined
+            ? `${s.population.total}/${s.population.max}`
+            : s.population || 0;
+        document.getElementById('settlement-header-pop').textContent = popText;
+
         document.getElementById('settlement-header-morale').textContent = `${s.morale}%`;
         document.getElementById('settlement-header-day').textContent = s.day;
     }
@@ -297,10 +335,18 @@ const Settlement = (() => {
                     amountClass = 'resource-high';
                 }
 
+                // Format rate display with color coding
+                let rateDisplay = '';
+                if (rate !== 0) {
+                    const sign = rate > 0 ? '+' : '';
+                    const rateColor = rate > 0 ? '#22c55e' : '#ef4444'; // Green for positive, red for negative
+                    rateDisplay = `<span style="color: ${rateColor}">${sign}${rateText} /d</span>`;
+                }
+
                 resourceRow.innerHTML = `
                     <div class="resource-name-col">${resourceDef.name}</div>
                     <div class="resource-amount-col ${amountClass}">${currentFormatted} / ${maxFormatted}</div>
-                    <div class="resource-rate-col">${rate > 0 ? rateText + ' /d' : ''}</div>
+                    <div class="resource-rate-col">${rateDisplay}</div>
                 `;
 
                 resourceContainer.appendChild(resourceRow);
@@ -315,9 +361,9 @@ const Settlement = (() => {
         // Clear and re-render all buildings dynamically
         container.innerHTML = '';
 
-        // Render resource production buildings
+        // Render all buildings (resource production and population buildings)
         state.buildingsData.forEach(buildingData => {
-            if (buildingData.category === 'resource_production') {
+            if (buildingData.category === 'resource_production' || buildingData.category === 'population') {
                 const buildingCard = document.createElement('div');
                 buildingCard.className = 'building-card';
                 buildingCard.dataset.buildingType = buildingData.id;
@@ -402,6 +448,11 @@ const Settlement = (() => {
         // Production is now calculated dynamically from buildings.json
         // No need to store production values - they're computed on-the-fly
 
+        // Update population cap if this is a housing building
+        if (buildingData.populationCapBonus) {
+            updatePopulationCap();
+        }
+
         // Update UI and save
         updateUI();
 
@@ -417,9 +468,12 @@ const Settlement = (() => {
     // RESOURCE GENERATION (Based on in-game time)
     // ============================================
     let resourceAccumulators = {};
+    let wandererSpawnAccumulator = 0; // Accumulate fractional days for wanderer spawning
 
     /**
-     * Calculate total resource generation rates based on buildings
+     * Calculate total resource generation rates based on buildings AND worker assignments
+     * Buildings are now WORKSTATIONS - they only produce if workers are assigned
+     * Returns NET rates (production - consumption)
      */
     function calculateResourceGenerationRates() {
         if (!state.settlement) {
@@ -437,20 +491,42 @@ const Settlement = (() => {
             rates[resource.id] = 0;
         });
 
-        // Add production from buildings only (no base rate)
+        // Initialize assigned workers if not present (for old saves)
+        if (!state.settlement.population || !state.settlement.population.assigned) {
+            // Still apply consumption even if no workers assigned
+            if (state.settlement.population?.total) {
+                const foodConsumption = state.settlement.population.total * 0.1;
+                rates.food = -foodConsumption;
+            }
+            return rates;
+        }
+
+        // Add production from buildings ONLY where workers are assigned
         for (const buildingId in state.settlement.buildings) {
             const building = state.settlement.buildings[buildingId];
             const buildingData = state.buildingsData.find(b => b.id === buildingId);
 
             if (buildingData && buildingData.production && building.count > 0) {
-                // Each building produces its specified amount per day
+                // Get number of workers assigned to this building type
+                const workersAssigned = state.settlement.population.assigned[buildingId] || 0;
+
+                // Production = min(building count, workers assigned) * production rate
+                // Each worker can operate 1 building
+                const activeBuildings = Math.min(building.count, workersAssigned);
+
                 for (const resource in buildingData.production) {
                     if (rates[resource] !== undefined) {
-                        // buildingData.production[resource] is the amount per building per day
-                        rates[resource] += buildingData.production[resource] * building.count;
+                        // Only active buildings (with workers) produce
+                        rates[resource] += buildingData.production[resource] * activeBuildings;
                     }
                 }
             }
+        }
+
+        // Subtract food consumption (0.1 food per person per day)
+        if (state.settlement.population?.total) {
+            const foodConsumption = state.settlement.population.total * 0.1;
+            rates.food = (rates.food || 0) - foodConsumption;
         }
 
         return rates;
@@ -500,7 +576,34 @@ const Settlement = (() => {
     function onTimeAdvance(daysAdvanced) {
         if (!state.settlement) return;
 
-        // Get current generation rates (base + buildings)
+        // Initialize population structure if it doesn't exist (for old saves)
+        if (!state.settlement.population || typeof state.settlement.population === 'number') {
+            const oldPop = state.settlement.population || 10;
+            state.settlement.population = {
+                total: oldPop,
+                max: 20,
+                idle: oldPop,
+                assigned: {}
+            };
+        }
+
+        // Update population cap based on housing buildings
+        updatePopulationCap();
+
+        // Accumulate fractional days for wanderer spawning
+        wandererSpawnAccumulator += daysAdvanced;
+
+        // Try to spawn wanderers for each full day that has passed
+        const fullDays = Math.floor(wandererSpawnAccumulator);
+        if (fullDays > 0) {
+            for (let i = 0; i < fullDays; i++) {
+                trySpawnWanderer();
+            }
+            // Subtract the full days, keep the fractional remainder
+            wandererSpawnAccumulator -= fullDays;
+        }
+
+        // Get current generation rates (base + buildings + workers)
         const currentRates = calculateResourceGenerationRates();
 
         // Get capacity bonuses from buildings
@@ -516,23 +619,279 @@ const Settlement = (() => {
             resourceAccumulators[resource] += currentRates[resource] * daysAdvanced;
 
             // Convert accumulated fractional resources to whole resources
-            const wholeResources = Math.floor(resourceAccumulators[resource]);
+            const wholeResources = Math.floor(Math.abs(resourceAccumulators[resource]));
             if (wholeResources > 0) {
                 const r = state.settlement.resources[resource];
                 if (r) {
-                    r.current += wholeResources;
-                    // Clamp to max capacity (base + bonus)
-                    const maxCapacity = r.max + (capacityBonuses[resource] || 0);
-                    r.current = Math.max(0, Math.min(r.current, maxCapacity));
+                    if (resourceAccumulators[resource] > 0) {
+                        // Positive accumulator - add resources
+                        r.current += wholeResources;
+                        // Clamp to max capacity (base + bonus)
+                        const maxCapacity = r.max + (capacityBonuses[resource] || 0);
+                        r.current = Math.min(r.current, maxCapacity);
+                    } else {
+                        // Negative accumulator - subtract resources
+                        r.current -= wholeResources;
+                        // Prevent going negative
+                        r.current = Math.max(0, r.current);
+                    }
 
                     // Subtract the whole resources from accumulator, keep the remainder
-                    resourceAccumulators[resource] -= wholeResources;
+                    resourceAccumulators[resource] -= (resourceAccumulators[resource] > 0 ? wholeResources : -wholeResources);
                 }
             }
         }
 
-        // Update UI
-        updateResourcesPanel();
+        // Check for starvation (0 food)
+        const currentFood = state.settlement.resources.food?.current || 0;
+        if (currentFood === 0) {
+            // Initialize starvationDays if it doesn't exist
+            if (state.settlement.starvationDays === undefined) {
+                state.settlement.starvationDays = 0;
+            }
+
+            state.settlement.starvationDays += fullDays;
+
+            // Every 3 days at 0 food, a person leaves
+            if (state.settlement.starvationDays >= 3) {
+                const peopleToRemove = Math.floor(state.settlement.starvationDays / 3);
+
+                for (let i = 0; i < peopleToRemove; i++) {
+                    if (state.settlement.population.total > 0) {
+                        state.settlement.population.total--;
+
+                        // Remove from idle first, then from assigned workers
+                        if (state.settlement.population.idle > 0) {
+                            state.settlement.population.idle--;
+                        } else {
+                            // Remove from first assigned job with workers
+                            for (const buildingType in state.settlement.population.assigned) {
+                                if (state.settlement.population.assigned[buildingType] > 0) {
+                                    state.settlement.population.assigned[buildingType]--;
+                                    if (state.settlement.population.assigned[buildingType] === 0) {
+                                        delete state.settlement.population.assigned[buildingType];
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Reset starvation counter for remainder
+                state.settlement.starvationDays = state.settlement.starvationDays % 3;
+            }
+        } else {
+            // Food is available, reset starvation counter
+            state.settlement.starvationDays = 0;
+        }
+
+        // Update UI in real-time (including current tab)
+        updateUI();
+    }
+
+    /**
+     * Calculate population cap based on housing buildings
+     */
+    function updatePopulationCap() {
+        const baseCap = 20;
+        let bonusCap = 0;
+
+        const housingCount = state.settlement.buildings.housing?.count || 0;
+        const housingData = state.buildingsData.find(b => b.id === 'housing');
+        if (housingData && housingData.populationCapBonus) {
+            bonusCap = housingCount * housingData.populationCapBonus;
+        }
+
+        state.settlement.population.max = baseCap + bonusCap;
+    }
+
+    /**
+     * Calculate wanderer spawn chance based on taverns
+     */
+    function getWandererSpawnChance() {
+        const baseChance = 0.02; // 2% base chance per day
+        let bonusChance = 0;
+
+        const tavernCount = state.settlement.buildings.tavern?.count || 0;
+        const tavernData = state.buildingsData.find(b => b.id === 'tavern');
+        if (tavernData && tavernData.wandererSpawnBonus) {
+            bonusChance = tavernCount * tavernData.wandererSpawnBonus;
+        }
+
+        // Cap at 100% (1.0)
+        return Math.min(1.0, baseChance + bonusChance);
+    }
+
+    /**
+     * Try to spawn a wanderer based on spawn chance
+     */
+    function trySpawnWanderer() {
+        const pop = state.settlement.population;
+
+        // Can't spawn if at max population
+        if (pop.total >= pop.max) return;
+
+        // Can't spawn if food is at 0 (starvation prevents new arrivals)
+        const currentFood = state.settlement.resources.food?.current || 0;
+        if (currentFood === 0) return;
+
+        const spawnChance = getWandererSpawnChance();
+        const roll = Math.random();
+
+        if (roll < spawnChance) {
+            pop.total++;
+            pop.idle++;
+        }
+    }
+
+    // ============================================
+    // WORKER MANAGEMENT
+    // ============================================
+
+    /**
+     * Assign a worker to a building type
+     */
+    function assignWorker(buildingType) {
+        const pop = state.settlement.population;
+
+        // Check if there are idle workers
+        if (pop.idle <= 0) {
+            alert('No idle workers available!');
+            return false;
+        }
+
+        // Get building data and count
+        const buildingCount = state.settlement.buildings[buildingType]?.count || 0;
+        if (buildingCount === 0) {
+            alert('You need to build this building first!');
+            return false;
+        }
+
+        // Get current workers assigned
+        const currentWorkers = pop.assigned[buildingType] || 0;
+
+        // Can't assign more workers than buildings
+        if (currentWorkers >= buildingCount) {
+            alert('All buildings of this type are already staffed!');
+            return false;
+        }
+
+        // Assign the worker
+        pop.assigned[buildingType] = currentWorkers + 1;
+        pop.idle--;
+
+        updateUI();
+        SaveSystem.save();
+        return true;
+    }
+
+    /**
+     * Unassign a worker from a building type
+     */
+    function unassignWorker(buildingType) {
+        const pop = state.settlement.population;
+
+        // Get current workers assigned
+        const currentWorkers = pop.assigned[buildingType] || 0;
+
+        if (currentWorkers === 0) {
+            alert('No workers assigned to this building!');
+            return false;
+        }
+
+        // Unassign the worker
+        pop.assigned[buildingType] = currentWorkers - 1;
+        if (pop.assigned[buildingType] === 0) {
+            delete pop.assigned[buildingType];
+        }
+        pop.idle++;
+
+        updateUI();
+        SaveSystem.save();
+        return true;
+    }
+
+    /**
+     * Update the population tab UI
+     */
+    function updatePopulationTab() {
+        const container = document.querySelector('#settlement-population-content .population-management');
+        if (!container) return;
+
+        const pop = state.settlement.population;
+        const spawnChance = (getWandererSpawnChance() * 100).toFixed(1);
+
+        let html = `
+            <div class="population-header">
+                <h3>Population Management</h3>
+                <div class="population-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Population:</span>
+                        <span class="stat-value">${pop.total} / ${pop.max}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Idle Workers:</span>
+                        <span class="stat-value">${pop.idle}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Wanderer Spawn Chance:</span>
+                        <span class="stat-value">${spawnChance}% per day</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="worker-allocation">
+                <h4>Worker Allocation</h4>
+                <p class="help-text">Assign workers to buildings to produce resources. Each building requires 1 worker.</p>
+                <div class="worker-list">
+        `;
+
+        // Show all building types that can have workers (production buildings)
+        state.buildingsData.forEach(buildingData => {
+            if (buildingData.category === 'resource_production' && buildingData.production) {
+                const buildingCount = state.settlement.buildings[buildingData.id]?.count || 0;
+                const workersAssigned = pop.assigned[buildingData.id] || 0;
+
+                html += `
+                    <div class="worker-allocation-row">
+                        <div class="building-info-col">
+                            <span class="building-icon">${buildingData.icon}</span>
+                            <span class="building-name">${buildingData.name}</span>
+                        </div>
+                        <div class="worker-count-col">
+                            <span class="workers-assigned">${workersAssigned} / ${buildingCount}</span>
+                        </div>
+                        <div class="worker-buttons-col">
+                            <button class="worker-btn unassign-btn" data-building="${buildingData.id}" ${workersAssigned === 0 ? 'disabled' : ''}>-</button>
+                            <button class="worker-btn assign-btn" data-building="${buildingData.id}" ${workersAssigned >= buildingCount || pop.idle === 0 ? 'disabled' : ''}>+</button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Add event listeners for worker buttons
+        container.querySelectorAll('.assign-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const buildingType = btn.dataset.building;
+                assignWorker(buildingType);
+            });
+        });
+
+        container.querySelectorAll('.unassign-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const buildingType = btn.dataset.building;
+                unassignWorker(buildingType);
+            });
+        });
     }
 
     // ============================================
@@ -561,7 +920,6 @@ const Settlement = (() => {
                             current: resourceDef.defaultStart || 0,
                             max: resourceDef.defaultMax || 100
                         };
-                        console.log(`🆕 Added new resource to save: ${resourceDef.id}`);
                     }
                 });
             }
@@ -571,7 +929,6 @@ const Settlement = (() => {
                 state.buildingsData.forEach(buildingDef => {
                     if (!s.buildings[buildingDef.id]) {
                         s.buildings[buildingDef.id] = { count: 0 };
-                        console.log(`🆕 Added new building to save: ${buildingDef.id}`);
                     }
                 });
             }

@@ -79,6 +79,31 @@
         "stone": 50,
         "food": 50
       }
+    },
+    {
+      "id": "tavern",
+      "name": "Tavern",
+      "icon": "🍺",
+      "description": "A gathering place that attracts wanderers. Each tavern increases wanderer spawn chance by 3% per day.",
+      "category": "population",
+      "cost": {
+        "wood": 10,
+        "stone": 5,
+        "food": 5
+      },
+      "wandererSpawnBonus": 0.03
+    },
+    {
+      "id": "housing",
+      "name": "Housing",
+      "icon": "🏠",
+      "description": "Provides shelter for your population. Each house increases population cap by 10.",
+      "category": "population",
+      "cost": {
+        "wood": 15,
+        "stone": 10
+      },
+      "populationCapBonus": 10
     }
   ]
 }

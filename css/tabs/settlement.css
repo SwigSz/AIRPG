@@ -584,3 +584,175 @@
 .settlement-resources-sidebar::-webkit-scrollbar-thumb:hover {
     background: #64748b;
 }
+
+/* ============================================
+   POPULATION TAB
+   ============================================ */
+.population-management {
+    padding: 1rem;
+}
+
+.population-header {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.population-header h3 {
+    color: #f59e0b;
+    font-size: 1.3rem;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #334155;
+}
+
+.population-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.population-stats .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.population-stats .stat-label {
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+.population-stats .stat-value {
+    color: #e2e8f0;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.worker-allocation {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.worker-allocation h4 {
+    color: #fbbf24;
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.worker-allocation .help-text {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin: 0 0 1.5rem 0;
+    font-style: italic;
+}
+
+.worker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.worker-allocation-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    background-color: #334155;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.worker-allocation-row:hover {
+    background-color: #3f4c63;
+    border-color: #3b82f6;
+}
+
+.building-info-col {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.building-info-col .building-icon {
+    font-size: 1.5rem;
+}
+
+.building-info-col .building-name {
+    color: #e2e8f0;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.worker-count-col {
+    color: #cbd5e1;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    min-width: 80px;
+    text-align: center;
+}
+
+.worker-buttons-col {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.worker-btn {
+    background-color: #3b82f6;
+    border: 1px solid #2563eb;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 40px;
+}
+
+.worker-btn:hover:not(:disabled) {
+    background-color: #2563eb;
+    border-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.worker-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.worker-btn:disabled {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #475569;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.worker-btn.unassign-btn {
+    background-color: #ef4444;
+    border-color: #dc2626;
+}
+
+.worker-btn.unassign-btn:hover:not(:disabled) {
+    background-color: #dc2626;
+    border-color: #b91c1c;
+}
+
+.worker-btn.assign-btn {
+    background-color: #22c55e;
+    border-color: #16a34a;
+}
+
+.worker-btn.assign-btn:hover:not(:disabled) {
+    background-color: #16a34a;
+    border-color: #15803d;
+}

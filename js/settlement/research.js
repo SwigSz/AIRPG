@@ -48,11 +48,8 @@ const Research = (() => {
 
         // Check if there's active research from a loaded save
         const state = window.GameState ? window.GameState.getState() : null;
-        console.log('🔬 Research.init() - checking for activeResearch:', state ? state.activeResearch : 'no state');
         if (state && state.activeResearch) {
-            console.log('🔬 Restored active research from save:', state.activeResearch);
-        } else {
-            console.log('🔬 No active research found during init');
+            // Active research restored from save
         }
 
         setupEventListeners();
@@ -123,7 +120,6 @@ const Research = (() => {
         // Reload research state from GameState (called after loading a save)
         loadResearchedNodes();
         render();
-        console.log('🔬 Research state reloaded from save');
     }
 
     function saveResearchedNodes() {
@@ -440,7 +436,6 @@ const Research = (() => {
         }
 
         render();
-        console.log('Research resumed');
     }
 
     function completeResearch(nodeId) {
@@ -461,7 +456,6 @@ const Research = (() => {
 
         // Handle recipe unlocks if this node unlocks recipes
         if (node.unlocksRecipes && node.unlocksRecipes.length > 0) {
-            console.log(`Research ${nodeId} unlocks recipes:`, node.unlocksRecipes);
 
             // Show notification for unlocked recipes
             if (window.NotificationManager) {
@@ -488,7 +482,6 @@ const Research = (() => {
         // Render again after a short delay to ensure state is fully updated
         setTimeout(() => render(), 100);
 
-        console.log(`Research completed: ${node.name}`);
     }
 
     function isAvailable(nodeId) {
@@ -795,7 +788,6 @@ const Research = (() => {
             // Pause research if not in settlement
             if (!activeResearch.isPaused) {
                 activeResearch.isPaused = true;
-                console.log('Research paused - player left settlement');
             }
             return;
         }
@@ -803,7 +795,6 @@ const Research = (() => {
         // Resume research if in settlement and paused
         if (activeResearch.isPaused) {
             activeResearch.isPaused = false;
-            console.log('Research resumed - player in settlement');
         }
 
         // Calculate days elapsed (with fractional hours for smooth progress)
@@ -830,7 +821,6 @@ const Research = (() => {
 
         if (state.activeResearch.isPaused) {
             state.activeResearch.isPaused = false;
-            console.log('Research auto-resumed on settlement entry');
             render();
         }
     }
@@ -841,7 +831,6 @@ const Research = (() => {
 
         if (!state.activeResearch.isPaused) {
             state.activeResearch.isPaused = true;
-            console.log('Research auto-paused on settlement exit');
             render();
         }
     }

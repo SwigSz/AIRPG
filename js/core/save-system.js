@@ -47,11 +47,6 @@ const SaveSystem = (() => {
             const state = parsed.state;
 
             // Debug: Log active research if present
-            if (state.activeResearch) {
-                console.log('📂 Loading active research:', state.activeResearch);
-            } else {
-                console.log('📂 No active research in save data');
-            }
 
             // Migrate old saves to new inventory capacity
             if (state.character && state.character.inventory) {
@@ -62,13 +57,7 @@ const SaveSystem = (() => {
             }
 
             // Migrate settlement resources to ensure they exist (for data-driven resources)
-            // Old saves have hardcoded wood/stone/food, new saves are dynamic
-            // This ensures compatibility with both old and new resource systems
-            if (state.settlement && state.settlement.resources) {
-                // Migration is handled automatically by Settlement.setState()
-                // Just ensure the structure is valid
-                console.log('Settlement resources loaded:', Object.keys(state.settlement.resources).join(', '));
-            }
+            // Migration is handled automatically by Settlement.setState()
 
             // Migrate discoveredRecipes and craftedItems from localStorage to GameState
             if (!state.discoveredRecipes || !Array.isArray(state.discoveredRecipes)) {

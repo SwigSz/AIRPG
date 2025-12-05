@@ -24,39 +24,25 @@ const DamageCalculator = (() => {
      */
     function getWeaponDamageType(weapon) {
         if (!weapon) {
-            console.log('[DamageCalculator] No weapon provided');
             return null;
         }
 
-        // Debug: Log weapon structure
-        console.log('[DamageCalculator] Checking weapon:', {
-            name: weapon.name,
-            hasClassifications: !!weapon.classifications,
-            classificationsType: typeof weapon.classifications,
-            classifications: weapon.classifications
-        });
-
         if (!weapon.classifications || !Array.isArray(weapon.classifications)) {
-            console.log('[DamageCalculator] No valid classifications array found');
             return null;
         }
 
         // Check for damage type classifications in priority order
         // [MODDING] Add new damage type checks here in your preferred priority order
         if (weapon.classifications.includes(DAMAGE_TYPES.MELEE)) {
-            console.log('[DamageCalculator] Detected melee weapon');
             return DAMAGE_TYPES.MELEE;
         }
         if (weapon.classifications.includes(DAMAGE_TYPES.RANGED)) {
-            console.log('[DamageCalculator] Detected ranged weapon');
             return DAMAGE_TYPES.RANGED;
         }
         if (weapon.classifications.includes(DAMAGE_TYPES.MAGIC)) {
-            console.log('[DamageCalculator] Detected magic weapon');
             return DAMAGE_TYPES.MAGIC;
         }
 
-        console.log('[DamageCalculator] No recognized damage type in classifications');
         return null; // No recognized damage type
     }
 
@@ -227,16 +213,6 @@ const DamageCalculator = (() => {
 
         // Calculate final damage
         const result = calculateWeaponDamage(character, weapon, baseDamage);
-
-        // Debug logging
-        console.log('[DamageCalculator] Calculation:', {
-            weaponName: weapon.name,
-            baseDamage: baseDamage,
-            damageType: result.damageType,
-            multiplier: result.multiplier,
-            finalDamage: result.damage
-        });
-
         return result.damage;
     }
 

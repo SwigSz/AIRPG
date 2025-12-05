@@ -1,5 +1,59 @@
 # Claude's Development Notes & Reminders
 
+## CRITICAL PRINCIPLE: Real-Time UI Updates
+
+**THE GAME MUST UPDATE IN REAL-TIME. PERIOD.**
+
+All UI elements MUST update immediately when their underlying data changes. Players should NEVER have to:
+- Switch tabs to see updates
+- Reload the page to see changes
+- Click anything to refresh data
+
+### Implementation Rules
+
+1. **When data changes, call updateUI() immediately**
+   - Settlement resources change → Call `Settlement.updateUI()`
+   - Character stats change → Update character panel
+   - Inventory changes → Re-render inventory
+   - Combat state changes → Update combat UI
+
+2. **System callbacks must trigger UI updates**
+   - `onTimeAdvance()` MUST call full `updateUI()`, not just partial updates
+   - Event handlers MUST update UI after modifying data
+   - Auto-save triggers MUST update UI
+
+3. **Tab-specific updates**
+   - `updateUI()` functions MUST check which tab is active
+   - Only render the active tab's content to avoid performance issues
+   - All tabs must update when their data changes AND they're visible
+
+4. **Common Mistakes to Avoid**
+   - ❌ Calling only `updateHeaderBar()` when full UI needs refresh
+   - ❌ Forgetting to call `updateUI()` after data mutations
+   - ❌ Assuming UI will "eventually" update
+   - ❌ Only updating UI on user interaction
+
+### Example: Settlement System
+
+```javascript
+// CORRECT - Full UI update on time advance
+function onTimeAdvance(daysAdvanced) {
+    // ... modify resources, population, etc ...
+    updateUI(); // ✅ Updates everything visible
+}
+
+// WRONG - Partial update
+function onTimeAdvance(daysAdvanced) {
+    // ... modify resources, population, etc ...
+    updateHeaderBar(); // ❌ Population tab won't update!
+    updateResourcesPanel(); // ❌ Still missing active tab!
+}
+```
+
+**If the UI doesn't update in real-time, IT'S A BUG.**
+
+---
+
 ## Quick Reference: File Locations
 
 When you need to edit specific functionality, look in these locations:
