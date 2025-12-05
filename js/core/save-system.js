@@ -61,6 +61,15 @@ const SaveSystem = (() => {
                 }
             }
 
+            // Migrate settlement resources to ensure they exist (for data-driven resources)
+            // Old saves have hardcoded wood/stone/food, new saves are dynamic
+            // This ensures compatibility with both old and new resource systems
+            if (state.settlement && state.settlement.resources) {
+                // Migration is handled automatically by Settlement.setState()
+                // Just ensure the structure is valid
+                console.log('Settlement resources loaded:', Object.keys(state.settlement.resources).join(', '));
+            }
+
             // Migrate discoveredRecipes and craftedItems from localStorage to GameState
             if (!state.discoveredRecipes || !Array.isArray(state.discoveredRecipes)) {
                 const oldDiscoveredRecipes = localStorage.getItem('discoveredRecipes');

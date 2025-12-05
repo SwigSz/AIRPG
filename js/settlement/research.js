@@ -112,10 +112,18 @@ const Research = (() => {
         const state = window.GameState ? window.GameState.getState() : null;
         if (state && state.researchedNodes && Array.isArray(state.researchedNodes)) {
             researchedNodes = new Set(state.researchedNodes);
-            console.log('Loaded researched nodes:', state.researchedNodes);
+            console.log('✅ Loaded researched nodes:', state.researchedNodes);
         } else {
             researchedNodes = new Set();
+            console.log('✅ No researched nodes found, starting fresh');
         }
+    }
+
+    function reloadState() {
+        // Reload research state from GameState (called after loading a save)
+        loadResearchedNodes();
+        render();
+        console.log('🔬 Research state reloaded from save');
     }
 
     function saveResearchedNodes() {
@@ -310,8 +318,16 @@ const Research = (() => {
             startBtn.addEventListener('click', () => {
                 const canAfford = checkCanAffordResearch(nodeId);
                 if (canAfford) {
-                    startResearch(nodeId);
+                    try {
+                        startResearch(nodeId);
+                    } catch (error) {
+                        console.error('Error starting research:', error);
+                    }
+                    // Always close modal after attempting to start research
                     document.body.removeChild(modal);
+                } else {
+                    // Can't afford - show message but don't close modal
+                    console.log('Cannot afford research - need more resources');
                 }
             });
         }
@@ -834,6 +850,7 @@ const Research = (() => {
         init,
         loadTree,
         render,
+        reloadState,
         isAvailable,
         clickNode,
         hasResearched,

@@ -285,6 +285,11 @@ function displayCharacterData() {
     if (window.Settlement && settlement) {
         Settlement.setState(settlement);
     }
+
+    // Reload research state if Research module exists
+    if (window.Research) {
+        Research.reloadState();
+    }
 }
 
 // Update Top Bar with Character Info

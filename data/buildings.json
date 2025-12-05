@@ -47,6 +47,38 @@
         "food": 0.2
       },
       "productionRate": "per_day"
+    },
+    {
+      "id": "ironMine",
+      "name": "Iron Mine",
+      "icon": "⛏️",
+      "description": "A mining operation that extracts iron ore from the earth.",
+      "category": "resource_production",
+      "cost": {
+        "wood": 5,
+        "stone": 10,
+        "food": 2
+      },
+      "production": {
+        "iron": 0.5
+      },
+      "productionRate": "per_day"
+    },
+    {
+      "id": "warehouse",
+      "name": "Warehouse",
+      "icon": "🏚️",
+      "description": "A large storage facility that increases resource capacity.",
+      "category": "resource_production",
+      "cost": {
+        "wood": 10,
+        "stone": 5
+      },
+      "capacityBonus": {
+        "wood": 50,
+        "stone": 50,
+        "food": 50
+      }
     }
   ]
 }

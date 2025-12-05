@@ -1,0 +1,58 @@
+{
+  "resources": [
+    {
+      "id": "wood",
+      "name": "Wood",
+      "icon": "🪵",
+      "description": "Basic building material harvested from trees.",
+      "category": "material",
+      "defaultMax": 100,
+      "defaultStart": 3
+    },
+    {
+      "id": "stone",
+      "name": "Stone",
+      "icon": "🪨",
+      "description": "Sturdy material quarried from rocks.",
+      "category": "material",
+      "defaultMax": 100,
+      "defaultStart": 3
+    },
+    {
+      "id": "food",
+      "name": "Food",
+      "icon": "🍞",
+      "description": "Sustains your population and keeps morale high.",
+      "category": "consumable",
+      "defaultMax": 100,
+      "defaultStart": 3
+    },
+    {
+      "id": "iron",
+      "name": "Iron Ore",
+      "icon": "⛏️",
+      "description": "Valuable metal ore used for advanced crafting and construction.",
+      "category": "material",
+      "defaultMax": 50,
+      "defaultStart": 0
+    },
+    {
+      "id": "copper",
+      "name": "Copper",
+      "icon": "🔶",
+      "description": "Conductive metal used for tools and electronics.",
+      "category": "material",
+      "defaultMax": 75,
+      "defaultStart": 0
+    },
+    {
+      "id": "clay",
+      "name": "Clay",
+      "icon": "🧱",
+      "description": "Moldable earth material for pottery and construction.",
+      "category": "material",
+      "defaultMax": 150,
+      "defaultStart": 0
+    }
+  ]
+}

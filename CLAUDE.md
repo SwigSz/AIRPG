@@ -33,6 +33,8 @@ When you need to edit specific functionality, look in these locations:
 ### World & Map
 - **Map system**: `js/world/map.js` - World map, movement, encounters
 - **Settlements**: `js/settlement/settlement.js` - Settlement management and resources
+- **Settlement resources**: `data/resources.json` - All settlement resource definitions (data-driven)
+- **Settlement buildings**: `data/buildings.json` - Building definitions and resource costs/production
 - **Settlement upgrades**: `data/settlement-upgrades.json` - Upgrade definitions
 - **Settlement detection**: `character.inSettlement` flag - Boolean property on character object that determines if player is in settlement (used for tab visibility and research progress)
 
@@ -63,6 +65,8 @@ When you need to edit specific functionality, look in these locations:
 - **Need to change damage calculations?** → Edit `js/combat/damage-calculator.js` (NEVER calculate elsewhere)
 - **Need to add an enemy?** → Edit `data/enemies.json`
 - **Need to add a recipe?** → Edit `data/recipes.json`
+- **Need to add a settlement resource?** → Edit `data/resources.json` (fully data-driven)
+- **Need to add a building?** → Edit `data/buildings.json`
 - **Need to modify combat flow?** → Edit `js/combat/combat-manager.js`
 - **Need to change map behavior?** → Edit `js/world/map.js`
 - **Need to modify character creation?** → Edit `js/main.js` (initializeTestCharacter function)
@@ -86,6 +90,8 @@ The game is designed to support **hot-reloading** of content. When you add new i
 - Abilities (`data/abilities.json`)
 - Skills (`data/skills.json`)
 - Spells (`data/spells.json`)
+- Resources (`data/resources.json`)
+- Buildings (`data/buildings.json`)
 
 ✅ **Player progress preserved in save file:**
 - Discovered recipes (which recipes the player has found)
@@ -436,6 +442,142 @@ function getAdditionalBonuses(character, damageType) {
 ```
 
 **See `js/combat/damage-calculator.js` for detailed implementation and modding examples.**
+
+---
+
+## Settlement Resource System
+
+### Overview
+The settlement system uses a **fully data-driven resource system** similar to idle/incremental games. Resources are defined in `data/resources.json` and dynamically loaded, making it trivial to add new resources without code changes.
+
+### Architecture Pattern
+
+```
+DATA LAYER                        GAME STATE                    UI LAYER
+├── resources.json                ├── GameState.settlement      ├── settlement.js
+│   └── Resource definitions      │   └── resources: {}         │   └── Dynamic rendering
+├── buildings.json                │       ├── wood: {...}       └── Auto-updates
+    └── Production/costs              └── stone: {...}
+```
+
+### How It Works
+
+**Resource Storage:**
+- All resource data stored in `GameState.settlement.resources`
+- Structure: `{ resourceId: { current, max, production } }`
+- Automatically saved/loaded with game state
+- Single source of truth for all resource values
+
+**Resource Definitions (data/resources.json):**
+```json
+{
+  "resources": [
+    {
+      "id": "wood",
+      "name": "Wood",
+      "icon": "🪵",
+      "description": "Basic building material",
+      "category": "material",
+      "defaultMax": 100,
+      "defaultStart": 3
+    }
+  ]
+}
+```
+
+**Building Integration (data/buildings.json):**
+Buildings reference resources by ID:
+```json
+{
+  "cost": {
+    "wood": 10,
+    "stone": 5
+  },
+  "production": {
+    "wood": 1.0
+  }
+}
+```
+
+### Key Principles
+
+1. **Centralized Storage**: All resource amounts stored in `GameState.settlement.resources`
+2. **Data-Driven**: Resource types defined in JSON, not code
+3. **Hot-Reloadable**: New resources can be added via JSON; refresh to see changes
+4. **Backward Compatible**: Old saves automatically work with new resource system
+5. **Idle Game Pattern**: Resources accumulate over time based on production rates
+
+### Adding New Resources
+
+**Step 1: Define in resources.json**
+```json
+{
+  "id": "iron",
+  "name": "Iron Ore",
+  "icon": "⛏️",
+  "description": "Metal ore for advanced crafting",
+  "category": "material",
+  "defaultMax": 50,
+  "defaultStart": 0
+}
+```
+
+**Step 2: (Optional) Add Buildings That Produce It**
+```json
+{
+  "id": "ironMine",
+  "name": "Iron Mine",
+  "production": {
+    "iron": 0.5
+  }
+}
+```
+
+**Step 3: Refresh the Game**
+- New resource automatically appears in settlement UI
+- Buildings can now produce/consume it
+- Saved games preserve resource amounts
+
+### Usage Rules
+
+**✅ DO:**
+- Store ALL resource amounts in `GameState.settlement.resources`
+- Reference resources by ID from resources.json
+- Use dynamic iteration when displaying resources
+- Add new resources via JSON files only
+
+**❌ DO NOT:**
+- Hardcode resource types in JavaScript
+- Store resource values outside GameState
+- Create separate variables for resource tracking
+- Modify settlement.js to add resources
+
+### Example: Accessing Resources in Code
+
+```javascript
+// Get current wood amount
+const wood = GameState.getState().settlement.resources.wood.current;
+
+// Add wood
+GameState.getState().settlement.resources.wood.current += 10;
+
+// Check if enough resources for cost
+const cost = { wood: 10, stone: 5 };
+const canAfford = Object.keys(cost).every(resourceId => {
+    return state.settlement.resources[resourceId].current >= cost[resourceId];
+});
+```
+
+### Resource Generation
+
+Resources are generated via the time system:
+1. Buildings define production rates (per day)
+2. `Settlement.onTimeAdvance(daysAdvanced)` called when time passes
+3. Fractional resources accumulated in `resourceAccumulators`
+4. Whole resources added to `settlement.resources[id].current`
+5. Capped at `settlement.resources[id].max`
+
+**See `js/settlement/settlement.js` for implementation details.**
 
 ---
 

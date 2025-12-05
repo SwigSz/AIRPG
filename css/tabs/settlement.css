@@ -176,20 +176,11 @@
 }
 
 /* ============================================
-   RIGHT PANEL - RESOURCES
+   RIGHT PANEL - RESOURCES (OLD - NOW HIDDEN)
    ============================================ */
 .settlement-resources-panel {
-    width: 320px;
-    background-color: #1e293b;
-    border-left: 2px solid #334155;
-    border-top: 2px solid #334155;
-    padding: 1.5rem;
-    overflow-y: auto;
-}
-
-/* Hide resources panel when research tab is active */
-.settlement-main-layout:has(#settlement-research-content.active) .settlement-resources-panel {
-    display: none;
+    /* Hidden - resources now displayed in right sidebar */
+    display: none !important;
 }
 
 .settlement-resources-panel h3 {
@@ -201,84 +192,65 @@
     text-align: center;
 }
 
-/* Resource Categories */
+/* Resource Categories - Compact Table Style */
 .resource-category {
-    margin-bottom: 1.5rem;
-}
-
-.resource-category-header {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.75rem;
-    padding: 0.5rem;
-    background-color: #0f172a;
-    border-left: 3px solid #f59e0b;
-}
-
-/* Resource Items */
-.resource-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background-color: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
-}
-
-.resource-icon {
-    font-size: 1.5rem;
-    min-width: 2rem;
-    text-align: center;
-}
-
-.resource-info {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0;
+    background-color: #0f172a;
 }
 
-.resource-name {
-    font-weight: 600;
-    color: #cbd5e1;
+/* Resource Row - Compact Table Design */
+.resource-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 80px;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: #1e293b;
     font-size: 0.9rem;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 32px;
 }
 
-.resource-amount {
-    font-size: 0.85rem;
-    color: #94a3b8;
+/* Alternating row backgrounds (grey/black) */
+.resource-row:nth-child(even) {
+    background-color: #0f172a;
 }
 
-.resource-amount .current {
-    color: #e0e7ff;
-    font-weight: 600;
+.resource-row:nth-child(odd) {
+    background-color: #1e293b;
 }
 
-.resource-amount .max {
-    color: #64748b;
+.resource-row:hover {
+    background-color: #334155 !important;
 }
 
-.resource-production {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #94a3b8;
+.resource-name-col {
+    color: #a78bfa;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
-.resource-production.positive {
+.resource-amount-col {
+    color: #e2e8f0;
+    text-align: right;
+    padding-right: 8px;
+    white-space: nowrap;
+}
+
+.resource-amount-col.resource-high {
+    color: #fbbf24;
+}
+
+.resource-amount-col.resource-full {
     color: #34d399;
 }
 
-.resource-production.negative {
-    color: #f87171;
-}
-
-.resource-production.stable {
-    color: #fbbf24;
+.resource-rate-col {
+    color: #94a3b8;
+    text-align: right;
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 /* Custom scrollbar for resources panel */
@@ -444,13 +416,33 @@
     flex-direction: column;
     gap: 0.5rem;
     transition: all 0.2s ease;
-    cursor: default;
+    cursor: pointer;
     position: relative;
 }
 
 .building-card:hover {
     background-color: #3f4c63;
-    border-color: #64748b;
+    border-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+.building-card:active {
+    transform: translateY(0);
+}
+
+/* Disabled state when can't afford */
+.building-card.building-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #1e293b;
+}
+
+.building-card.building-disabled:hover {
+    background-color: #1e293b;
+    border-color: #475569;
+    box-shadow: none;
+    transform: none;
 }
 
 .building-header {
@@ -488,25 +480,25 @@
     color: #fbbf24;
 }
 
-.building-build-btn {
+/* Count badge in bottom-left corner */
+.building-count-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
     background-color: #fbbf24;
     color: #1e293b;
-    border: none;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 2px 6px;
     border-radius: 3px;
-    padding: 0.5rem;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    width: 100%;
+    min-width: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.building-build-btn:hover {
-    background-color: #f59e0b;
-}
-
-.building-build-btn:active {
-    transform: scale(0.98);
+/* Remove old build button styles (no longer used) */
+.building-build-btn {
+    display: none;
 }
 
 /* Settlement-specific tooltip */
@@ -520,4 +512,75 @@
     z-index: 1000;
     pointer-events: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   SETTLEMENT RESOURCES IN RIGHT SIDEBAR
+   ============================================ */
+.settlement-resources-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.settlement-resources-sidebar h3 {
+    color: #f59e0b;
+    font-size: 1.2rem;
+    margin: 0 0 1rem 0;
+    padding: 1rem 1rem 0.5rem 1rem;
+    border-bottom: 2px solid #334155;
+    text-align: center;
+    background-color: #0f172a;
+}
+
+/* Reuse resource row styles but ensure they work in sidebar context */
+.settlement-resources-sidebar .resource-category {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.5rem;
+    background-color: #0f172a;
+}
+
+.settlement-resources-sidebar .resource-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 80px;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: #1e293b;
+    font-size: 0.9rem;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 32px;
+}
+
+.settlement-resources-sidebar .resource-row:nth-child(even) {
+    background-color: #0f172a;
+}
+
+.settlement-resources-sidebar .resource-row:nth-child(odd) {
+    background-color: #1e293b;
+}
+
+.settlement-resources-sidebar .resource-row:hover {
+    background-color: #334155 !important;
+}
+
+/* Custom scrollbar for settlement resources sidebar */
+.settlement-resources-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settlement-resources-sidebar::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+.settlement-resources-sidebar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+}
+
+.settlement-resources-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
 }

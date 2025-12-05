@@ -53,12 +53,46 @@ const TabManager = (() => {
             activeTabContent.style.display = 'block'; // Explicitly show
         }
 
+        // Toggle right sidebar content based on active tab
+        toggleRightSidebarContent(tabName);
+
         // Trigger tab-specific updates when switching to inventory tab
         if (tabName === 'inventory' && window.renderInventoryUI) {
             renderInventoryUI();
         }
         if (tabName === 'inventory' && window.renderEquipmentUI) {
             renderEquipmentUI();
+        }
+    }
+
+    function toggleRightSidebarContent(tabName) {
+        const activityLog = document.querySelector('.activity-log');
+        const quickSlots = document.querySelector('.quick-slots');
+        const settlementResources = document.getElementById('settlement-resources-sidebar');
+
+        if (tabName === 'settlement') {
+            // Hide Activity Log and Quick Slots when in settlement tab
+            if (activityLog) activityLog.style.display = 'none';
+            if (quickSlots) quickSlots.style.display = 'none';
+
+            // Show settlement resources (will be created by Settlement module if needed)
+            if (settlementResources) {
+                settlementResources.style.display = 'block';
+            }
+
+            // Trigger settlement UI update to render resources
+            if (window.Settlement) {
+                Settlement.updateUI();
+            }
+        } else {
+            // Show Activity Log and Quick Slots for all other tabs
+            if (activityLog) activityLog.style.display = 'flex';
+            if (quickSlots) quickSlots.style.display = 'block';
+
+            // Hide settlement resources
+            if (settlementResources) {
+                settlementResources.style.display = 'none';
+            }
         }
     }
 
