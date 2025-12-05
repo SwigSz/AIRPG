@@ -392,68 +392,94 @@
 
                 <!-- Crafting Tab -->
                 <div class="tab-content" id="crafting-tab">
-                    <div class="crafting-layout">
-                        <!-- Categories -->
-                        <div class="categories-section">
-                            <h2>Categories</h2>
-                            <div class="categories-list">
-                                <button class="category-btn">Category 1</button>
-                                <button class="category-btn">Category 2</button>
-                                <button class="category-btn">Category 3</button>
-                                <button class="category-btn">Category 4</button>
-                            </div>
-                        </div>
+                    <!-- Crafting Sub-Tab Navigation -->
+                    <div class="crafting-nav-tabs">
+                        <button class="crafting-nav-tab active" data-crafting-tab="basic-combining">
+                            <span class="tab-icon">🔨</span>
+                            <span class="tab-label">Basic Combining</span>
+                        </button>
+                        <button class="crafting-nav-tab" data-crafting-tab="smithing">
+                            <span class="tab-icon">⚒️</span>
+                            <span class="tab-label">Smithing</span>
+                        </button>
+                        <button class="crafting-nav-tab" data-crafting-tab="enchanting">
+                            <span class="tab-icon">✨</span>
+                            <span class="tab-label">Enchanting</span>
+                        </button>
+                        <button class="crafting-nav-tab" data-crafting-tab="spell-crafting">
+                            <span class="tab-icon">🔮</span>
+                            <span class="tab-label">Spell Crafting</span>
+                        </button>
+                    </div>
 
-                        <!-- Recipes -->
-                        <div class="recipes-section">
-                            <h2>Recipes</h2>
-                            <div class="recipes-grid">
-                                <!-- Recipe bars will be added dynamically -->
+                    <!-- Basic Combining Tab Content -->
+                    <div class="crafting-tab-content active" id="crafting-basic-combining-content">
+                        <!-- Crafting Station -->
+                        <div class="crafting-station">
+                            <div class="crafting-station-content">
+                                <!-- Mini Inventory Section -->
+                                <div class="crafting-mini-inventory">
+                                    <h3>Inventory</h3>
+                                    <div class="mini-inventory-grid" id="crafting-mini-inventory-grid">
+                                        <!-- Will be populated dynamically from player inventory -->
+                                    </div>
+                                </div>
+
+                                <!-- Circular crafting wheel -->
+                                <div class="crafting-wheel">
+                                    <!-- SVG for connecting pipes -->
+                                    <svg class="crafting-pipes" viewBox="0 0 400 400">
+                                        <!-- Pipes from each input to center (200, 200) -->
+                                        <line class="pipe" x1="200" y1="60" x2="200" y2="200" />
+                                        <line class="pipe" x1="309.456" y1="112.711" x2="200" y2="200" />
+                                        <line class="pipe" x1="336.49" y1="231.152" x2="200" y2="200" />
+                                        <line class="pipe" x1="260.743" y1="326.136" x2="200" y2="200" />
+                                        <line class="pipe" x1="139.257" y1="326.136" x2="200" y2="200" />
+                                        <line class="pipe" x1="63.51" y1="231.152" x2="200" y2="200" />
+                                        <line class="pipe" x1="90.544" y1="112.711" x2="200" y2="200" />
+                                    </svg>
+
+                                    <!-- Input slots (7 slots in circle) -->
+                                    <div class="crafting-slot input-slot" data-slot="0"></div>
+                                    <div class="crafting-slot input-slot" data-slot="1"></div>
+                                    <div class="crafting-slot input-slot" data-slot="2"></div>
+                                    <div class="crafting-slot input-slot" data-slot="3"></div>
+                                    <div class="crafting-slot input-slot" data-slot="4"></div>
+                                    <div class="crafting-slot input-slot" data-slot="5"></div>
+                                    <div class="crafting-slot input-slot" data-slot="6"></div>
+
+                                    <!-- Central output slot -->
+                                    <div class="crafting-slot output-slot"></div>
+
+                                    <!-- Clear and Combine buttons -->
+                                    <button class="clear-all-btn">Clear All</button>
+                                    <button class="combine-btn">Combine</button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Crafting Station -->
-                    <div class="crafting-station">
-                        <div class="crafting-station-content">
-                            <!-- Mini Inventory Section -->
-                            <div class="crafting-mini-inventory">
-                                <h3>Inventory</h3>
-                                <div class="mini-inventory-grid" id="crafting-mini-inventory-grid">
-                                    <!-- Will be populated dynamically from player inventory -->
-                                </div>
-                            </div>
+                    <!-- Smithing Tab Content -->
+                    <div class="crafting-tab-content" id="crafting-smithing-content">
+                        <div class="placeholder-content">
+                            <h3>Smithing</h3>
+                            <p class="placeholder-text">This will be implemented in the future</p>
+                        </div>
+                    </div>
 
-                            <!-- Circular crafting wheel -->
-                            <div class="crafting-wheel">
-                                <!-- SVG for connecting pipes -->
-                                <svg class="crafting-pipes" viewBox="0 0 400 400">
-                                    <!-- Pipes from each input to center (200, 200) -->
-                                    <line class="pipe" x1="200" y1="60" x2="200" y2="200" />
-                                    <line class="pipe" x1="309.456" y1="112.711" x2="200" y2="200" />
-                                    <line class="pipe" x1="336.49" y1="231.152" x2="200" y2="200" />
-                                    <line class="pipe" x1="260.743" y1="326.136" x2="200" y2="200" />
-                                    <line class="pipe" x1="139.257" y1="326.136" x2="200" y2="200" />
-                                    <line class="pipe" x1="63.51" y1="231.152" x2="200" y2="200" />
-                                    <line class="pipe" x1="90.544" y1="112.711" x2="200" y2="200" />
-                                </svg>
+                    <!-- Enchanting Tab Content -->
+                    <div class="crafting-tab-content" id="crafting-enchanting-content">
+                        <div class="placeholder-content">
+                            <h3>Enchanting</h3>
+                            <p class="placeholder-text">This will be implemented in the future</p>
+                        </div>
+                    </div>
 
-                                <!-- Input slots (7 slots in circle) -->
-                                <div class="crafting-slot input-slot" data-slot="0"></div>
-                                <div class="crafting-slot input-slot" data-slot="1"></div>
-                                <div class="crafting-slot input-slot" data-slot="2"></div>
-                                <div class="crafting-slot input-slot" data-slot="3"></div>
-                                <div class="crafting-slot input-slot" data-slot="4"></div>
-                                <div class="crafting-slot input-slot" data-slot="5"></div>
-                                <div class="crafting-slot input-slot" data-slot="6"></div>
-
-                                <!-- Central output slot -->
-                                <div class="crafting-slot output-slot"></div>
-
-                                <!-- Clear and Combine buttons -->
-                                <button class="clear-all-btn">Clear All</button>
-                                <button class="combine-btn">Combine</button>
-                            </div>
+                    <!-- Spell Crafting Tab Content -->
+                    <div class="crafting-tab-content" id="crafting-spell-crafting-content">
+                        <div class="placeholder-content">
+                            <h3>Spell Crafting</h3>
+                            <p class="placeholder-text">This will be implemented in the future</p>
                         </div>
                     </div>
                 </div>

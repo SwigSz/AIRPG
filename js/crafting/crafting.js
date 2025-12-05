@@ -36,7 +36,7 @@ const Crafting = (() => {
         // Note: renderMiniInventory will be called when character is ready
         setTimeout(() => {
             initializeCraftingSlots();
-            renderRecipeList();
+            initializeSubTabs();
         }, 100);
 
         // Initialize mini inventory when tab manager is ready
@@ -50,10 +50,42 @@ const Crafting = (() => {
                     setTimeout(() => renderMiniInventory(), 50);
                     if (!initialized) {
                         initializeCraftingSlots();
+                        initializeSubTabs();
                         initialized = true;
                     }
                 }
             };
+        }
+    }
+
+    function initializeSubTabs() {
+        // Initialize sub-tab click handlers
+        document.querySelectorAll('.crafting-nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchCraftingTab(tab.dataset.craftingTab);
+            });
+        });
+    }
+
+    function switchCraftingTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.crafting-nav-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.craftingTab === tabName);
+        });
+
+        // Update tab content
+        document.querySelectorAll('.crafting-tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        const targetContent = document.getElementById(`crafting-${tabName}-content`);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
+
+        // Re-render mini inventory if switching to basic combining tab
+        if (tabName === 'basic-combining') {
+            setTimeout(() => renderMiniInventory(), 50);
         }
     }
 
@@ -359,7 +391,6 @@ const Crafting = (() => {
             if (!discoveredRecipes.find(r => r.id === matchedRecipe.id)) {
                 discoveredRecipes.push(matchedRecipe);
                 saveDiscoveredRecipes();
-                renderRecipeList();
             }
 
             // Track crafting stats
@@ -613,63 +644,6 @@ const Crafting = (() => {
         }
 
         console.log('Crafted item discarded');
-    }
-
-    function renderRecipeList() {
-        const recipesGrid = document.querySelector('.recipes-grid');
-        if (!recipesGrid) return;
-
-        recipesGrid.innerHTML = '';
-
-        // Render each discovered recipe as a bar
-        discoveredRecipes.forEach(recipe => {
-            const recipeContainer = document.createElement('div');
-
-            const recipeBar = document.createElement('div');
-            recipeBar.className = 'recipe-bar';
-            recipeBar.dataset.recipeId = recipe.id;
-
-            const recipeName = document.createElement('span');
-            recipeName.textContent = recipe.name;
-
-            const arrow = document.createElement('span');
-            arrow.className = 'recipe-bar-arrow';
-            arrow.textContent = '▶';
-
-            recipeBar.appendChild(recipeName);
-            recipeBar.appendChild(arrow);
-
-            // Create dropdown
-            const dropdown = document.createElement('div');
-            dropdown.className = 'recipe-dropdown';
-
-            const ingredientsList = document.createElement('div');
-            ingredientsList.className = 'recipe-ingredients';
-
-            recipe.inputs.forEach(input => {
-                const ingredientItem = document.createElement('div');
-                ingredientItem.className = 'recipe-ingredient-item';
-
-                // Look up item name from ItemFactory
-                const itemTemplate = ItemFactory.getItemTemplate(input.itemId);
-                const itemName = itemTemplate ? itemTemplate.name : input.itemId;
-
-                ingredientItem.textContent = `${itemName} x${input.count}`;
-                ingredientsList.appendChild(ingredientItem);
-            });
-
-            dropdown.appendChild(ingredientsList);
-
-            // Add click handler to toggle dropdown
-            recipeBar.addEventListener('click', () => {
-                recipeBar.classList.toggle('expanded');
-                dropdown.classList.toggle('open');
-            });
-
-            recipeContainer.appendChild(recipeBar);
-            recipeContainer.appendChild(dropdown);
-            recipesGrid.appendChild(recipeContainer);
-        });
     }
 
     function clearAllSlots() {
