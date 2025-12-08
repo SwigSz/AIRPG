@@ -518,7 +518,7 @@
    SETTLEMENT RESOURCES IN RIGHT SIDEBAR
    ============================================ */
 .settlement-resources-sidebar {
-    display: flex;
+    display: none; /* Hidden by default, shown only when settlement tab is active */
     flex-direction: column;
     gap: 0;
     height: 100%;

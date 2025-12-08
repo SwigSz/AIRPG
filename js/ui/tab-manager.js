@@ -77,12 +77,21 @@ const TabManager = (() => {
 
             // Show settlement resources (will be created by Settlement module if needed)
             if (settlementResources) {
-                settlementResources.style.display = 'block';
+                settlementResources.style.display = 'flex';
             }
 
             // Trigger settlement UI update to render resources
             if (window.Settlement) {
                 Settlement.updateUI();
+            }
+        } else if (tabName === 'crafting') {
+            // Hide Activity Log and Quick Slots when in crafting tab
+            if (activityLog) activityLog.style.display = 'none';
+            if (quickSlots) quickSlots.style.display = 'none';
+
+            // Hide settlement resources
+            if (settlementResources) {
+                settlementResources.style.display = 'none';
             }
         } else {
             // Show Activity Log and Quick Slots for all other tabs

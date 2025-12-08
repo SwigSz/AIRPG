@@ -274,11 +274,6 @@ function displayCharacterData() {
         InventoryUI.setupInventoryControls(inventoryGrid, character, handleItemAction);
     }
 
-    // Render crafting materials if crafting module is available
-    if (window.Crafting) {
-        Crafting.renderCraftingMaterials();
-    }
-
     // Render character UI if available
     if (window.CharacterUI) {
         CharacterUI.render();
@@ -417,11 +412,6 @@ function renderInventoryUI() {
 
     // Use InventoryUI module to render the grid
     InventoryUI.renderInventoryGrid(inventoryGrid, character, handleItemAction);
-
-    // Always update crafting materials when inventory changes
-    if (window.Crafting) {
-        Crafting.renderCraftingMaterials();
-    }
 }
 
 // Render equipment slots
