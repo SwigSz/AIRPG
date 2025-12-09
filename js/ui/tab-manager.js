@@ -53,6 +53,13 @@ const TabManager = (() => {
             activeTabContent.style.display = 'block'; // Explicitly show
         }
 
+        // Add/remove body class for crafting tab to hide right sidebar
+        if (tabName === 'crafting') {
+            document.body.classList.add('crafting-tab-active');
+        } else {
+            document.body.classList.remove('crafting-tab-active');
+        }
+
         // Toggle right sidebar content based on active tab
         toggleRightSidebarContent(tabName);
 
@@ -68,21 +75,21 @@ const TabManager = (() => {
     function toggleRightSidebarContent(tabName) {
         const activityLog = document.querySelector('.activity-log');
         const quickSlots = document.querySelector('.quick-slots');
-        const settlementResources = document.getElementById('settlement-resources-sidebar');
 
         if (tabName === 'settlement') {
             // Hide Activity Log and Quick Slots when in settlement tab
             if (activityLog) activityLog.style.display = 'none';
             if (quickSlots) quickSlots.style.display = 'none';
 
-            // Show settlement resources (will be created by Settlement module if needed)
-            if (settlementResources) {
-                settlementResources.style.display = 'flex';
-            }
-
-            // Trigger settlement UI update to render resources
+            // Trigger settlement UI update to render resources FIRST
             if (window.Settlement) {
                 Settlement.updateUI();
+            }
+
+            // Now show settlement resources (after it's been created)
+            const settlementResources = document.getElementById('settlement-resources-sidebar');
+            if (settlementResources) {
+                settlementResources.style.display = 'flex';
             }
         } else if (tabName === 'crafting') {
             // Hide Activity Log and Quick Slots when in crafting tab
@@ -90,6 +97,7 @@ const TabManager = (() => {
             if (quickSlots) quickSlots.style.display = 'none';
 
             // Hide settlement resources
+            const settlementResources = document.getElementById('settlement-resources-sidebar');
             if (settlementResources) {
                 settlementResources.style.display = 'none';
             }
@@ -99,6 +107,7 @@ const TabManager = (() => {
             if (quickSlots) quickSlots.style.display = 'block';
 
             // Hide settlement resources
+            const settlementResources = document.getElementById('settlement-resources-sidebar');
             if (settlementResources) {
                 settlementResources.style.display = 'none';
             }

@@ -414,9 +414,52 @@
 
                     <!-- Basic Combining Tab Content -->
                     <div class="crafting-tab-content active" id="crafting-basic-combining-content">
-                        <div class="placeholder-content">
-                            <h3>Basic Combining</h3>
-                            <p class="placeholder-text">Crafting interface will be redesigned here</p>
+                        <div class="assembly-layout">
+                            <!-- Left Panel: Weapon Type Selection -->
+                            <div class="weapon-selection-panel">
+                                <h3 class="panel-header">CRAFT ITEM</h3>
+                                <div class="weapon-categories">
+                                    <!-- Dynamically rendered by crafting.js -->
+                                </div>
+                            </div>
+
+                            <!-- Center Panel: Assembly Station -->
+                            <div class="assembly-station-panel">
+                                <div class="assembly-header">
+                                    <h3 class="assembly-weapon-name">CRAFTING: LONGSWORD</h3>
+                                    <p class="assembly-weapon-category">(One-Handed Melee)</p>
+                                </div>
+                                <div class="assembly-slots-container">
+                                    <!-- Dynamically rendered component slots -->
+                                </div>
+                                <div class="assembly-action-bar">
+                                    <button class="assembly-btn assembly-btn-secondary" id="clear-assembly-btn">CLEAR ALL</button>
+                                    <div class="assembly-validation">
+                                        <span class="validation-message">✗ Missing required: Blade, Handle</span>
+                                    </div>
+                                    <button class="assembly-btn assembly-btn-primary" id="forge-weapon-btn" disabled>FORGE WEAPON →</button>
+                                </div>
+                            </div>
+
+                            <!-- Right Panel: Component Inventory -->
+                            <div class="component-inventory-panel">
+                                <h3 class="panel-header">YOUR COMPONENTS</h3>
+                                <div class="component-filter">
+                                    <select class="component-filter-dropdown">
+                                        <option value="all">All</option>
+                                        <option value="blades">Blades</option>
+                                        <option value="handles">Handles</option>
+                                        <option value="guards">Guards</option>
+                                    </select>
+                                </div>
+                                <div class="component-list-container">
+                                    <!-- Placeholder components -->
+                                    <div class="placeholder-message">Components you craft will appear here</div>
+                                    <div class="component-placeholder-cards">
+                                        <!-- Sample placeholder components -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

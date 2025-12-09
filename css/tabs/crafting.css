@@ -1,12 +1,25 @@
 /* ============================================
    CRAFTING TAB
    ============================================ */
+
+/* Hide right sidebar when crafting tab is active */
+body.crafting-tab-active #right-sidebar {
+    display: none !important;
+}
+
+/* Prevent page scroll in crafting tab - panels scroll individually */
+body.crafting-tab-active #center-content {
+    overflow: hidden;
+    padding: 0;
+}
+
 #crafting-tab {
     display: flex;
     flex-direction: column;
     gap: 0;
     height: 100%;
     padding: 0;
+    overflow: hidden;
 }
 
 /* ============================================
@@ -19,6 +32,7 @@
     border: 1px solid #334155;
     border-radius: 8px 8px 0 0;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .crafting-nav-tab {
@@ -73,7 +87,7 @@
     border-top: none;
     border-radius: 0 0 8px 8px;
     padding: 0;
-    min-height: 0;
+    height: calc(100vh - 120px); /* Always extend to bottom of viewport minus header/nav */
 }
 
 .crafting-tab-content.active {
@@ -100,5 +114,509 @@
 .placeholder-text {
     font-size: 1rem;
     color: #94a3b8;
+}
+
+/* ============================================
+   ASSEMBLY SYSTEM - THREE PANEL LAYOUT
+   ============================================ */
+
+.assembly-layout {
+    display: grid;
+    grid-template-columns: 20% 1fr 25%;
+    grid-template-rows: 1fr;
+    gap: 0.75rem;
+    height: 100%;
+    padding: 0.75rem;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+/* ============================================
+   LEFT PANEL - WEAPON SELECTION
+   ============================================ */
+
+.weapon-selection-panel {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.5rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    height: 100%;
+}
+
+.weapon-selection-panel .panel-header {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f59e0b;
+    margin: 0 0 0.5rem 0;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid #334155;
+    text-align: center;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.weapon-categories {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    min-height: 0;
+}
+
+.weapon-category {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.weapon-category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    background-color: #334155;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.weapon-category-header:hover {
+    background-color: #475569;
+    border-color: #64748b;
+}
+
+.weapon-category-header .category-icon {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    width: 12px;
+    text-align: center;
+}
+
+.weapon-category-header .category-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    letter-spacing: 0.3px;
+}
+
+.weapon-category-items {
+    display: none;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-left: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.weapon-category-items.expanded {
+    display: flex;
+}
+
+.weapon-type-item {
+    padding: 0.4rem 0.6rem;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+
+.weapon-type-item:hover {
+    background-color: #1e293b;
+    border-color: #f59e0b;
+    color: #f59e0b;
+    transform: translateX(2px);
+}
+
+.weapon-type-item.selected {
+    background-color: #f59e0b;
+    border-color: #d97706;
+    color: #0f172a;
+    font-weight: 600;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+/* ============================================
+   CENTER PANEL - ASSEMBLY STATION
+   ============================================ */
+
+.assembly-station-panel {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.5rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    position: relative;
+}
+
+.assembly-header {
+    text-align: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #334155;
+    flex-shrink: 0;
+}
+
+.assembly-weapon-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f59e0b;
+    margin: 0 0 0.2rem 0;
+    letter-spacing: 0.5px;
+}
+
+.assembly-weapon-category {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+    font-style: italic;
+}
+
+.assembly-slots-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
+    min-height: 0;
+}
+
+/* Assembly Slot */
+.assembly-slot {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.assembly-slot:hover {
+    border-color: #475569;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slot-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f59e0b;
+    letter-spacing: 0.3px;
+}
+
+.slot-dropzone {
+    min-height: 60px;
+    background-color: #1e293b;
+    border: 2px dashed #475569;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.slot-dropzone:hover {
+    border-color: #64748b;
+    background-color: #334155;
+}
+
+.slot-placeholder {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-style: italic;
+    text-align: center;
+}
+
+.slot-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.slot-accepts {
+    color: #94a3b8;
+}
+
+.slot-accepts::before {
+    content: "• ";
+    color: #64748b;
+}
+
+.slot-effect {
+    color: #cbd5e1;
+}
+
+.slot-effect::before {
+    content: "• ";
+    color: #64748b;
+}
+
+/* Assembly Action Bar */
+.assembly-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid #334155;
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+.assembly-btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+}
+
+.assembly-btn-secondary {
+    background-color: #334155;
+    color: #cbd5e1;
+    border: 1px solid #475569;
+}
+
+.assembly-btn-secondary:hover {
+    background-color: #475569;
+    border-color: #64748b;
+    transform: translateY(-1px);
+}
+
+.assembly-btn-primary {
+    background-color: #f59e0b;
+    color: #0f172a;
+    border: 1px solid #d97706;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.assembly-btn-primary:hover:not(:disabled) {
+    background-color: #d97706;
+    border-color: #b45309;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
+}
+
+.assembly-btn-primary:disabled {
+    background-color: #475569;
+    color: #64748b;
+    border-color: #334155;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.assembly-validation {
+    flex: 1;
+    text-align: center;
+}
+
+.validation-message {
+    color: #fca5a5;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* ============================================
+   RIGHT PANEL - COMPONENT INVENTORY
+   ============================================ */
+
+.component-inventory-panel {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.5rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    height: 100%;
+}
+
+.component-inventory-panel .panel-header {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f59e0b;
+    margin: 0 0 0.5rem 0;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid #334155;
+    text-align: center;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.component-filter {
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.component-filter-dropdown {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.component-filter-dropdown:hover {
+    border-color: #475569;
+}
+
+.component-filter-dropdown:focus {
+    outline: none;
+    border-color: #f59e0b;
+}
+
+.component-list-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: scroll;
+    min-height: 0;
+}
+
+.placeholder-message {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.8rem;
+    font-style: italic;
+    padding: 0.75rem;
+    background-color: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 4px;
+}
+
+.component-placeholder-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.component-card {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.component-card:hover {
+    border-color: #475569;
+    background-color: #1e293b;
+    transform: translateX(-2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.component-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+.component-quality {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
+    display: inline-block;
+    align-self: flex-start;
+}
+
+.component-quality.quality-high {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    border: 1px solid #22c55e;
+}
+
+.component-quality.quality-medium {
+    background-color: rgba(203, 213, 225, 0.2);
+    color: #e2e8f0;
+    border: 1px solid #cbd5e1;
+}
+
+.component-quality.quality-low {
+    background-color: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    border: 1px solid #64748b;
+}
+
+.component-material {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+/* Standard scrollbar properties for all browsers */
+.weapon-categories,
+.assembly-slots-container,
+.component-list-container {
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #0f172a;
+}
+
+/* Webkit scrollbar styling (Chrome, Safari, Edge) */
+.weapon-categories::-webkit-scrollbar,
+.assembly-slots-container::-webkit-scrollbar,
+.component-list-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.weapon-categories::-webkit-scrollbar-track,
+.assembly-slots-container::-webkit-scrollbar-track,
+.component-list-container::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 4px;
+}
+
+.weapon-categories::-webkit-scrollbar-thumb,
+.assembly-slots-container::-webkit-scrollbar-thumb,
+.component-list-container::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+    border: 1px solid #334155;
+}
+
+.weapon-categories::-webkit-scrollbar-thumb:hover,
+.assembly-slots-container::-webkit-scrollbar-thumb:hover,
+.component-list-container::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
 }
 

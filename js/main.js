@@ -20,12 +20,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.SkillManager) await SkillManager.init();
     if (window.LootManager) await LootManager.init();
 
-    // Initialize UI systems
+    // Initialize UI systems (but NOT TabManager yet - wait until after save load)
     if (window.UIManager) {
         UIManager.init();
     } else {
         // Fallback to individual initialization
-        if (window.TabManager) TabManager.init();
+        // TabManager.init() will be called AFTER save data is loaded
         if (window.CombatUI) CombatUI.init();
     }
 
@@ -109,9 +109,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 CombatManager.restoreCombatState();
             }
 
+            // Initialize TabManager AFTER settlement state is restored
+            if (window.TabManager) TabManager.init();
+
             // Check research nodes after loading save (crafting history is now loaded)
             if (window.Research && window.Research.checkAndAutoCompleteNodes) {
                 Research.checkAndAutoCompleteNodes();
+            }
+
+            // Refresh crafting category states from save data
+            if (window.Crafting && window.Crafting.refreshFromSaveData) {
+                Crafting.refreshFromSaveData();
             }
         } else {
             // Failed to load or no character, create test character
@@ -251,6 +259,9 @@ function initializeTestCharacter() {
 
     // Auto-save the initial character
     SaveSystem.save();
+
+    // Initialize TabManager AFTER character is created
+    if (window.TabManager) TabManager.init();
 }
 
 // Display Character Data in UI
