@@ -242,6 +242,12 @@ const Settlement = (() => {
     // UI UPDATES
     // ============================================
     function updateUI() {
+        // Sync with GameState to ensure we have the latest reference
+        const gameState = window.GameState?.getState();
+        if (gameState && gameState.settlement) {
+            state.settlement = gameState.settlement;
+        }
+
         if (!state.settlement) return;
 
         updateHeaderBar();
@@ -381,9 +387,49 @@ const Settlement = (() => {
 
     function updateBuildingsTab() {
         const container = document.querySelector('.buildings-grid');
-        if (!container) return;
+        if (!container) {
+            return;
+        }
 
-        // Clear and re-render all buildings dynamically
+        // Check if the container is actually visible to avoid unnecessary re-renders
+        // This prevents the building cards from being destroyed during time ticks
+        if (container.offsetParent === null) {
+            // Container is hidden, skip rendering
+            return;
+        }
+
+        // Only clear and re-render if we have buildings to show
+        if (state.buildingsData.length === 0) {
+            return;
+        }
+
+        // Check if building cards already exist - if so, just update them instead of re-rendering
+        const existingCards = container.querySelectorAll('.building-card');
+        if (existingCards.length > 0) {
+            // Update existing cards (counts and affordability)
+            existingCards.forEach(card => {
+                const buildingType = card.dataset.buildingType;
+                const buildingData = state.buildingsData.find(b => b.id === buildingType);
+                if (buildingData && state.settlement) {
+                    const count = state.settlement.buildings[buildingType]?.count || 0;
+                    const badge = card.querySelector('.building-count-badge');
+                    if (badge) {
+                        badge.textContent = count;
+                    }
+
+                    // Update affordability
+                    const canAfford = checkCanAffordBuilding(buildingData);
+                    if (canAfford) {
+                        card.classList.remove('building-disabled');
+                    } else {
+                        card.classList.add('building-disabled');
+                    }
+                }
+            });
+            return; // Don't re-render if cards already exist
+        }
+
+        // INITIAL RENDER ONLY (when no cards exist yet)
         container.innerHTML = '';
 
         // Render all buildings (resource production and population buildings)
@@ -434,16 +480,27 @@ const Settlement = (() => {
     // BUILDING CONSTRUCTION
     // ============================================
     function constructBuilding(buildingType) {
-        if (!state.settlement || !state.settlement.buildings[buildingType]) {
+        // Get settlement from GameState to ensure we have the latest reference
+        const gameState = window.GameState?.getState();
+        if (!gameState || !gameState.settlement) {
+            return;
+        }
+
+        // Update local reference
+        state.settlement = gameState.settlement;
+
+        if (!state.settlement.buildings[buildingType]) {
             return;
         }
 
         // Get building data
         const buildingData = state.buildingsData.find(b => b.id === buildingType);
-        if (!buildingData) return;
+        if (!buildingData) {
+            return;
+        }
 
         // Check resources dynamically
-        const cost = buildingData.cost;
+        const cost = buildingData.cost || {};
         const missingResources = [];
 
         for (const [resourceId, resourceCost] of Object.entries(cost)) {
