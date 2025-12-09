@@ -1317,6 +1317,13 @@ const CombatManager = (() => {
 
     // Attempt to flee combat
     function attemptFlee() {
+        // Disable flee button to prevent spam
+        const fleeBtn = document.getElementById('flee-btn');
+        if (fleeBtn) {
+            fleeBtn.disabled = true;
+            fleeBtn.classList.add('disabled');
+        }
+
         const fleeChance = Math.random();
         const success = fleeChance > 0.5;
 
@@ -1325,10 +1332,10 @@ const CombatManager = (() => {
 
         if (success) {
             logCombat('Successfully fled from combat!');
-            // Delay combat end to let player see the indicator
+            // Shorter delay to end combat quickly
             setTimeout(() => {
                 endCombat('flee');
-            }, 1000);
+            }, 300);
         } else {
             logCombat('Failed to flee!');
 

@@ -2,17 +2,6 @@
    CRAFTING TAB
    ============================================ */
 
-/* Hide right sidebar when crafting tab is active */
-body.crafting-tab-active #right-sidebar {
-    display: none !important;
-}
-
-/* Prevent page scroll in crafting tab - panels scroll individually */
-body.crafting-tab-active #center-content {
-    overflow: hidden;
-    padding: 0;
-}
-
 #crafting-tab {
     display: flex;
     flex-direction: column;
@@ -87,7 +76,8 @@ body.crafting-tab-active #center-content {
     border-top: none;
     border-radius: 0 0 8px 8px;
     padding: 0;
-    height: calc(100vh - 120px); /* Always extend to bottom of viewport minus header/nav */
+    height: calc(100vh - 180px);
+    max-height: calc(100vh - 180px);
 }
 
 .crafting-tab-content.active {
@@ -126,6 +116,7 @@ body.crafting-tab-active #center-content {
     grid-template-rows: 1fr;
     gap: 0.75rem;
     height: 100%;
+    max-height: 100%;
     padding: 0.75rem;
     overflow: hidden;
     max-width: 100%;
@@ -259,7 +250,6 @@ body.crafting-tab-active #center-content {
     flex-direction: column;
     gap: 0.5rem;
     height: 100%;
-    position: relative;
 }
 
 .assembly-header {
@@ -285,14 +275,15 @@ body.crafting-tab-active #center-content {
 }
 
 .assembly-slots-container {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 0.5rem;
     padding-bottom: 0.5rem;
     min-height: 0;
+    flex: 1 1 0;
 }
 
 /* Assembly Slot */
@@ -380,10 +371,10 @@ body.crafting-tab-active #center-content {
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding-top: 0.75rem;
+    padding: 0.75rem 0.5rem;
     border-top: 2px solid #334155;
     flex-shrink: 0;
-    margin-top: auto;
+    height: 70px;
 }
 
 .assembly-btn {

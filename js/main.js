@@ -137,9 +137,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 function initializeTestCharacter() {
     // Create test skill
     const woodcuttingSkill = Skills.createSkill('Woodcutting', {
-        level: 5,
-        xp: 250,
-        xpToNext: 500
+        level: 1,
+        xp: 0,
+        xpToNext: 100
     });
 
     // Create all placeholder items for inventory
@@ -148,7 +148,7 @@ function initializeTestCharacter() {
     // Create test character with proper inventory and equipment structure
     const testCharacter = Character.create('Test Hero', {
         age: 25,
-        level: 5,
+        level: 1,
         skills: [woodcuttingSkill],
         inventory: Inventory.create(),
         equipment: Equipment.create()

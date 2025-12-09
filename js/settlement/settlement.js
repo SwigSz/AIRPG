@@ -67,9 +67,9 @@ const Settlement = (() => {
             resources: resources,
             buildings: buildings,
             population: {
-                total: 10,
+                total: 0, // Start with 0 population until tavern is built
                 max: 20,
-                idle: 10,
+                idle: 0,
                 assigned: {} // { buildingType: workerCount }
             },
             starvationDays: 0 // Days at 0 food (people leave after 3)
@@ -268,14 +268,28 @@ const Settlement = (() => {
         document.getElementById('settlement-header-day').textContent = s.day;
 
         // Update top bar settlement info (real-time updates)
+        // Only show if camp has been placed
+        const gameState = window.GameState?.getState();
+        const hasCamp = gameState?.campLocation?.isPlaced;
+
         const topBarSettlementName = document.querySelector('.settlement-name');
         if (topBarSettlementName) {
-            topBarSettlementName.textContent = `Settlement: ${s.name}`;
+            if (hasCamp) {
+                topBarSettlementName.textContent = `Settlement: ${s.name}`;
+                topBarSettlementName.style.display = '';
+            } else {
+                topBarSettlementName.style.display = 'none';
+            }
         }
 
         const topBarPopulation = document.querySelector('.population');
         if (topBarPopulation) {
-            topBarPopulation.textContent = `Population: ${popText}`;
+            if (hasCamp) {
+                topBarPopulation.textContent = `Population: ${popText}`;
+                topBarPopulation.style.display = '';
+            } else {
+                topBarPopulation.style.display = 'none';
+            }
         }
     }
 
@@ -589,7 +603,7 @@ const Settlement = (() => {
 
         // Initialize population structure if it doesn't exist (for old saves)
         if (!state.settlement.population || typeof state.settlement.population === 'number') {
-            const oldPop = state.settlement.population || 10;
+            const oldPop = state.settlement.population || 0; // Start with 0 if no previous population
             state.settlement.population = {
                 total: oldPop,
                 max: 20,
@@ -721,10 +735,16 @@ const Settlement = (() => {
      * Calculate wanderer spawn chance based on taverns
      */
     function getWandererSpawnChance() {
-        const baseChance = 0.02; // 2% base chance per day
+        const tavernCount = state.settlement.buildings.tavern?.count || 0;
+
+        // No taverns = no wanderers can spawn
+        if (tavernCount === 0) {
+            return 0;
+        }
+
+        const baseChance = 0.02; // 2% base chance per day (only when tavern exists)
         let bonusChance = 0;
 
-        const tavernCount = state.settlement.buildings.tavern?.count || 0;
         const tavernData = state.buildingsData.find(b => b.id === 'tavern');
         if (tavernData && tavernData.wandererSpawnBonus) {
             bonusChance = tavernCount * tavernData.wandererSpawnBonus;

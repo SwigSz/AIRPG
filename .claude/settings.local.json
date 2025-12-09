@@ -6,7 +6,8 @@
       "Bash(node -c:*)",
       "Bash(npm start)",
       "Bash(python -m http.server:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(start index.html)"
     ],
     "deny": [],
     "ask": []

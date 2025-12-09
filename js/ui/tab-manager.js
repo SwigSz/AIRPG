@@ -53,13 +53,6 @@ const TabManager = (() => {
             activeTabContent.style.display = 'block'; // Explicitly show
         }
 
-        // Add/remove body class for crafting tab to hide right sidebar
-        if (tabName === 'crafting') {
-            document.body.classList.add('crafting-tab-active');
-        } else {
-            document.body.classList.remove('crafting-tab-active');
-        }
-
         // Toggle right sidebar content based on active tab
         toggleRightSidebarContent(tabName);
 
@@ -73,10 +66,14 @@ const TabManager = (() => {
     }
 
     function toggleRightSidebarContent(tabName) {
+        const rightSidebar = document.getElementById('right-sidebar');
         const activityLog = document.querySelector('.activity-log');
         const quickSlots = document.querySelector('.quick-slots');
 
         if (tabName === 'settlement') {
+            // Show right sidebar on settlement tab
+            if (rightSidebar) rightSidebar.style.display = 'flex';
+
             // Hide Activity Log and Quick Slots when in settlement tab
             if (activityLog) activityLog.style.display = 'none';
             if (quickSlots) quickSlots.style.display = 'none';
@@ -91,10 +88,13 @@ const TabManager = (() => {
             if (settlementResources) {
                 settlementResources.style.display = 'flex';
             }
-        } else if (tabName === 'crafting') {
-            // Hide Activity Log and Quick Slots when in crafting tab
-            if (activityLog) activityLog.style.display = 'none';
-            if (quickSlots) quickSlots.style.display = 'none';
+        } else if (tabName === 'map') {
+            // Show right sidebar on map tab
+            if (rightSidebar) rightSidebar.style.display = 'flex';
+
+            // Show Activity Log and Quick Slots on map tab
+            if (activityLog) activityLog.style.display = 'flex';
+            if (quickSlots) quickSlots.style.display = 'block';
 
             // Hide settlement resources
             const settlementResources = document.getElementById('settlement-resources-sidebar');
@@ -102,9 +102,8 @@ const TabManager = (() => {
                 settlementResources.style.display = 'none';
             }
         } else {
-            // Show Activity Log and Quick Slots for all other tabs
-            if (activityLog) activityLog.style.display = 'flex';
-            if (quickSlots) quickSlots.style.display = 'block';
+            // Hide right sidebar for all other tabs (character, inventory, crafting)
+            if (rightSidebar) rightSidebar.style.display = 'none';
 
             // Hide settlement resources
             const settlementResources = document.getElementById('settlement-resources-sidebar');

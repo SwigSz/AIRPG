@@ -828,9 +828,9 @@ const Map = (() => {
                 return;
             }
 
-            // Check if we're in combat view (don't allow map movement during combat)
-            const combatView = document.querySelector('.combat-view');
-            if (combatView && combatView.classList.contains('active')) {
+            // Check if we're in combat (don't allow map movement during combat)
+            const combatOverlay = document.querySelector('.combat-overlay');
+            if (combatOverlay && combatOverlay.classList.contains('active')) {
                 return;
             }
 
@@ -1288,9 +1288,9 @@ const Map = (() => {
         // Save to game state
         savePlayerPosition();
 
-        // Advance time by 1 day for moving a tile
+        // Advance time by 12 hours (0.5 days) for moving a tile
         if (window.TimeSystem) {
-            TimeSystem.advanceDays(1);
+            TimeSystem.advanceDays(0.5);
         }
 
         // Check for combat encounter
