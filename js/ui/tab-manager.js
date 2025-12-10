@@ -3,7 +3,7 @@
 // ============================================
 
 const TabManager = (() => {
-    let currentTab = 'character';
+    let isRestoring = false; // Flag to prevent saving during restoration
 
     function init() {
         initializeTabSwitching();
@@ -23,11 +23,19 @@ const TabManager = (() => {
     }
 
     function switchTab(tabName) {
-        // Update current tab state
-        currentTab = tabName;
+        // Save to GameState
+        const state = window.GameState?.getState();
+        if (state) {
+            if (!state.ui) {
+                state.ui = { activeTab: 'character', subTabs: {} };
+            }
+            state.ui.activeTab = tabName;
 
-        // Save to localStorage
-        localStorage.setItem('lastActiveTab', tabName);
+            // Immediately save to persist tab state (but not during restoration)
+            if (window.SaveSystem && !isRestoring) {
+                SaveSystem.save();
+            }
+        }
 
         // Remove active class from all nav buttons
         const navButtons = document.querySelectorAll('.nav-button');
@@ -114,19 +122,43 @@ const TabManager = (() => {
     }
 
     function setInitialTab() {
-        // Try to restore last active tab from localStorage
-        const lastActiveTab = localStorage.getItem('lastActiveTab');
+        isRestoring = true; // Set flag to prevent saving during restoration
+
+        // Try to restore last active tab from GameState
+        const state = window.GameState?.getState();
+        const lastActiveTab = state?.ui?.activeTab;
+
+        console.log('[TabManager] Restoring initial tab. Saved state:', lastActiveTab);
+
+        // Migrate from old localStorage system if needed
+        if (!lastActiveTab) {
+            const legacyTab = localStorage.getItem('lastActiveTab');
+            if (legacyTab && state) {
+                if (!state.ui) {
+                    state.ui = { activeTab: 'character', subTabs: {} };
+                }
+                state.ui.activeTab = legacyTab;
+                localStorage.removeItem('lastActiveTab'); // Clean up old storage
+                console.log('[TabManager] Migrated from localStorage:', legacyTab);
+            }
+        }
 
         // If a tab was saved and it exists, switch to it; otherwise default to character
-        if (lastActiveTab && document.getElementById(`${lastActiveTab}-tab`)) {
-            switchTab(lastActiveTab);
+        const tabToActivate = lastActiveTab || 'character';
+        if (document.getElementById(`${tabToActivate}-tab`)) {
+            console.log('[TabManager] Switching to:', tabToActivate);
+            switchTab(tabToActivate);
         } else {
+            console.log('[TabManager] Tab not found, defaulting to character');
             switchTab('character');
         }
+
+        isRestoring = false; // Clear flag
     }
 
     function getCurrentTab() {
-        return currentTab;
+        const state = window.GameState?.getState();
+        return state?.ui?.activeTab || 'character';
     }
 
     /**

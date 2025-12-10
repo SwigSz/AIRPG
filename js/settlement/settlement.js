@@ -86,12 +86,18 @@ const Settlement = (() => {
     // UI INITIALIZATION
     // ============================================
     function initializeUI() {
-        // Tab switching
-        document.querySelectorAll('.settlement-nav-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                switchTab(tab.dataset.settlementTab);
-            });
-        });
+        // Initialize sub-tab system using centralized SubTabManager
+        if (window.SubTabManager) {
+            SubTabManager.initSubTabs(
+                'settlement',                      // Parent tab name
+                '.settlement-nav-tab',             // Button selector
+                '.settlement-tab-content',         // Content selector
+                'data-settlement-tab',             // Data attribute
+                'settlement-',                     // Content ID prefix
+                '-content',                        // Content ID suffix
+                updateUI                           // Callback on tab change
+            );
+        }
 
         // Building card clicks (delegate to parent to handle dynamic content)
         document.addEventListener('click', (e) => {
@@ -221,21 +227,19 @@ const Settlement = (() => {
     }
 
     function switchTab(tabName) {
-        state.currentTab = tabName;
-
-        // Update tab buttons
-        document.querySelectorAll('.settlement-nav-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.settlementTab === tabName);
-        });
-
-        // Update tab content
-        document.querySelectorAll('.settlement-tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(`settlement-${tabName}-content`)?.classList.add('active');
-
-        // Update the UI for the newly selected tab
-        updateUI();
+        // Use centralized SubTabManager to switch tabs
+        if (window.SubTabManager) {
+            SubTabManager.switchSubTab(
+                'settlement',
+                tabName,
+                '.settlement-nav-tab',
+                '.settlement-tab-content',
+                'data-settlement-tab',
+                'settlement-',
+                '-content',
+                updateUI
+            );
+        }
     }
 
     // ============================================
@@ -253,9 +257,12 @@ const Settlement = (() => {
         updateHeaderBar();
         updateResourcesPanel();
 
-        if (state.currentTab === 'buildings') {
+        // Get current sub-tab from SubTabManager
+        const currentTab = window.SubTabManager?.getCurrentSubTab('settlement') || 'buildings';
+
+        if (currentTab === 'buildings') {
             updateBuildingsTab();
-        } else if (state.currentTab === 'population') {
+        } else if (currentTab === 'population') {
             updatePopulationTab();
         }
     }

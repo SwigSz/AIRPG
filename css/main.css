@@ -48,6 +48,23 @@ html, body {
     position: relative;
 }
 
+/* Hide ALL tabs until JavaScript restoration is complete (prevents flash) */
+body:not(.tabs-ready) .tab-content,
+body:not(.tabs-ready) .settlement-tab-content,
+body:not(.tabs-ready) .crafting-tab-content,
+body:not(.tabs-ready) .character-tab-content {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Hide nav buttons until ready to prevent showing wrong active state */
+body:not(.tabs-ready) .nav-button.active,
+body:not(.tabs-ready) .settlement-nav-tab.active,
+body:not(.tabs-ready) .crafting-nav-tab.active,
+body:not(.tabs-ready) .character-tab-btn.active {
+    opacity: 0;
+}
+
 /* Hide inactive tabs */
 .tab-content {
     display: none;

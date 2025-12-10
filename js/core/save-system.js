@@ -90,6 +90,36 @@ const SaveSystem = (() => {
                 }
             }
 
+            // Migrate UI state for tab persistence
+            if (!state.ui) {
+                // Initialize with defaults
+                state.ui = {
+                    activeTab: 'character',
+                    subTabs: {
+                        character: 'skills',
+                        settlement: 'buildings',
+                        crafting: 'basic-combining'
+                    }
+                };
+
+                // Try to migrate from old localStorage tab storage
+                const oldActiveTab = localStorage.getItem('lastActiveTab');
+                if (oldActiveTab) {
+                    state.ui.activeTab = oldActiveTab;
+                    console.log('Migrated active tab from localStorage to GameState');
+                    localStorage.removeItem('lastActiveTab');
+                }
+            } else {
+                // Ensure sub-tabs object exists even if ui exists
+                if (!state.ui.subTabs) {
+                    state.ui.subTabs = {
+                        character: 'skills',
+                        settlement: 'buildings',
+                        crafting: 'basic-combining'
+                    };
+                }
+            }
+
             // Game loaded successfully
             return state;
         } catch (error) {

@@ -3,8 +3,6 @@
 // ============================================
 
 const CharacterUI = (() => {
-    let activeTab = 'skills'; // 'skills', 'abilities', 'stats'
-
     function init() {
         // Create the new character tab structure
         createCharacterTabStructure();
@@ -84,45 +82,42 @@ const CharacterUI = (() => {
 
     // Set up tab switching functionality
     function setupTabSwitching() {
-        const tabButtons = document.querySelectorAll('.character-tab-btn');
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const tabName = button.getAttribute('data-char-tab');
-                switchTab(tabName);
-            });
-        });
+        // Initialize sub-tab system using centralized SubTabManager
+        if (window.SubTabManager) {
+            SubTabManager.initSubTabs(
+                'character',                       // Parent tab name
+                '.character-tab-btn',              // Button selector
+                '.character-tab-content',          // Content selector
+                'data-char-tab',                   // Data attribute
+                '',                                // Content ID prefix (empty because IDs are like 'skills-tab-content')
+                '-tab-content',                    // Content ID suffix
+                render                             // Callback on tab change
+            );
+        }
     }
 
     // Switch between character tabs
     function switchTab(tabName) {
-        activeTab = tabName;
-
-        // Update button active states
-        document.querySelectorAll('.character-tab-btn').forEach(btn => {
-            if (btn.getAttribute('data-char-tab') === tabName) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-
-        // Update content active states
-        document.querySelectorAll('.character-tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-
-        const activeContent = document.getElementById(`${tabName}-tab-content`);
-        if (activeContent) {
-            activeContent.classList.add('active');
+        // Use centralized SubTabManager to switch tabs
+        if (window.SubTabManager) {
+            SubTabManager.switchSubTab(
+                'character',
+                tabName,
+                '.character-tab-btn',
+                '.character-tab-content',
+                'data-char-tab',
+                '',
+                '-tab-content',
+                render
+            );
         }
-
-        // Re-render the active tab
-        render();
     }
 
     // Main render function
     function render() {
+        // Get current active tab from SubTabManager
+        const activeTab = window.SubTabManager?.getCurrentSubTab('character') || 'skills';
+
         if (activeTab === 'skills') {
             renderSkills();
         } else if (activeTab === 'abilities') {

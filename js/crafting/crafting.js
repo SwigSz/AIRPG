@@ -599,12 +599,18 @@ const Crafting = (() => {
     }
 
     function initializeSubTabs() {
-        // Initialize sub-tab click handlers
-        document.querySelectorAll('.crafting-nav-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                switchCraftingTab(tab.dataset.craftingTab);
-            });
-        });
+        // Initialize sub-tab system using centralized SubTabManager
+        if (window.SubTabManager) {
+            SubTabManager.initSubTabs(
+                'crafting',                        // Parent tab name
+                '.crafting-nav-tab',               // Button selector
+                '.crafting-tab-content',           // Content selector
+                'data-crafting-tab',               // Data attribute
+                'crafting-',                       // Content ID prefix
+                '-content',                        // Content ID suffix
+                null                               // No callback needed
+            );
+        }
 
         // Initialize assembly system
         initializeAssemblySystem();
@@ -792,19 +798,18 @@ const Crafting = (() => {
     }
 
     function switchCraftingTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.crafting-nav-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.craftingTab === tabName);
-        });
-
-        // Update tab content
-        document.querySelectorAll('.crafting-tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-
-        const targetContent = document.getElementById(`crafting-${tabName}-content`);
-        if (targetContent) {
-            targetContent.classList.add('active');
+        // Use centralized SubTabManager to switch tabs
+        if (window.SubTabManager) {
+            SubTabManager.switchSubTab(
+                'crafting',
+                tabName,
+                '.crafting-nav-tab',
+                '.crafting-tab-content',
+                'data-crafting-tab',
+                'crafting-',
+                '-content',
+                null
+            );
         }
     }
 

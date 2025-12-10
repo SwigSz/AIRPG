@@ -20,7 +20,16 @@ const GameState = (() => {
         time: null,
         activeResearch: null, // { nodeId, startDay, daysRequired, isPaused }
         discoveredRecipes: [], // Recipe IDs the player has discovered
-        craftedItems: [] // Item names that have been crafted before
+        craftedItems: [], // Item names that have been crafted before
+        ui: {
+            activeTab: 'character', // Current main tab
+            subTabs: {
+                // Active sub-tab for each parent tab that has sub-tabs
+                character: 'skills',
+                settlement: 'buildings',
+                crafting: 'basic-combining'
+            }
+        }
     };
 
     function init() {
@@ -66,7 +75,15 @@ const GameState = (() => {
             campLocation: null,
             activeResearch: null,
             discoveredRecipes: [],
-            craftedItems: []
+            craftedItems: [],
+            ui: {
+                activeTab: 'character',
+                subTabs: {
+                    character: 'skills',
+                    settlement: 'buildings',
+                    crafting: 'basic-combining'
+                }
+            }
         };
     }
 

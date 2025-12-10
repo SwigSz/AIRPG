@@ -112,6 +112,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Initialize TabManager AFTER settlement state is restored
             if (window.TabManager) TabManager.init();
 
+            // Restore sub-tabs for all parent tabs (must happen after save load)
+            if (window.SubTabManager) {
+                // Character sub-tabs (with render callback from CharacterUI)
+                if (window.CharacterUI && window.CharacterUI.render) {
+                    SubTabManager.restoreSubTab('character', '.character-tab-btn', '.character-tab-content', 'data-char-tab', '', '-tab-content', window.CharacterUI.render);
+                } else {
+                    SubTabManager.restoreSubTab('character', '.character-tab-btn', '.character-tab-content', 'data-char-tab', '', '-tab-content', null);
+                }
+
+                // Settlement sub-tabs (with updateUI callback from Settlement)
+                if (window.Settlement && window.Settlement.updateUI) {
+                    SubTabManager.restoreSubTab('settlement', '.settlement-nav-tab', '.settlement-tab-content', 'data-settlement-tab', 'settlement-', '-content', window.Settlement.updateUI);
+                } else {
+                    SubTabManager.restoreSubTab('settlement', '.settlement-nav-tab', '.settlement-tab-content', 'data-settlement-tab', 'settlement-', '-content', null);
+                }
+
+                // Crafting sub-tabs (no callback needed)
+                SubTabManager.restoreSubTab('crafting', '.crafting-nav-tab', '.crafting-tab-content', 'data-crafting-tab', 'crafting-', '-content', null);
+            }
+
+            // Mark tabs as ready to prevent flash on load
+            document.body.classList.add('tabs-ready');
+
             // Check research nodes after loading save (crafting history is now loaded)
             if (window.Research && window.Research.checkAndAutoCompleteNodes) {
                 Research.checkAndAutoCompleteNodes();
@@ -267,6 +290,29 @@ function initializeTestCharacter() {
 
     // Initialize TabManager AFTER character is created
     if (window.TabManager) TabManager.init();
+
+    // Restore sub-tabs for all parent tabs (for new characters, use defaults)
+    if (window.SubTabManager) {
+        // Character sub-tabs (with render callback from CharacterUI)
+        if (window.CharacterUI && window.CharacterUI.render) {
+            SubTabManager.restoreSubTab('character', '.character-tab-btn', '.character-tab-content', 'data-char-tab', '', '-tab-content', window.CharacterUI.render);
+        } else {
+            SubTabManager.restoreSubTab('character', '.character-tab-btn', '.character-tab-content', 'data-char-tab', '', '-tab-content', null);
+        }
+
+        // Settlement sub-tabs (with updateUI callback from Settlement)
+        if (window.Settlement && window.Settlement.updateUI) {
+            SubTabManager.restoreSubTab('settlement', '.settlement-nav-tab', '.settlement-tab-content', 'data-settlement-tab', 'settlement-', '-content', window.Settlement.updateUI);
+        } else {
+            SubTabManager.restoreSubTab('settlement', '.settlement-nav-tab', '.settlement-tab-content', 'data-settlement-tab', 'settlement-', '-content', null);
+        }
+
+        // Crafting sub-tabs (no callback needed)
+        SubTabManager.restoreSubTab('crafting', '.crafting-nav-tab', '.crafting-tab-content', 'data-crafting-tab', 'crafting-', '-content', null);
+    }
+
+    // Mark tabs as ready to prevent flash on load
+    document.body.classList.add('tabs-ready');
 }
 
 // Display Character Data in UI
