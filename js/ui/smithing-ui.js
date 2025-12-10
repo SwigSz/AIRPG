@@ -169,47 +169,21 @@ const SmithingUI = (() => {
             });
         });
 
-        // Item selection (visual only - no functionality)
+        // Item selection - call the Smithing system to handle game logic
         const smithingItems = document.querySelectorAll('.smithing-item');
         smithingItems.forEach(item => {
-            item.addEventListener('click', function() {
-                // Remove selected class from all items
-                smithingItems.forEach(i => i.classList.remove('selected'));
+            item.addEventListener('click', function(e) {
+                // Don't handle if it's locked
+                if (this.classList.contains('locked')) return;
 
-                // Add selected class to clicked item
-                this.classList.add('selected');
-
-                // Show the forge work state (placeholder)
-                // This is just UI switching - no actual forging logic
-                const defaultState = document.getElementById('forge-default-state');
-                const workState = document.getElementById('forge-work-state');
-
-                if (defaultState && workState) {
-                    defaultState.style.display = 'none';
-                    workState.style.display = 'flex';
+                // Call Smithing system to handle the actual game logic
+                if (window.Smithing && window.Smithing.handleItemClick) {
+                    window.Smithing.handleItemClick(e, this);
                 }
             });
         });
 
-        // Cancel button - return to default state
-        const cancelBtn = document.getElementById('cancel-forge-btn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
-                // Clear selection
-                smithingItems.forEach(i => i.classList.remove('selected'));
-
-                // Show default state
-                const defaultState = document.getElementById('forge-default-state');
-                const workState = document.getElementById('forge-work-state');
-
-                if (defaultState && workState) {
-                    defaultState.style.display = 'flex';
-                    workState.style.display = 'none';
-                }
-            });
-        }
-
-        console.log('[Smithing UI] Collapsible categories initialized with state persistence');
+        // Cancel button is handled by Smithing.js now, don't duplicate
     }
 
     /**

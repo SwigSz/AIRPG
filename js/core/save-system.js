@@ -51,7 +51,6 @@ const SaveSystem = (() => {
             // Migrate old saves to new inventory capacity
             if (state.character && state.character.inventory) {
                 if (state.character.inventory.capacity === 64) {
-                    console.log('Migrating inventory capacity from 64 to 256');
                     state.character.inventory.capacity = 256;
                 }
             }
@@ -65,7 +64,6 @@ const SaveSystem = (() => {
                 if (oldDiscoveredRecipes) {
                     try {
                         state.discoveredRecipes = JSON.parse(oldDiscoveredRecipes);
-                        console.log('Migrated discoveredRecipes from localStorage to GameState');
                         localStorage.removeItem('discoveredRecipes');
                     } catch (error) {
                         state.discoveredRecipes = [];
@@ -80,7 +78,6 @@ const SaveSystem = (() => {
                 if (oldCraftedItems) {
                     try {
                         state.craftedItems = JSON.parse(oldCraftedItems);
-                        console.log('Migrated craftedItems from localStorage to GameState');
                         localStorage.removeItem('craftedItems');
                     } catch (error) {
                         state.craftedItems = [];
@@ -106,7 +103,6 @@ const SaveSystem = (() => {
                 const oldActiveTab = localStorage.getItem('lastActiveTab');
                 if (oldActiveTab) {
                     state.ui.activeTab = oldActiveTab;
-                    console.log('Migrated active tab from localStorage to GameState');
                     localStorage.removeItem('lastActiveTab');
                 }
             } else {
@@ -125,7 +121,6 @@ const SaveSystem = (() => {
                 state.smithing = {
                     coalInPit: 0
                 };
-                console.log('Initialized smithing state for old save');
             }
 
             // Game loaded successfully
@@ -203,7 +198,6 @@ const SaveSystem = (() => {
                         // Migrate old saves to new inventory capacity
                         if (saveData.state.character && saveData.state.character.inventory) {
                             if (saveData.state.character.inventory.capacity === 64) {
-                                console.log('Migrating imported save: inventory capacity from 64 to 256');
                                 saveData.state.character.inventory.capacity = 256;
                             }
                         }
@@ -221,7 +215,6 @@ const SaveSystem = (() => {
                             saveData.state.smithing = {
                                 coalInPit: 0
                             };
-                            console.log('Initialized smithing state for imported save');
                         }
 
                         // Load the state

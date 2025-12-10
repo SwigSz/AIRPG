@@ -149,7 +149,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Reload smithing coal pit state from save data
             if (window.Smithing && window.Smithing.loadCoalPitState) {
                 Smithing.loadCoalPitState();
-                console.log('[Main] Reloaded smithing coal pit state from save');
+            }
+
+            // Refresh smithing category states from save data
+            if (window.SmithingUI && window.SmithingUI.refreshFromSaveData) {
+                SmithingUI.refreshFromSaveData();
             }
         } else {
             // Failed to load or no character, create test character

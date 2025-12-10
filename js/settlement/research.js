@@ -109,10 +109,8 @@ const Research = (() => {
         const state = window.GameState ? window.GameState.getState() : null;
         if (state && state.researchedNodes && Array.isArray(state.researchedNodes)) {
             researchedNodes = new Set(state.researchedNodes);
-            console.log('✅ Loaded researched nodes:', state.researchedNodes);
         } else {
             researchedNodes = new Set();
-            console.log('✅ No researched nodes found, starting fresh');
         }
     }
 

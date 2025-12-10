@@ -19,14 +19,11 @@ window.Smithing = (function() {
 
     // Initialize smithing system
     async function init() {
-        console.log('[Smithing] Initializing smithing system...');
-
         // Load materials data
         try {
             const response = await fetch('data/materials.json');
             const data = await response.json();
             materialsData = data.materials;
-            console.log('[Smithing] Loaded materials data:', materialsData.length, 'materials');
         } catch (error) {
             console.error('[Smithing] Failed to load materials.json:', error);
             return;
@@ -41,31 +38,12 @@ window.Smithing = (function() {
         // Initialize UI
         initializeUI();
 
-        console.log('[Smithing] Smithing system initialized');
     }
 
     // Set up all event listeners
     function setupEventListeners() {
-        // Category headers (collapsible)
-        const categoryHeaders = document.querySelectorAll('.smithing-category-header');
-        console.log('[Smithing] Found', categoryHeaders.length, 'category headers');
-        categoryHeaders.forEach(header => {
-            header.addEventListener('click', handleCategoryClick);
-        });
-
-        // Subcategory headers (collapsible)
-        const subcategoryHeaders = document.querySelectorAll('.smithing-subcategory-header');
-        console.log('[Smithing] Found', subcategoryHeaders.length, 'subcategory headers');
-        subcategoryHeaders.forEach(header => {
-            header.addEventListener('click', handleSubcategoryClick);
-        });
-
-        // Smithing items (ingots to select)
-        document.querySelectorAll('.smithing-item').forEach(item => {
-            if (!item.classList.contains('locked')) {
-                item.addEventListener('click', handleItemClick);
-            }
-        });
+        // DON'T set up category/subcategory/item listeners here - smithing-ui.js handles those
+        // We only handle the forge-specific buttons
 
         // Add coal button
         const addCoalBtn = document.getElementById('add-coal-btn');
@@ -119,7 +97,6 @@ window.Smithing = (function() {
 
         // Load coal pit amount
         coalInPit = state.smithing.coalInPit || 0;
-        console.log('[Smithing] Loaded coal pit state:', coalInPit);
 
         // Update the UI display
         updateCoalDisplay();
@@ -149,60 +126,21 @@ window.Smithing = (function() {
         // Persist to localStorage
         if (window.SaveSystem) {
             window.SaveSystem.save();
-            console.log('[Smithing] Coal pit state saved to localStorage:', coalInPit);
-        }
-    }
-
-    // Handle category header click (collapse/expand)
-    function handleCategoryClick(event) {
-        event.stopPropagation(); // Prevent event bubbling
-        const header = event.currentTarget;
-        const itemsContainer = header.nextElementSibling;
-        const icon = header.querySelector('.category-icon');
-
-        if (!itemsContainer) {
-            console.warn('[Smithing] Category items container not found');
-            return;
-        }
-
-        if (itemsContainer.classList.contains('expanded')) {
-            itemsContainer.classList.remove('expanded');
-            if (icon) icon.textContent = '►';
-        } else {
-            itemsContainer.classList.add('expanded');
-            if (icon) icon.textContent = '▼';
-        }
-    }
-
-    // Handle subcategory header click (collapse/expand)
-    function handleSubcategoryClick(event) {
-        event.stopPropagation(); // Prevent event bubbling
-        const header = event.currentTarget;
-        const itemsContainer = header.nextElementSibling;
-        const icon = header.querySelector('.subcategory-icon');
-
-        if (!itemsContainer) {
-            console.warn('[Smithing] Subcategory items container not found');
-            return;
-        }
-
-        if (itemsContainer.classList.contains('expanded')) {
-            itemsContainer.classList.remove('expanded');
-            if (icon) icon.textContent = '►';
-        } else {
-            itemsContainer.classList.add('expanded');
-            if (icon) icon.textContent = '▼';
         }
     }
 
     // Handle smithing item click (select ingot to craft)
-    function handleItemClick(event) {
+    // Called by smithing-ui.js
+    function handleItemClick(event, item) {
         if (isMinigameActive) {
-            console.log('[Smithing] Cannot change selection during active minigame');
             return;
         }
 
-        const item = event.currentTarget;
+        // If item wasn't passed, get it from currentTarget (for backward compatibility)
+        if (!item) {
+            item = event.currentTarget;
+        }
+
         const oreId = item.dataset.oreId;
         const ingotId = item.dataset.ingotId;
 
@@ -215,8 +153,6 @@ window.Smithing = (function() {
         item.classList.add('selected');
         selectedOreId = oreId;
         selectedIngotId = ingotId;
-
-        console.log('[Smithing] Selected:', ingotId, 'from', oreId);
 
         // Show forge work state
         document.getElementById('forge-default-state').style.display = 'none';
@@ -364,14 +300,12 @@ window.Smithing = (function() {
     // Handle add coal button click
     function handleAddCoal() {
         if (coalInPit >= MAX_COAL) {
-            console.log('[Smithing] Coal pit is full');
             return;
         }
 
         // Check if player has coal
         const coalCount = getItemCountById('coal');
         if (coalCount === 0) {
-            console.log('[Smithing] No coal in inventory');
             return;
         }
 
@@ -380,7 +314,6 @@ window.Smithing = (function() {
 
         // Add 1 coal to pit
         coalInPit++;
-        console.log('[Smithing] Added coal to pit. Coal in pit:', coalInPit);
 
         // Save coal pit state
         saveCoalPitState();
@@ -411,13 +344,11 @@ window.Smithing = (function() {
     // Handle start forging button click
     function handleStartForging() {
         if (isMinigameActive) {
-            console.log('[Smithing] Minigame already active');
             return;
         }
 
         // Check if there's coal in the pit
         if (coalInPit <= 0) {
-            console.log('[Smithing] No coal in heater');
             if (window.Modal) {
                 window.Modal.show({
                     title: 'No Coal',
@@ -443,14 +374,11 @@ window.Smithing = (function() {
         const oresOwned = getItemCountById(selectedOreId);
 
         if (oresOwned < oresRequired) {
-            console.log('[Smithing] Insufficient ores');
             return;
         }
 
         // Consume ores
         removeItemsById(selectedOreId, oresRequired);
-
-        console.log('[Smithing] Starting minigame for', ingotMaterial.name);
 
         // Start minigame
         isMinigameActive = true;
@@ -493,8 +421,6 @@ window.Smithing = (function() {
 
     // Handle minigame completion
     function handleMinigameComplete(quality, gradeName) {
-        console.log('[Smithing] Minigame complete. Quality:', quality, 'Grade:', gradeName);
-
         isMinigameActive = false;
 
         // Create ingot with quality data
@@ -526,7 +452,6 @@ window.Smithing = (function() {
 
         // Add to inventory (will stack with same grade ingots)
         addItemToInventory(ingotItem);
-        console.log('[Smithing] Created and added:', ingotItem.name);
     }
 
     // Show success popup
@@ -602,8 +527,6 @@ window.Smithing = (function() {
 
     // Confirm cancel action
     function confirmCancel() {
-        console.log('[Smithing] Cancelled minigame');
-
         // Stop minigame if active
         if (isMinigameActive && window.SmithingMinigames) {
             window.SmithingMinigames.stop();
@@ -707,13 +630,15 @@ window.Smithing = (function() {
     // Public API
     return {
         init,
-        loadCoalPitState, // Expose this so it can be called after save load
+        loadCoalPitState,
         getCoalInPit: () => coalInPit,
         setCoalInPit: (amount) => {
             coalInPit = Math.max(0, Math.min(MAX_COAL, amount));
             saveCoalPitState();
             updateCoalDisplay();
-        }
+        },
+        // Expose for smithing-ui.js to call
+        handleItemClick
     };
 
 })();

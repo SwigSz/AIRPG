@@ -118,8 +118,6 @@ const Map = (() => {
      * Initialize the map module
      */
     function init() {
-        console.log('Map: Initializing...');
-
         // Find or create canvas element
         const mapView = document.querySelector('.map-view');
         if (!mapView) {
@@ -194,7 +192,6 @@ const Map = (() => {
         render();
 
         isInitialized = true;
-        console.log('Map: Initialized successfully');
     }
 
     /**
@@ -901,7 +898,6 @@ const Map = (() => {
 
         // Add event listener
         document.addEventListener('keydown', keydownHandler);
-        console.log('Map: Keyboard controls initialized (WASD or Arrow Keys)');
     }
 
     /**
@@ -1710,8 +1706,6 @@ const Map = (() => {
     function restoreState() {
         if (!isInitialized) return;
 
-        console.log('Map: Restoring state from save data...');
-
         // Reload player position from game state
         loadPlayerPosition();
 
@@ -1731,8 +1725,6 @@ const Map = (() => {
 
         // Re-render with restored state
         render();
-
-        console.log('Map: State restored successfully');
     }
 
     return {

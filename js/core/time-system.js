@@ -40,8 +40,6 @@ const TimeSystem = {
 
         // Start the tick system for settlement time progression
         this.startTickSystem();
-
-        console.log('Time system initialized');
     },
 
     /**

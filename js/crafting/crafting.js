@@ -831,7 +831,6 @@ const Crafting = (() => {
                 // Migrate to GameState
                 if (state) {
                     state.discoveredRecipes = recipeIds;
-                    console.log(`Migrated ${recipeIds.length} discovered recipes from localStorage to GameState`);
                 }
 
                 // Clear old localStorage
@@ -865,7 +864,6 @@ const Crafting = (() => {
         const state = window.GameState ? window.GameState.getState() : null;
         if (state && state.craftedItems && Array.isArray(state.craftedItems)) {
             craftedItems = state.craftedItems;
-            console.log(`✅ Loaded ${craftedItems.length} crafted items from GameState:`, craftedItems);
             return;
         }
 
@@ -878,7 +876,6 @@ const Crafting = (() => {
                 // Migrate to GameState
                 if (state) {
                     state.craftedItems = craftedItems;
-                    console.log(`Migrated ${craftedItems.length} crafted items from localStorage to GameState`);
                 }
 
                 // Clear old localStorage

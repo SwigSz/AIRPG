@@ -4,8 +4,6 @@
 
 const UIManager = (() => {
     function init() {
-        console.log('UIManager: Initializing...');
-
         // Initialize all UI subsystems
         if (window.TabManager) TabManager.init();
         if (window.ActivityLog) ActivityLog.init();

@@ -128,8 +128,6 @@ const TabManager = (() => {
         const state = window.GameState?.getState();
         const lastActiveTab = state?.ui?.activeTab;
 
-        console.log('[TabManager] Restoring initial tab. Saved state:', lastActiveTab);
-
         // Migrate from old localStorage system if needed
         if (!lastActiveTab) {
             const legacyTab = localStorage.getItem('lastActiveTab');
@@ -139,17 +137,14 @@ const TabManager = (() => {
                 }
                 state.ui.activeTab = legacyTab;
                 localStorage.removeItem('lastActiveTab'); // Clean up old storage
-                console.log('[TabManager] Migrated from localStorage:', legacyTab);
             }
         }
 
         // If a tab was saved and it exists, switch to it; otherwise default to character
         const tabToActivate = lastActiveTab || 'character';
         if (document.getElementById(`${tabToActivate}-tab`)) {
-            console.log('[TabManager] Switching to:', tabToActivate);
             switchTab(tabToActivate);
         } else {
-            console.log('[TabManager] Tab not found, defaulting to character');
             switchTab('character');
         }
 

@@ -87,13 +87,10 @@ const SubTabManager = (() => {
         const state = window.GameState?.getState();
         const savedSubTab = state?.ui?.subTabs?.[parentTabName];
 
-        console.log(`[SubTabManager] Restoring ${parentTabName} sub-tab. Saved state:`, savedSubTab);
-
         if (savedSubTab) {
             // Verify the sub-tab exists before switching
             const targetButton = document.querySelector(`${buttonSelector}[${dataAttribute}="${savedSubTab}"]`);
             if (targetButton) {
-                console.log(`[SubTabManager] Found button for ${parentTabName}/${savedSubTab}, restoring...`);
                 switchSubTab(parentTabName, savedSubTab, buttonSelector, contentSelector, dataAttribute, contentIdPrefix, contentIdSuffix, onTabChange);
                 isRestoring = false;
                 return;
@@ -106,7 +103,6 @@ const SubTabManager = (() => {
         const firstButton = document.querySelector(buttonSelector);
         if (firstButton) {
             const firstTabName = firstButton.getAttribute(dataAttribute);
-            console.log(`[SubTabManager] No saved state for ${parentTabName}, defaulting to ${firstTabName}`);
             switchSubTab(parentTabName, firstTabName, buttonSelector, contentSelector, dataAttribute, contentIdPrefix, contentIdSuffix, onTabChange);
         }
 

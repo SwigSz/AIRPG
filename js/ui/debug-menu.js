@@ -17,7 +17,6 @@ const DebugMenu = (() => {
         character = char;
         createModal();
         attachKeyboardListener();
-        console.log('Debug menu initialized. Press ` to open.');
     }
 
     /**
