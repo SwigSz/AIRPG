@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.AbilityManager) await AbilityManager.init();
     if (window.SkillManager) await SkillManager.init();
     if (window.LootManager) await LootManager.init();
+    if (window.Smithing) await Smithing.init();
 
     // Initialize UI systems (but NOT TabManager yet - wait until after save load)
     if (window.UIManager) {
@@ -145,9 +146,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 Crafting.refreshFromSaveData();
             }
 
-            // Refresh smithing category states from save data
-            if (window.SmithingUI && window.SmithingUI.refreshFromSaveData) {
-                SmithingUI.refreshFromSaveData();
+            // Reload smithing coal pit state from save data
+            if (window.Smithing && window.Smithing.loadCoalPitState) {
+                Smithing.loadCoalPitState();
+                console.log('[Main] Reloaded smithing coal pit state from save');
             }
         } else {
             // Failed to load or no character, create test character
@@ -263,6 +265,23 @@ function initializeTestCharacter() {
             }
         }
     });
+
+    // Add smithing materials for testing
+    // Copper ore for immediate smelting tests
+    for (let i = 0; i < 3; i++) {
+        const copperOre = ItemFactory.createItem('copper_ore');
+        if (copperOre) {
+            Inventory.addItem(testCharacter.inventory, copperOre);
+        }
+    }
+
+    // Coal for fuel management testing
+    for (let i = 0; i < 20; i++) {
+        const coal = ItemFactory.createItem('coal');
+        if (coal) {
+            Inventory.addItem(testCharacter.inventory, coal);
+        }
+    }
 
     // Store in game state
     GameState.updateProperty('character', testCharacter);

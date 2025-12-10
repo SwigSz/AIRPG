@@ -184,6 +184,93 @@
         "amount": 10
       },
       "usableInCombat": true
+    },
+    {
+      "id": "coal",
+      "name": "Coal",
+      "icon": "🪨",
+      "description": "Fuel for smelting operations. Burns hot and long.",
+      "type": "material",
+      "classifications": ["material", "fuel"],
+      "stackable": true,
+      "rarity": "common",
+      "value": 5,
+      "sources": ["coal_vein", "mine"],
+      "smithing": {
+        "fuelValue": 10
+      }
+    },
+    {
+      "id": "copper_ore",
+      "name": "Copper Ore",
+      "icon": "🟫",
+      "description": "Raw copper ore. Can be smelted into copper ingots.",
+      "type": "material",
+      "classifications": ["material", "ore"],
+      "stackable": true,
+      "rarity": "common",
+      "value": 8,
+      "sources": ["copper_vein", "mine"],
+      "smithing": {
+        "tier": 1,
+        "ingotId": "copper_ingot",
+        "oresRequired": 3,
+        "optimalTemp": 55,
+        "optimalTempRange": [45, 65],
+        "optimalColor": "orange"
+      }
+    },
+    {
+      "id": "tin_ore",
+      "name": "Tin Ore",
+      "icon": "⚪",
+      "description": "Raw tin ore. Can be smelted into tin ingots.",
+      "type": "material",
+      "classifications": ["material", "ore"],
+      "stackable": true,
+      "rarity": "common",
+      "value": 8,
+      "sources": ["tin_vein", "mine"],
+      "smithing": {
+        "tier": 1,
+        "ingotId": "tin_ingot",
+        "oresRequired": 3,
+        "optimalTemp": 65,
+        "optimalTempRange": [55, 75],
+        "optimalColor": "yellow-orange"
+      }
+    },
+    {
+      "id": "copper_ingot",
+      "name": "Copper Ingot",
+      "icon": "🟧",
+      "description": "A refined copper ingot. Quality varies based on smithing skill.",
+      "type": "material",
+      "classifications": ["material", "ingot", "metal"],
+      "stackable": true,
+      "rarity": "uncommon",
+      "value": 30,
+      "sources": ["smithing"],
+      "smithing": {
+        "tier": 1,
+        "baseColor": "#B87333"
+      }
+    },
+    {
+      "id": "tin_ingot",
+      "name": "Tin Ingot",
+      "icon": "⬜",
+      "description": "A refined tin ingot. Quality varies based on smithing skill.",
+      "type": "material",
+      "classifications": ["material", "ingot", "metal"],
+      "stackable": true,
+      "rarity": "uncommon",
+      "value": 30,
+      "sources": ["smithing"],
+      "smithing": {
+        "tier": 1,
+        "baseColor": "#C0C0C0"
+      }
     }
   ]
 }

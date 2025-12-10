@@ -478,11 +478,13 @@
                                             <span class="category-name">BARS</span>
                                         </div>
                                         <div class="smithing-category-items expanded">
-                                            <div class="smithing-item" data-component-type="bar" data-item="iron-bar">Iron Bar</div>
-                                            <div class="smithing-item" data-component-type="bar" data-item="steel-bar">Steel Bar</div>
-                                            <div class="smithing-item" data-component-type="bar" data-item="gold-bar">Gold Bar</div>
-                                            <div class="smithing-item" data-component-type="bar" data-item="silver-bar">Silver Bar</div>
-                                            <div class="smithing-item" data-component-type="bar" data-item="mithril-bar">Mithril Bar</div>
+                                            <div class="smithing-item" data-tier="1" data-ore-id="copper_ore" data-ingot-id="copper_ingot">Copper Ingot</div>
+                                            <div class="smithing-item" data-tier="1" data-ore-id="tin_ore" data-ingot-id="tin_ingot">Tin Ingot</div>
+                                            <div class="smithing-item locked" data-tier="2" data-ore-id="iron_ore" data-ingot-id="iron_bar">Iron Bar</div>
+                                            <div class="smithing-item locked" data-tier="3" data-ore-id="steel_ore" data-ingot-id="steel_bar">Steel Bar</div>
+                                            <div class="smithing-item locked" data-tier="3" data-ore-id="gold_ore" data-ingot-id="gold_bar">Gold Bar</div>
+                                            <div class="smithing-item locked" data-tier="3" data-ore-id="silver_ore" data-ingot-id="silver_bar">Silver Bar</div>
+                                            <div class="smithing-item locked" data-tier="4" data-ore-id="mithril_ore" data-ingot-id="mithril_bar">Mithril Bar</div>
                                         </div>
                                     </div>
 
@@ -648,69 +650,92 @@
                                 <!-- Item Selected State (Hidden by default) -->
                                 <div class="forge-work-state" id="forge-work-state" style="display: none;">
 
-                                    <!-- Top Section: Quality & Materials -->
+                                    <!-- Top Section: Item Info & Materials -->
                                     <div class="forge-top-section">
                                         <div class="forge-item-info">
-                                            <h2 class="forge-item-name">Iron Bar</h2>
-                                            <p class="forge-item-description">A sturdy bar of iron, ready for crafting</p>
+                                            <h2 class="forge-item-name" id="forge-item-name">Select an ingot</h2>
+                                            <p class="forge-item-description" id="forge-item-description"></p>
                                         </div>
-                                        <div class="forge-quality-display">
-                                            <div class="quality-label">Quality</div>
-                                            <div class="quality-value">--%</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Material Requirements Panel -->
-                                    <div class="forge-materials-panel">
-                                        <h4 class="materials-header">Required Materials</h4>
-                                        <div class="materials-list">
-                                            <div class="material-item">
-                                                <span class="material-icon">⛏️</span>
-                                                <span class="material-name">Iron Ore</span>
-                                                <span class="material-count">
-                                                    <span class="have">0</span> / <span class="need">1</span>
-                                                </span>
+                                        <div class="forge-materials-required">
+                                            <h4 class="materials-header">Required Materials</h4>
+                                            <div class="materials-list" id="forge-materials-list">
+                                                <!-- Dynamically populated -->
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Main Work Area: Stage-Specific Interface -->
+                                    <!-- Main Work Area: Smelting Minigame -->
                                     <div class="forge-work-area">
-                                        <div class="stage-placeholder">
-                                            <div class="placeholder-box stage-box-1">
-                                                <span class="stage-label">Stage Interface Area</span>
-                                            </div>
-                                            <div class="placeholder-box stage-box-2">
-                                                <span class="stage-label">Interactive Minigame Zone</span>
+
+                                        <!-- Temperature Gauge (Left) -->
+                                        <div class="temperature-gauge" id="temperature-gauge">
+                                            <div class="gauge-gradient">
+                                                <div class="gauge-arrow" id="gauge-arrow" style="bottom: 0%;">
+                                                    <div class="arrow-tip">▶</div>
+                                                </div>
+                                                <div class="optimal-zone-marker" id="optimal-zone-marker" style="bottom: 55%; display: none;">
+                                                    <span class="zone-star">★</span>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <!-- Bellows (Left of Crucible) -->
+                                        <div class="bellows-container" id="bellows-container">
+                                            <div class="bellows" id="bellows">
+                                                <div class="bellows-body">
+                                                    <div class="bellows-handle"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Crucible (Center-Left) -->
+                                        <div class="crucible-container">
+                                            <div class="crucible" id="crucible">
+                                                <div class="crucible-contents" id="crucible-contents">
+                                                    <div class="metal-glow" id="metal-glow"></div>
+                                                </div>
+                                            </div>
+                                            <!-- Coal Pit (Below Crucible) -->
+                                            <div class="coal-pit" id="coal-pit">
+                                                <div class="coal-count" id="coal-count">0/10</div>
+                                                <button class="add-coal-btn" id="add-coal-btn">Add Coal</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Chain Pull (Above Mold, Right of Crucible) -->
+                                        <div class="chain-container" id="chain-container">
+                                            <div class="chain" id="chain">
+                                                <div class="chain-links"></div>
+                                                <div class="chain-handle" id="chain-handle">
+                                                    <div class="handle-grip"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mold (Right) -->
+                                        <div class="mold-container">
+                                            <div class="mold" id="mold">
+                                                <div class="mold-fill" id="mold-fill" style="height: 0%;">
+                                                    <div class="fill-glow" id="fill-glow"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Proceed Button (appears after heating) -->
+                                        <button class="proceed-btn" id="proceed-pour-btn" style="display: none;">Proceed to Pour</button>
+
                                     </div>
 
                                     <!-- Stage Progress Indicator -->
-                                    <div class="forge-stage-progress">
-                                        <div class="stage-step active">
+                                    <div class="forge-stage-progress" id="forge-stage-progress">
+                                        <div class="stage-step" data-stage="heat">
                                             <div class="stage-dot"></div>
-                                            <div class="stage-name">Heat</div>
+                                            <div class="stage-name">HEAT</div>
                                         </div>
                                         <div class="stage-connector"></div>
-                                        <div class="stage-step">
+                                        <div class="stage-step" data-stage="pour">
                                             <div class="stage-dot"></div>
-                                            <div class="stage-name">Shape</div>
-                                        </div>
-                                        <div class="stage-connector"></div>
-                                        <div class="stage-step">
-                                            <div class="stage-dot"></div>
-                                            <div class="stage-name">Quench</div>
-                                        </div>
-                                        <div class="stage-connector"></div>
-                                        <div class="stage-step">
-                                            <div class="stage-dot"></div>
-                                            <div class="stage-name">Sharpen</div>
-                                        </div>
-                                        <div class="stage-connector"></div>
-                                        <div class="stage-step">
-                                            <div class="stage-dot"></div>
-                                            <div class="stage-name">Finish</div>
+                                            <div class="stage-name">POUR</div>
                                         </div>
                                     </div>
 
@@ -871,6 +896,8 @@
     <script src="js/ui/smithing-ui.js"></script>
     <script src="js/ui/debug-menu.js"></script>
     <script src="js/crafting/crafting.js"></script>
+    <script src="js/crafting/smithing.js"></script>
+    <script src="js/crafting/smithing-minigames.js"></script>
     <script src="js/settlement/settlement.js"></script>
     <script src="js/settlement/research.js"></script>
     <script src="js/world/map.js"></script>

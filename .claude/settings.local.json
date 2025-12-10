@@ -7,7 +7,9 @@
       "Bash(npm start)",
       "Bash(python -m http.server:*)",
       "Bash(cat:*)",
-      "Bash(start index.html)"
+      "Bash(start index.html)",
+      "Bash(dir:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

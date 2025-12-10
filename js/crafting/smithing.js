@@ -1,0 +1,719 @@
+/**
+ * Smithing System Controller
+ *
+ * Manages the tier-based ingot smelting system with progressive minigame complexity.
+ * Tier 1 (Copper, Tin): 2 stages - Heating + Pouring
+ * Future tiers will add additional minigame stages.
+ */
+
+window.Smithing = (function() {
+    'use strict';
+
+    // State
+    let materialsData = null;
+    let selectedOreId = null;
+    let selectedIngotId = null;
+    let isMinigameActive = false;
+    let coalInPit = 0; // Persistent coal pit state (0-10)
+    const MAX_COAL = 10;
+
+    // Initialize smithing system
+    async function init() {
+        console.log('[Smithing] Initializing smithing system...');
+
+        // Load materials data
+        try {
+            const response = await fetch('data/materials.json');
+            const data = await response.json();
+            materialsData = data.materials;
+            console.log('[Smithing] Loaded materials data:', materialsData.length, 'materials');
+        } catch (error) {
+            console.error('[Smithing] Failed to load materials.json:', error);
+            return;
+        }
+
+        // Load coal pit state from GameState
+        loadCoalPitState();
+
+        // Set up event listeners
+        setupEventListeners();
+
+        // Initialize UI
+        initializeUI();
+
+        console.log('[Smithing] Smithing system initialized');
+    }
+
+    // Set up all event listeners
+    function setupEventListeners() {
+        // Category headers (collapsible)
+        const categoryHeaders = document.querySelectorAll('.smithing-category-header');
+        console.log('[Smithing] Found', categoryHeaders.length, 'category headers');
+        categoryHeaders.forEach(header => {
+            header.addEventListener('click', handleCategoryClick);
+        });
+
+        // Subcategory headers (collapsible)
+        const subcategoryHeaders = document.querySelectorAll('.smithing-subcategory-header');
+        console.log('[Smithing] Found', subcategoryHeaders.length, 'subcategory headers');
+        subcategoryHeaders.forEach(header => {
+            header.addEventListener('click', handleSubcategoryClick);
+        });
+
+        // Smithing items (ingots to select)
+        document.querySelectorAll('.smithing-item').forEach(item => {
+            if (!item.classList.contains('locked')) {
+                item.addEventListener('click', handleItemClick);
+            }
+        });
+
+        // Add coal button
+        const addCoalBtn = document.getElementById('add-coal-btn');
+        if (addCoalBtn) {
+            addCoalBtn.addEventListener('click', handleAddCoal);
+        }
+
+        // Start forging button
+        const startForgeBtn = document.getElementById('start-forge-btn');
+        if (startForgeBtn) {
+            startForgeBtn.addEventListener('click', handleStartForging);
+        }
+
+        // Cancel button
+        const cancelForgeBtn = document.getElementById('cancel-forge-btn');
+        if (cancelForgeBtn) {
+            cancelForgeBtn.addEventListener('click', handleCancel);
+        }
+    }
+
+    // Initialize UI to default state
+    function initializeUI() {
+        // Show default state
+        document.getElementById('forge-default-state').style.display = 'flex';
+        document.getElementById('forge-work-state').style.display = 'none';
+
+        // Ensure crucible starts empty
+        const metalGlow = document.getElementById('metal-glow');
+        if (metalGlow) {
+            metalGlow.style.height = '0%';
+        }
+
+        // Update coal display
+        updateCoalDisplay();
+    }
+
+    // Load coal pit state from GameState
+    function loadCoalPitState() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state) {
+            console.warn('[Smithing] GameState not available, using default coal pit state');
+            return;
+        }
+
+        // Ensure smithing property exists (migration for old saves)
+        if (!state.smithing) {
+            state.smithing = {
+                coalInPit: 0
+            };
+        }
+
+        // Load coal pit amount
+        coalInPit = state.smithing.coalInPit || 0;
+        console.log('[Smithing] Loaded coal pit state:', coalInPit);
+
+        // Update the UI display
+        updateCoalDisplay();
+
+        // Update start button state if an item is selected
+        if (selectedOreId && selectedIngotId) {
+            updateStartButtonState();
+        }
+    }
+
+    // Save coal pit state to GameState and persist to localStorage
+    function saveCoalPitState() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state) {
+            console.warn('[Smithing] GameState not available, cannot save coal pit state');
+            return;
+        }
+
+        // Ensure smithing property exists
+        if (!state.smithing) {
+            state.smithing = {};
+        }
+
+        // Save coal pit amount
+        state.smithing.coalInPit = coalInPit;
+
+        // Persist to localStorage
+        if (window.SaveSystem) {
+            window.SaveSystem.save();
+            console.log('[Smithing] Coal pit state saved to localStorage:', coalInPit);
+        }
+    }
+
+    // Handle category header click (collapse/expand)
+    function handleCategoryClick(event) {
+        event.stopPropagation(); // Prevent event bubbling
+        const header = event.currentTarget;
+        const itemsContainer = header.nextElementSibling;
+        const icon = header.querySelector('.category-icon');
+
+        if (!itemsContainer) {
+            console.warn('[Smithing] Category items container not found');
+            return;
+        }
+
+        if (itemsContainer.classList.contains('expanded')) {
+            itemsContainer.classList.remove('expanded');
+            if (icon) icon.textContent = '►';
+        } else {
+            itemsContainer.classList.add('expanded');
+            if (icon) icon.textContent = '▼';
+        }
+    }
+
+    // Handle subcategory header click (collapse/expand)
+    function handleSubcategoryClick(event) {
+        event.stopPropagation(); // Prevent event bubbling
+        const header = event.currentTarget;
+        const itemsContainer = header.nextElementSibling;
+        const icon = header.querySelector('.subcategory-icon');
+
+        if (!itemsContainer) {
+            console.warn('[Smithing] Subcategory items container not found');
+            return;
+        }
+
+        if (itemsContainer.classList.contains('expanded')) {
+            itemsContainer.classList.remove('expanded');
+            if (icon) icon.textContent = '►';
+        } else {
+            itemsContainer.classList.add('expanded');
+            if (icon) icon.textContent = '▼';
+        }
+    }
+
+    // Handle smithing item click (select ingot to craft)
+    function handleItemClick(event) {
+        if (isMinigameActive) {
+            console.log('[Smithing] Cannot change selection during active minigame');
+            return;
+        }
+
+        const item = event.currentTarget;
+        const oreId = item.dataset.oreId;
+        const ingotId = item.dataset.ingotId;
+
+        // Deselect all items
+        document.querySelectorAll('.smithing-item').forEach(i => {
+            i.classList.remove('selected');
+        });
+
+        // Select this item
+        item.classList.add('selected');
+        selectedOreId = oreId;
+        selectedIngotId = ingotId;
+
+        console.log('[Smithing] Selected:', ingotId, 'from', oreId);
+
+        // Show forge work state
+        document.getElementById('forge-default-state').style.display = 'none';
+        document.getElementById('forge-work-state').style.display = 'flex';
+
+        // Update forge UI with selected item info
+        updateForgeUI();
+    }
+
+    // Update forge UI with selected item details
+    function updateForgeUI() {
+        const oreMaterial = getMaterial(selectedOreId);
+        const ingotMaterial = getMaterial(selectedIngotId);
+
+        if (!oreMaterial || !ingotMaterial) {
+            console.error('[Smithing] Could not find materials for:', selectedOreId, selectedIngotId);
+            return;
+        }
+
+        // Update item name and description
+        document.getElementById('forge-item-name').textContent = ingotMaterial.name;
+        document.getElementById('forge-item-description').textContent = ingotMaterial.description;
+
+        // Update materials required
+        updateMaterialsDisplay(oreMaterial);
+
+        // Reset minigame elements to pre-game state
+        resetMinigameElements();
+
+        // Update start button state
+        updateStartButtonState();
+    }
+
+    // Update materials required display
+    function updateMaterialsDisplay(oreMaterial) {
+        const materialsList = document.getElementById('forge-materials-list');
+        const oresRequired = oreMaterial.smithing.oresRequired;
+        const oresOwned = getItemCountById(selectedOreId);
+
+        const isSufficient = oresOwned >= oresRequired;
+
+        materialsList.innerHTML = `
+            <div class="material-item">
+                <span class="material-icon">${oreMaterial.icon}</span>
+                <span class="material-name">${oreMaterial.name}</span>
+                <span class="material-count ${isSufficient ? 'sufficient' : 'insufficient'}">
+                    ${oresOwned} / ${oresRequired}
+                </span>
+            </div>
+        `;
+    }
+
+    // Reset minigame elements to initial state
+    function resetMinigameElements() {
+        // Reset temperature gauge
+        const gaugeArrow = document.getElementById('gauge-arrow');
+        if (gaugeArrow) {
+            gaugeArrow.style.bottom = '0%';
+        }
+
+        // Hide optimal zone marker initially
+        const optimalMarker = document.getElementById('optimal-zone-marker');
+        if (optimalMarker) {
+            optimalMarker.style.display = 'none';
+        }
+
+        // Reset crucible glow (empty until forging starts)
+        const metalGlow = document.getElementById('metal-glow');
+        if (metalGlow) {
+            metalGlow.className = 'metal-glow temp-grey';
+            metalGlow.style.height = '0%'; // Empty until forging starts
+        }
+
+        // Reset mold fill
+        const moldFill = document.getElementById('mold-fill');
+        if (moldFill) {
+            moldFill.style.height = '0%';
+            moldFill.className = 'mold-fill temp-grey';
+        }
+
+        // Disable bellows
+        const bellowsContainer = document.getElementById('bellows-container');
+        if (bellowsContainer) {
+            bellowsContainer.classList.add('disabled');
+        }
+
+        // Disable chain and reset to top position
+        const chainContainer = document.getElementById('chain-container');
+        if (chainContainer) {
+            chainContainer.classList.remove('active');
+        }
+
+        const chainLinks = document.querySelector('.chain-links');
+        if (chainLinks) {
+            chainLinks.style.height = '20px';
+        }
+
+        const chainHandle = document.querySelector('.chain-handle');
+        if (chainHandle) {
+            chainHandle.style.top = '10px';
+        }
+
+        // Hide proceed button
+        const proceedBtn = document.getElementById('proceed-pour-btn');
+        if (proceedBtn) {
+            proceedBtn.style.display = 'none';
+        }
+
+        // Reset stage progress
+        document.querySelectorAll('.stage-step').forEach(step => {
+            step.classList.remove('active', 'completed');
+        });
+
+        // Update coal display
+        updateCoalDisplay();
+    }
+
+    // Update start button enabled/disabled state
+    function updateStartButtonState() {
+        const startBtn = document.getElementById('start-forge-btn');
+        if (!startBtn) return;
+
+        const oreMaterial = getMaterial(selectedOreId);
+        if (!oreMaterial) return;
+
+        const oresRequired = oreMaterial.smithing.oresRequired;
+        const oresOwned = getItemCountById(selectedOreId);
+        const hasEnoughOres = oresOwned >= oresRequired;
+        const hasCoal = coalInPit > 0;
+
+        // Can only start if we have enough ores AND coal in the pit
+        const canStart = hasEnoughOres && hasCoal;
+        startBtn.disabled = !canStart;
+
+        // Update button text to indicate why it's disabled
+        if (!hasCoal && hasEnoughOres) {
+            startBtn.title = 'Add coal to the heater first';
+        } else if (!hasEnoughOres) {
+            startBtn.title = 'Not enough ore';
+        } else {
+            startBtn.title = 'Start forging';
+        }
+    }
+
+    // Handle add coal button click
+    function handleAddCoal() {
+        if (coalInPit >= MAX_COAL) {
+            console.log('[Smithing] Coal pit is full');
+            return;
+        }
+
+        // Check if player has coal
+        const coalCount = getItemCountById('coal');
+        if (coalCount === 0) {
+            console.log('[Smithing] No coal in inventory');
+            return;
+        }
+
+        // Remove 1 coal from inventory
+        removeItemsById('coal', 1);
+
+        // Add 1 coal to pit
+        coalInPit++;
+        console.log('[Smithing] Added coal to pit. Coal in pit:', coalInPit);
+
+        // Save coal pit state
+        saveCoalPitState();
+
+        // Update UI
+        updateCoalDisplay();
+
+        // If minigame is active, notify minigame system
+        if (isMinigameActive && window.SmithingMinigames) {
+            window.SmithingMinigames.onCoalAdded();
+        }
+    }
+
+    // Update coal pit display
+    function updateCoalDisplay() {
+        const coalCountEl = document.getElementById('coal-count');
+        if (coalCountEl) {
+            coalCountEl.textContent = `${coalInPit}/${MAX_COAL}`;
+        }
+
+        const addCoalBtn = document.getElementById('add-coal-btn');
+        if (addCoalBtn) {
+            const coalInInventory = getItemCountById('coal');
+            addCoalBtn.disabled = coalInPit >= MAX_COAL || coalInInventory === 0;
+        }
+    }
+
+    // Handle start forging button click
+    function handleStartForging() {
+        if (isMinigameActive) {
+            console.log('[Smithing] Minigame already active');
+            return;
+        }
+
+        // Check if there's coal in the pit
+        if (coalInPit <= 0) {
+            console.log('[Smithing] No coal in heater');
+            if (window.Modal) {
+                window.Modal.show({
+                    title: 'No Coal',
+                    content: '<p style="text-align: center; color: #fca5a5;">You need to add coal to the heater before you can start forging.</p>',
+                    buttons: [{ text: 'OK' }]
+                });
+            } else {
+                alert('You need to add coal to the heater before you can start forging.');
+            }
+            return;
+        }
+
+        const oreMaterial = getMaterial(selectedOreId);
+        const ingotMaterial = getMaterial(selectedIngotId);
+
+        if (!oreMaterial || !ingotMaterial) {
+            console.error('[Smithing] Materials not found');
+            return;
+        }
+
+        // Check if player has enough ores
+        const oresRequired = oreMaterial.smithing.oresRequired;
+        const oresOwned = getItemCountById(selectedOreId);
+
+        if (oresOwned < oresRequired) {
+            console.log('[Smithing] Insufficient ores');
+            return;
+        }
+
+        // Consume ores
+        removeItemsById(selectedOreId, oresRequired);
+
+        console.log('[Smithing] Starting minigame for', ingotMaterial.name);
+
+        // Start minigame
+        isMinigameActive = true;
+        startMinigame(oreMaterial, ingotMaterial);
+    }
+
+    // Start the smelting minigame
+    function startMinigame(oreMaterial, ingotMaterial) {
+        // Hide start button
+        const startBtn = document.getElementById('start-forge-btn');
+        if (startBtn) {
+            startBtn.style.display = 'none';
+        }
+
+        // Lock item selection
+        document.querySelectorAll('.smithing-item').forEach(item => {
+            item.style.pointerEvents = 'none';
+            item.style.opacity = '0.6';
+        });
+
+        // Initialize minigame
+        if (window.SmithingMinigames) {
+            window.SmithingMinigames.start(oreMaterial, ingotMaterial, coalInPit, {
+                onCoalConsumed: handleCoalConsumed,
+                onMinigameComplete: handleMinigameComplete
+            });
+        } else {
+            console.error('[Smithing] SmithingMinigames module not loaded');
+        }
+    }
+
+    // Handle coal consumed callback
+    function handleCoalConsumed() {
+        if (coalInPit > 0) {
+            coalInPit--;
+            saveCoalPitState();
+            updateCoalDisplay();
+        }
+    }
+
+    // Handle minigame completion
+    function handleMinigameComplete(quality, gradeName) {
+        console.log('[Smithing] Minigame complete. Quality:', quality, 'Grade:', gradeName);
+
+        isMinigameActive = false;
+
+        // Create ingot with quality data
+        createIngot(quality, gradeName);
+
+        // Show success popup
+        showSuccessPopup(gradeName);
+    }
+
+    // Create ingot item with quality data
+    function createIngot(quality, gradeName) {
+        const ingotMaterial = getMaterial(selectedIngotId);
+        if (!ingotMaterial) return;
+
+        // Create item with quality embedded in the item data
+        const ingotItem = {
+            id: selectedIngotId,
+            name: `${gradeName} ${ingotMaterial.name}`,
+            icon: ingotMaterial.icon,
+            description: ingotMaterial.description,
+            type: ingotMaterial.type,
+            classifications: ingotMaterial.classifications,
+            stackable: ingotMaterial.stackable,
+            rarity: ingotMaterial.rarity,
+            value: Math.floor(ingotMaterial.value * (quality / 100)),
+            quality: quality,
+            qualityGrade: gradeName
+        };
+
+        // Add to inventory (will stack with same grade ingots)
+        addItemToInventory(ingotItem);
+        console.log('[Smithing] Created and added:', ingotItem.name);
+    }
+
+    // Show success popup
+    function showSuccessPopup(gradeName) {
+        const ingotMaterial = getMaterial(selectedIngotId);
+        if (!ingotMaterial) return;
+
+        const title = 'Smelting Complete!';
+        const message = `Successfully smithed a ${gradeName} ${ingotMaterial.name}`;
+
+        if (window.Modal) {
+            window.Modal.show({
+                title: title,
+                content: `<p style="text-align: center; font-size: 1.1rem; color: #cbd5e1; margin: 1rem 0;">${message}</p>
+                          <div style="text-align: center; font-size: 3rem; margin: 1rem 0;">${ingotMaterial.icon}</div>
+                          <div style="text-align: center; font-size: 1.2rem; font-weight: 700; color: #f59e0b; margin: 1rem 0;">${gradeName}</div>`,
+                buttons: [
+                    {
+                        text: 'Collect Ingot',
+                        onClick: handleCollectIngot
+                    }
+                ]
+            });
+        } else {
+            // Fallback if Modal not available
+            alert(message);
+            handleCollectIngot();
+        }
+    }
+
+    // Handle collect ingot button in success popup
+    function handleCollectIngot() {
+        // Close modal
+        if (window.Modal) {
+            window.Modal.hide();
+        }
+
+        // Reset to default state
+        resetToDefaultState();
+    }
+
+    // Handle cancel button click
+    function handleCancel() {
+        if (!isMinigameActive) {
+            // Just return to default state
+            resetToDefaultState();
+            return;
+        }
+
+        // Confirm cancellation
+        if (window.Modal) {
+            window.Modal.show({
+                title: 'Cancel Smelting?',
+                content: '<p style="text-align: center; color: #fca5a5; margin: 1rem 0;">Materials will be lost. Coal will remain in the pit.</p>',
+                buttons: [
+                    {
+                        text: 'Cancel',
+                        class: 'modal-btn-secondary'
+                    },
+                    {
+                        text: 'Confirm',
+                        class: 'modal-btn-primary',
+                        onClick: confirmCancel
+                    }
+                ]
+            });
+        } else {
+            if (confirm('Cancel smelting? Materials will be lost.')) {
+                confirmCancel();
+            }
+        }
+    }
+
+    // Confirm cancel action
+    function confirmCancel() {
+        console.log('[Smithing] Cancelled minigame');
+
+        // Stop minigame if active
+        if (isMinigameActive && window.SmithingMinigames) {
+            window.SmithingMinigames.stop();
+        }
+
+        isMinigameActive = false;
+
+        // Close modal
+        if (window.Modal) {
+            window.Modal.hide();
+        }
+
+        // Reset to default state
+        resetToDefaultState();
+    }
+
+    // Reset to default state (no selection)
+    function resetToDefaultState() {
+        // Deselect all items
+        document.querySelectorAll('.smithing-item').forEach(item => {
+            item.classList.remove('selected');
+            item.style.pointerEvents = '';
+            item.style.opacity = '';
+        });
+
+        selectedOreId = null;
+        selectedIngotId = null;
+
+        // Show default state
+        document.getElementById('forge-default-state').style.display = 'flex';
+        document.getElementById('forge-work-state').style.display = 'none';
+
+        // Show start button again
+        const startBtn = document.getElementById('start-forge-btn');
+        if (startBtn) {
+            startBtn.style.display = 'block';
+        }
+
+        // Empty the crucible
+        const metalGlow = document.getElementById('metal-glow');
+        if (metalGlow) {
+            metalGlow.style.height = '0%';
+        }
+
+        // Update coal display
+        updateCoalDisplay();
+
+        // Update UI if character tab is active
+        if (window.updateUI) {
+            window.updateUI();
+        }
+    }
+
+    // Get material by ID
+    function getMaterial(id) {
+        if (!materialsData) return null;
+        return materialsData.find(m => m.id === id);
+    }
+
+    // Helper: Count items of a specific ID in character's inventory
+    function getItemCountById(itemId) {
+        const character = window.GameState ? window.GameState.getState().character : null;
+        if (!character || !character.inventory || !character.inventory.items) return 0;
+
+        // ItemFactory generates IDs like "copper_ore_1234567890_abc123"
+        // We need to count items whose ID starts with the base ID
+        return character.inventory.items.filter(item => {
+            return item.id && item.id.startsWith(itemId + '_');
+        }).length;
+    }
+
+    // Helper: Remove multiple items by ID from character's inventory
+    function removeItemsById(itemId, count) {
+        const character = window.GameState ? window.GameState.getState().character : null;
+        if (!character || !window.Inventory) return;
+
+        // Find and remove items that match the base ID
+        let removed = 0;
+        while (removed < count && character.inventory.items.length > 0) {
+            const itemToRemove = character.inventory.items.find(item =>
+                item.id && item.id.startsWith(itemId + '_')
+            );
+
+            if (itemToRemove) {
+                window.Inventory.removeItem(character.inventory, itemToRemove.id);
+                removed++;
+            } else {
+                break; // No more items to remove
+            }
+        }
+    }
+
+    // Helper: Add item to character's inventory
+    function addItemToInventory(item) {
+        const character = window.GameState ? window.GameState.getState().character : null;
+        if (!character || !window.Inventory) return;
+
+        window.Inventory.addItem(character.inventory, item);
+    }
+
+    // Public API
+    return {
+        init,
+        loadCoalPitState, // Expose this so it can be called after save load
+        getCoalInPit: () => coalInPit,
+        setCoalInPit: (amount) => {
+            coalInPit = Math.max(0, Math.min(MAX_COAL, amount));
+            saveCoalPitState();
+            updateCoalDisplay();
+        }
+    };
+
+})();

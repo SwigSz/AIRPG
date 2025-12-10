@@ -120,6 +120,14 @@ const SaveSystem = (() => {
                 }
             }
 
+            // Migrate smithing state
+            if (!state.smithing) {
+                state.smithing = {
+                    coalInPit: 0
+                };
+                console.log('Initialized smithing state for old save');
+            }
+
             // Game loaded successfully
             return state;
         } catch (error) {
@@ -206,6 +214,14 @@ const SaveSystem = (() => {
                         }
                         if (!saveData.state.craftedItems || !Array.isArray(saveData.state.craftedItems)) {
                             saveData.state.craftedItems = [];
+                        }
+
+                        // Migrate smithing state
+                        if (!saveData.state.smithing) {
+                            saveData.state.smithing = {
+                                coalInPit: 0
+                            };
+                            console.log('Initialized smithing state for imported save');
                         }
 
                         // Load the state

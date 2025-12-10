@@ -21,6 +21,9 @@ const GameState = (() => {
         activeResearch: null, // { nodeId, startDay, daysRequired, isPaused }
         discoveredRecipes: [], // Recipe IDs the player has discovered
         craftedItems: [], // Item names that have been crafted before
+        smithing: {
+            coalInPit: 0 // Coal in the forge pit (0-10)
+        },
         ui: {
             activeTab: 'character', // Current main tab
             subTabs: {
@@ -76,6 +79,9 @@ const GameState = (() => {
             activeResearch: null,
             discoveredRecipes: [],
             craftedItems: [],
+            smithing: {
+                coalInPit: 0
+            },
             ui: {
                 activeTab: 'character',
                 subTabs: {
