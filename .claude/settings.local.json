@@ -10,7 +10,8 @@
       "Bash(start index.html)",
       "Bash(dir:*)",
       "Bash(test:*)",
-      "Bash(powershell -Command \"Get-Content ''c:\\Users\\maufo\\AI-RPG\\index.html'' | Select-Object -Last 100\")"
+      "Bash(powershell -Command \"Get-Content ''c:\\Users\\maufo\\AI-RPG\\index.html'' | Select-Object -Last 100\")",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
