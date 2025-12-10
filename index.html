@@ -465,9 +465,264 @@
 
                     <!-- Smithing Tab Content -->
                     <div class="crafting-tab-content" id="crafting-smithing-content">
-                        <div class="placeholder-content">
-                            <h3>Smithing</h3>
-                            <p class="placeholder-text">This will be implemented in the future</p>
+                        <div class="smithing-layout">
+                            <!-- Left Panel: Component Selection -->
+                            <div class="smithing-component-panel">
+                                <h3 class="panel-header">SELECT COMPONENT</h3>
+                                <div class="smithing-categories">
+
+                                    <!-- BARS Category -->
+                                    <div class="smithing-category">
+                                        <div class="smithing-category-header" data-category="bars">
+                                            <span class="category-icon">▼</span>
+                                            <span class="category-name">BARS</span>
+                                        </div>
+                                        <div class="smithing-category-items expanded">
+                                            <div class="smithing-item" data-component-type="bar" data-item="iron-bar">Iron Bar</div>
+                                            <div class="smithing-item" data-component-type="bar" data-item="steel-bar">Steel Bar</div>
+                                            <div class="smithing-item" data-component-type="bar" data-item="gold-bar">Gold Bar</div>
+                                            <div class="smithing-item" data-component-type="bar" data-item="silver-bar">Silver Bar</div>
+                                            <div class="smithing-item" data-component-type="bar" data-item="mithril-bar">Mithril Bar</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- WEAPON COMPONENTS Category -->
+                                    <div class="smithing-category">
+                                        <div class="smithing-category-header" data-category="weapon-components">
+                                            <span class="category-icon">►</span>
+                                            <span class="category-name">WEAPON COMPONENTS</span>
+                                        </div>
+                                        <div class="smithing-category-items">
+
+                                            <!-- Blades Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="blades">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Blades</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="blade" data-item="longsword-blade">Longsword Blade</div>
+                                                    <div class="smithing-item" data-component-type="blade" data-item="greatsword-blade">Greatsword Blade</div>
+                                                    <div class="smithing-item" data-component-type="blade" data-item="dagger-blade">Dagger Blade</div>
+                                                    <div class="smithing-item" data-component-type="blade" data-item="axe-head">Axe Head</div>
+                                                    <div class="smithing-item" data-component-type="blade" data-item="spear-head">Spear Head</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Hilts Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="hilts">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Hilts</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="hilt" data-item="one-handed-hilt">One-Handed Hilt</div>
+                                                    <div class="smithing-item" data-component-type="hilt" data-item="two-handed-hilt">Two-Handed Hilt</div>
+                                                    <div class="smithing-item" data-component-type="hilt" data-item="leather-grip">Leather Grip</div>
+                                                    <div class="smithing-item" data-component-type="hilt" data-item="simple-handle">Simple Handle</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Guards Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="guards">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Guards</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="guard" data-item="crossguard">Crossguard</div>
+                                                    <div class="smithing-item" data-component-type="guard" data-item="full-guard">Full Guard</div>
+                                                    <div class="smithing-item" data-component-type="guard" data-item="simple-guard">Simple Guard</div>
+                                                    <div class="smithing-item" data-component-type="guard" data-item="curved-guard">Curved Guard</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Pommels Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="pommels">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Pommels</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="pommel" data-item="round-pommel">Round Pommel</div>
+                                                    <div class="smithing-item" data-component-type="pommel" data-item="spiked-pommel">Spiked Pommel</div>
+                                                    <div class="smithing-item" data-component-type="pommel" data-item="weighted-pommel">Weighted Pommel</div>
+                                                    <div class="smithing-item" data-component-type="pommel" data-item="decorative-pommel">Decorative Pommel</div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <!-- ARMOR COMPONENTS Category -->
+                                    <div class="smithing-category">
+                                        <div class="smithing-category-header" data-category="armor-components">
+                                            <span class="category-icon">►</span>
+                                            <span class="category-name">ARMOR COMPONENTS</span>
+                                        </div>
+                                        <div class="smithing-category-items">
+
+                                            <!-- Head Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="head">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Head</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="armor-head" data-item="helmet-piece">Helmet Piece</div>
+                                                    <div class="smithing-item" data-component-type="armor-head" data-item="coif-piece">Coif Piece</div>
+                                                    <div class="smithing-item" data-component-type="armor-head" data-item="circlet-piece">Circlet Piece</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Chest Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="chest">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Chest</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="armor-chest" data-item="breastplate-piece">Breastplate Piece</div>
+                                                    <div class="smithing-item" data-component-type="armor-chest" data-item="chainmail-piece">Chainmail Piece</div>
+                                                    <div class="smithing-item" data-component-type="armor-chest" data-item="scale-piece">Scale Piece</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Hands Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="hands">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Hands</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="armor-hands" data-item="gauntlet-piece">Gauntlet Piece</div>
+                                                    <div class="smithing-item" data-component-type="armor-hands" data-item="glove-piece">Glove Piece</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Legs Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="legs">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Legs</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="armor-legs" data-item="greaves-piece">Greaves Piece</div>
+                                                    <div class="smithing-item" data-component-type="armor-legs" data-item="legging-piece">Legging Piece</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Feet Sub-category -->
+                                            <div class="smithing-subcategory">
+                                                <div class="smithing-subcategory-header" data-subcategory="feet">
+                                                    <span class="subcategory-icon">►</span>
+                                                    <span class="subcategory-name">Feet</span>
+                                                </div>
+                                                <div class="smithing-subcategory-items">
+                                                    <div class="smithing-item" data-component-type="armor-feet" data-item="boot-piece">Boot Piece</div>
+                                                    <div class="smithing-item" data-component-type="armor-feet" data-item="sabaton-piece">Sabaton Piece</div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Right Panel: Forge Area -->
+                            <div class="smithing-forge-panel">
+
+                                <!-- Default State (Nothing Selected) -->
+                                <div class="forge-default-state" id="forge-default-state">
+                                    <div class="forge-icon">🔨</div>
+                                    <h2 class="forge-title">SMITHING STATION</h2>
+                                    <p class="forge-description">Select a component type from the left panel to begin forging</p>
+                                    <div class="forge-explanation">
+                                        <p>The smithing station allows you to forge weapon and armor components through a multi-stage process.</p>
+                                        <p>Each component requires materials and progresses through stages like heating, shaping, quenching, and finishing.</p>
+                                        <p>Your smithing skill and performance in each stage determines the final component quality.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Item Selected State (Hidden by default) -->
+                                <div class="forge-work-state" id="forge-work-state" style="display: none;">
+
+                                    <!-- Top Section: Quality & Materials -->
+                                    <div class="forge-top-section">
+                                        <div class="forge-item-info">
+                                            <h2 class="forge-item-name">Iron Bar</h2>
+                                            <p class="forge-item-description">A sturdy bar of iron, ready for crafting</p>
+                                        </div>
+                                        <div class="forge-quality-display">
+                                            <div class="quality-label">Quality</div>
+                                            <div class="quality-value">--%</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Material Requirements Panel -->
+                                    <div class="forge-materials-panel">
+                                        <h4 class="materials-header">Required Materials</h4>
+                                        <div class="materials-list">
+                                            <div class="material-item">
+                                                <span class="material-icon">⛏️</span>
+                                                <span class="material-name">Iron Ore</span>
+                                                <span class="material-count">
+                                                    <span class="have">0</span> / <span class="need">1</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Main Work Area: Stage-Specific Interface -->
+                                    <div class="forge-work-area">
+                                        <div class="stage-placeholder">
+                                            <div class="placeholder-box stage-box-1">
+                                                <span class="stage-label">Stage Interface Area</span>
+                                            </div>
+                                            <div class="placeholder-box stage-box-2">
+                                                <span class="stage-label">Interactive Minigame Zone</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stage Progress Indicator -->
+                                    <div class="forge-stage-progress">
+                                        <div class="stage-step active">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">Heat</div>
+                                        </div>
+                                        <div class="stage-connector"></div>
+                                        <div class="stage-step">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">Shape</div>
+                                        </div>
+                                        <div class="stage-connector"></div>
+                                        <div class="stage-step">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">Quench</div>
+                                        </div>
+                                        <div class="stage-connector"></div>
+                                        <div class="stage-step">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">Sharpen</div>
+                                        </div>
+                                        <div class="stage-connector"></div>
+                                        <div class="stage-step">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">Finish</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Button Area -->
+                                    <div class="forge-action-bar">
+                                        <button class="forge-btn forge-btn-secondary" id="cancel-forge-btn">Cancel</button>
+                                        <button class="forge-btn forge-btn-primary" id="start-forge-btn" disabled>Start Forging</button>
+                                    </div>
+
+                                </div>
+
+                            </div>
                         </div>
                     </div>
 
@@ -612,6 +867,7 @@
     <script src="js/ui/ui-manager.js"></script>
     <script src="js/ui/character-ui.js"></script>
     <script src="js/ui/inventory-ui.js"></script>
+    <script src="js/ui/smithing-ui.js"></script>
     <script src="js/ui/debug-menu.js"></script>
     <script src="js/crafting/crafting.js"></script>
     <script src="js/settlement/settlement.js"></script>

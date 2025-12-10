@@ -121,6 +121,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (window.Crafting && window.Crafting.refreshFromSaveData) {
                 Crafting.refreshFromSaveData();
             }
+
+            // Refresh smithing category states from save data
+            if (window.SmithingUI && window.SmithingUI.refreshFromSaveData) {
+                SmithingUI.refreshFromSaveData();
+            }
         } else {
             // Failed to load or no character, create test character
             console.log('No character in saved state, creating new character...');
