@@ -216,8 +216,7 @@
         "ingotId": "copper_ingot",
         "oresRequired": 3,
         "optimalTemp": 55,
-        "optimalTempRange": [45, 65],
-        "optimalColor": "orange"
+        "optimalColor": "temp-orange"
       }
     },
     {
@@ -236,8 +235,7 @@
         "ingotId": "tin_ingot",
         "oresRequired": 3,
         "optimalTemp": 65,
-        "optimalTempRange": [55, 75],
-        "optimalColor": "yellow-orange"
+        "optimalColor": "temp-yellow-orange"
       }
     },
     {

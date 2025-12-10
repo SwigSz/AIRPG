@@ -636,8 +636,14 @@ const Crafting = (() => {
     function refreshFromSaveData() {
         // Load category states from GameState (called after save is loaded)
         loadCategoryStates();
+        // Load selected weapon from GameState
+        loadSelectedWeapon();
         // Re-render to apply loaded states
         renderWeaponCategories();
+        // Re-render assembly station with saved selection
+        if (currentSelectedWeapon) {
+            renderAssemblyStation(currentSelectedWeapon);
+        }
     }
 
     function loadCategoryStates() {
@@ -650,6 +656,25 @@ const Crafting = (() => {
                     category.expanded = state.craftingCategoryStates[categoryId];
                 }
             });
+        }
+    }
+
+    function loadSelectedWeapon() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state && state.craftingSelectedWeapon) {
+            currentSelectedWeapon = state.craftingSelectedWeapon;
+        }
+    }
+
+    function saveSelectedWeapon() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state) {
+            state.craftingSelectedWeapon = currentSelectedWeapon;
+
+            // Trigger main save system
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
         }
     }
 
@@ -728,6 +753,9 @@ const Crafting = (() => {
 
         // Re-render assembly station with new weapon configuration
         renderAssemblyStation(weaponId);
+
+        // Save selected weapon to GameState
+        saveSelectedWeapon();
     }
 
     function renderAssemblyStation(weaponId) {

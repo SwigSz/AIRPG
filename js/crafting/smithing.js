@@ -98,12 +98,59 @@ window.Smithing = (function() {
         // Load coal pit amount
         coalInPit = state.smithing.coalInPit || 0;
 
+        // Load selected ore/ingot
+        loadSelectedOreIngot();
+
         // Update the UI display
         updateCoalDisplay();
 
         // Update start button state if an item is selected
         if (selectedOreId && selectedIngotId) {
             updateStartButtonState();
+        }
+    }
+
+    // Load selected ore/ingot from GameState
+    function loadSelectedOreIngot() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.smithing) return;
+
+        if (state.smithing.selectedOreId && state.smithing.selectedIngotId) {
+            selectedOreId = state.smithing.selectedOreId;
+            selectedIngotId = state.smithing.selectedIngotId;
+
+            // Re-select the item in the UI
+            const itemElement = document.querySelector(`[data-ore-id="${selectedOreId}"][data-ingot-id="${selectedIngotId}"]`);
+            if (itemElement) {
+                // Trigger the selection UI update
+                itemElement.classList.add('selected');
+
+                // Show forge work state
+                document.getElementById('forge-default-state').style.display = 'none';
+                document.getElementById('forge-work-state').style.display = 'flex';
+
+                // Update forge UI with selected item info
+                updateForgeUI();
+            }
+        }
+    }
+
+    // Save selected ore/ingot to GameState
+    function saveSelectedOreIngot() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state) return;
+
+        // Ensure smithing property exists
+        if (!state.smithing) {
+            state.smithing = {};
+        }
+
+        state.smithing.selectedOreId = selectedOreId;
+        state.smithing.selectedIngotId = selectedIngotId;
+
+        // Persist to localStorage
+        if (window.SaveSystem) {
+            window.SaveSystem.save();
         }
     }
 
@@ -160,6 +207,9 @@ window.Smithing = (function() {
 
         // Update forge UI with selected item info
         updateForgeUI();
+
+        // Save selected ore/ingot to GameState
+        saveSelectedOreIngot();
     }
 
     // Update forge UI with selected item details
@@ -320,6 +370,11 @@ window.Smithing = (function() {
 
         // Update UI
         updateCoalDisplay();
+
+        // Update start button state (in case it was disabled due to no coal)
+        if (selectedOreId && selectedIngotId) {
+            updateStartButtonState();
+        }
 
         // If minigame is active, notify minigame system
         if (isMinigameActive && window.SmithingMinigames) {
@@ -489,8 +544,36 @@ window.Smithing = (function() {
             window.Modal.hide();
         }
 
-        // Reset to default state
-        resetToDefaultState();
+        // Reset minigame state but KEEP the selection
+        resetMinigameAfterCompletion();
+    }
+
+    // Reset minigame elements after successful completion (keeps selection)
+    function resetMinigameAfterCompletion() {
+        // Unlock item selection
+        document.querySelectorAll('.smithing-item').forEach(item => {
+            item.style.pointerEvents = '';
+            item.style.opacity = '';
+        });
+
+        // Reset minigame elements
+        resetMinigameElements();
+
+        // Show start button again
+        const startBtn = document.getElementById('start-forge-btn');
+        if (startBtn) {
+            startBtn.style.display = 'block';
+        }
+
+        // Update forge UI to refresh materials count
+        if (selectedOreId && selectedIngotId) {
+            updateForgeUI();
+        }
+
+        // Update UI (inventory changed)
+        if (window.updateUI) {
+            window.updateUI();
+        }
     }
 
     // Handle cancel button click
@@ -554,6 +637,9 @@ window.Smithing = (function() {
 
         selectedOreId = null;
         selectedIngotId = null;
+
+        // Clear saved selection from GameState
+        saveSelectedOreIngot();
 
         // Show default state
         document.getElementById('forge-default-state').style.display = 'flex';

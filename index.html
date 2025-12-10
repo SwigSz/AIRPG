@@ -671,7 +671,7 @@
                                         <div class="temperature-gauge" id="temperature-gauge">
                                             <div class="gauge-gradient">
                                                 <div class="gauge-arrow" id="gauge-arrow" style="bottom: 0%;">
-                                                    <div class="arrow-tip">▶</div>
+                                                    <div class="arrow-tip">◀</div>
                                                 </div>
                                                 <div class="optimal-zone-marker" id="optimal-zone-marker" style="bottom: 55%; display: none;">
                                                     <span class="zone-star">★</span>
@@ -723,6 +723,17 @@
 
                                         <!-- Proceed Button (appears after heating) -->
                                         <button class="proceed-btn" id="proceed-pour-btn" style="display: none;">Proceed to Pour</button>
+
+                                        <!-- Debug Quality Tracker -->
+                                        <div class="quality-debug-panel" id="quality-debug-panel" style="display: none;">
+                                            <div class="debug-title">Quality Tracking</div>
+                                            <div class="debug-stat">Temp: <span id="debug-temp">0</span></div>
+                                            <div class="debug-stat">Time Above: <span id="debug-optimal">0.0s</span></div>
+                                            <div class="debug-stat">Splashes: <span id="debug-splashes">0</span></div>
+                                            <div class="debug-stat">Pour Temp: <span id="debug-pour-temp">0</span></div>
+                                            <div class="debug-divider"></div>
+                                            <div class="debug-stat"><strong>Est. Quality: <span id="debug-quality">100%</span></strong></div>
+                                        </div>
 
                                     </div>
 
@@ -891,6 +902,7 @@
     <script src="js/ui/notification-manager.js"></script>
     <script src="js/ui/activity-log.js"></script>
     <script src="js/ui/ui-manager.js"></script>
+    <script src="js/ui/modal.js"></script>
     <script src="js/ui/character-ui.js"></script>
     <script src="js/ui/inventory-ui.js"></script>
     <script src="js/ui/smithing-ui.js"></script>

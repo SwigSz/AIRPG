@@ -59,10 +59,7 @@ window.SmithingMinigames = (function() {
     let temperatureUpdateTimer = null;
     let bellowsHoldStartTime = null;
     let bellowsHoldTimer = null;
-    let timeInOptimalZone = 0; // seconds
-    let timeInSuboptimalZone = 0; // seconds
-    let timeInPoorZone = 0; // seconds
-    let peakOverheatAmount = 0; // How far above optimal the metal was overheated
+    let timeInOptimalZone = 0; // Tracks time spent ABOVE optimal temperature (overheating penalty)
 
     // Pouring stage state
     let pouringActive = false;
@@ -85,15 +82,20 @@ window.SmithingMinigames = (function() {
 
         // Get optimal temperature from ore data
         optimalTemp = ore.smithing.optimalTemp || 55;
-        optimalTempRange = ore.smithing.optimalTempRange || [45, 65];
+
+        // Derive optimal range from color band
+        const optimalColorClass = ore.smithing.optimalColor || 'temp-orange';
+        const colorBand = TEMP_COLORS.find(c => c.class === optimalColorClass);
+        if (colorBand) {
+            optimalTempRange = [colorBand.min, colorBand.max];
+        } else {
+            optimalTempRange = [45, 65]; // Fallback
+        }
 
         // Reset state
         temperature = 0;
         currentStage = 'heating';
-        timeInOptimalZone = 0;
-        timeInSuboptimalZone = 0;
-        timeInPoorZone = 0;
-        peakOverheatAmount = 0;
+        timeInOptimalZone = 0; // Tracks time spent ABOVE optimal (overheating)
         moldFillPercent = 0;
         crucibleFillPercent = 100;
         splashCount = 0;
@@ -110,6 +112,9 @@ window.SmithingMinigames = (function() {
                 }
             }, 50);
         }
+
+        // Show debug panel
+        showDebugPanel();
 
         // Start heating stage
         startHeatingStage();
@@ -129,8 +134,52 @@ window.SmithingMinigames = (function() {
         removeBellowsListeners();
         removeChainListeners();
 
+        // Hide debug panel
+        hideDebugPanel();
+
         // Reset state
         currentStage = null;
+    }
+
+    // Show debug panel
+    function showDebugPanel() {
+        const panel = document.getElementById('quality-debug-panel');
+        if (panel) {
+            panel.style.display = 'block';
+            updateDebugPanel();
+        }
+    }
+
+    // Hide debug panel
+    function hideDebugPanel() {
+        const panel = document.getElementById('quality-debug-panel');
+        if (panel) {
+            panel.style.display = 'none';
+        }
+    }
+
+    // Update debug panel with current quality tracking data
+    function updateDebugPanel() {
+        // Update temperature
+        const tempEl = document.getElementById('debug-temp');
+        if (tempEl) tempEl.textContent = temperature.toFixed(1);
+
+        // Update time above optimal
+        const optimalEl = document.getElementById('debug-optimal');
+        if (optimalEl) optimalEl.textContent = timeInOptimalZone.toFixed(1) + 's';
+
+        // Update splashes
+        const splashEl = document.getElementById('debug-splashes');
+        if (splashEl) splashEl.textContent = splashCount;
+
+        // Update pour temperature
+        const pourTempEl = document.getElementById('debug-pour-temp');
+        if (pourTempEl) pourTempEl.textContent = pourTemperature.toFixed(1);
+
+        // Calculate and update estimated quality
+        const estimatedQuality = calculateQuality();
+        const qualityEl = document.getElementById('debug-quality');
+        if (qualityEl) qualityEl.textContent = estimatedQuality + '%';
     }
 
     // Start heating stage
@@ -141,9 +190,6 @@ window.SmithingMinigames = (function() {
 
         // Update stage progress UI
         updateStageProgress('heat', 'active');
-
-        // Show optimal zone marker on temperature gauge
-        showOptimalZone();
 
         // Enable bellows
         enableBellows();
@@ -272,6 +318,7 @@ window.SmithingMinigames = (function() {
             updateTemperature();
             updateTemperatureUI();
             trackHeatingPerformance();
+            updateDebugPanel();
         }, TEMPERATURE_UPDATE_INTERVAL);
     }
 
@@ -307,25 +354,9 @@ window.SmithingMinigames = (function() {
     function trackHeatingPerformance() {
         const interval = TEMPERATURE_UPDATE_INTERVAL / 1000; // Convert to seconds
 
-        const distanceFromOptimal = Math.abs(temperature - optimalTemp);
-
-        if (temperature >= optimalTempRange[0] && temperature <= optimalTempRange[1]) {
-            // In optimal range
-            timeInOptimalZone += interval;
-        } else if (distanceFromOptimal <= 15) {
-            // Close to optimal
-            timeInSuboptimalZone += interval;
-        } else {
-            // Far from optimal
-            timeInPoorZone += interval;
-        }
-
-        // Track overheating
+        // Only track time spent ABOVE optimal range (overheating)
         if (temperature > optimalTempRange[1]) {
-            const overheat = temperature - optimalTempRange[1];
-            if (overheat > peakOverheatAmount) {
-                peakOverheatAmount = overheat;
-            }
+            timeInOptimalZone += interval; // Reusing this variable for "time above optimal"
         }
     }
 
@@ -361,14 +392,25 @@ window.SmithingMinigames = (function() {
         }
     }
 
+    // Hide proceed button
+    function hideProceedButton() {
+        const proceedBtn = document.getElementById('proceed-pour-btn');
+        if (proceedBtn) {
+            proceedBtn.style.display = 'none';
+        }
+    }
+
     // Make proceed button visible (player manually shows it when ready)
     // For Tier 1, we'll show it after a few seconds of heating or when temp is above 20
+    // Also hide it if temperature drops below minimum threshold
     function checkShowProceedButton() {
         if (temperature >= 20) {
             setupProceedButton();
             return true;
+        } else {
+            hideProceedButton();
+            return false;
         }
-        return false;
     }
 
     // Update heating stage - check if we should show proceed button
@@ -384,6 +426,9 @@ window.SmithingMinigames = (function() {
 
         // Store the pour temperature
         pourTemperature = temperature;
+
+        // Update debug panel with pour temperature
+        updateDebugPanel();
 
         // End heating stage
         endHeatingStage();
@@ -558,6 +603,7 @@ window.SmithingMinigames = (function() {
             if (!pouringActive) return;
 
             pourLiquid();
+            updateDebugPanel();
         }, 50);
     }
 
@@ -700,48 +746,39 @@ window.SmithingMinigames = (function() {
         }
     }
 
-    // Calculate final quality (70-110%)
+    // Calculate final quality (0-100%)
     function calculateQuality() {
-        let quality = QUALITY_BASE;
+        let quality = 100; // Start at 100%
 
-        // Heating performance (0-15%)
-        const totalHeatingTime = timeInOptimalZone + timeInSuboptimalZone + timeInPoorZone;
-        if (totalHeatingTime > 0) {
-            const optimalRatio = timeInOptimalZone / totalHeatingTime;
-            const suboptimalRatio = timeInSuboptimalZone / totalHeatingTime;
-
-            const heatingScore = (optimalRatio * 1.0) + (suboptimalRatio * 0.6);
-            quality += Math.floor(heatingScore * QUALITY_HEATING_MAX);
+        // Pour temperature penalty
+        if (pourTemperature < optimalTempRange[0]) {
+            // Poured below optimal color
+            quality -= 20;
+        } else if (pourTemperature > optimalTempRange[1]) {
+            // Poured above optimal color
+            quality -= 15;
         }
 
-        // Pouring performance (0-10%)
-        const splashPenalty = Math.min(splashCount * 2, 10);
-        const pouringScore = QUALITY_POURING_MAX - splashPenalty;
-        quality += Math.max(0, pouringScore);
+        // Splash penalty: -1% per splash
+        quality -= splashCount;
 
-        // Overheat penalty (0-5% reduction)
-        if (peakOverheatAmount > 0) {
-            const overheatPenalty = Math.min(peakOverheatAmount / 10, 1) * OVERHEAT_PENALTY_MAX;
-            quality -= Math.floor(overheatPenalty);
-        }
+        // Overheating penalty: -1% per full second spent above optimal during heating
+        const secondsOverheated = Math.floor(timeInOptimalZone); // timeInOptimalZone now tracks time above optimal
+        quality -= secondsOverheated;
 
-        // Skill bonus (future implementation, 0-10%)
-        const skillBonus = 0; // Placeholder
-        quality += skillBonus;
-
-        // Clamp to reasonable range
-        quality = Math.max(70, Math.min(110, quality));
+        // Clamp to reasonable range (0-100%)
+        quality = Math.max(0, Math.min(100, quality));
 
         return quality;
     }
 
-    // Get quality grade name from percentage
+    // Get quality grade name from percentage (0-100%)
     function getQualityGrade(quality) {
         if (quality >= 100) return 'Masterwork';
         if (quality >= 95) return 'Excellent';
         if (quality >= 85) return 'Well-Forged';
         if (quality >= 75) return 'Standard';
-        if (quality >= 70) return 'Rough';
+        if (quality >= 60) return 'Rough';
         return 'Flawed';
     }
 
