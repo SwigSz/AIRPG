@@ -740,7 +740,63 @@
 
                                     <!-- Weapon Forge Work Area (for hammering weapons) -->
                                     <div class="weapon-forge-work-area" id="weapon-forge-work-area" style="display: none;">
-                                        <!-- Hammering scene will be inserted here -->
+
+                                        <!-- Hammering Scene -->
+                                        <div class="hammering-scene" id="hammering-scene">
+
+                                            <!-- Hammer Progress (Top) -->
+                                            <div class="hammer-progress">
+                                                <div class="hammer-progress-label">Hammers: <span id="hammer-count">0</span> / <span id="hammer-total">5</span></div>
+                                                <div class="hammer-progress-bar">
+                                                    <div class="hammer-progress-fill" id="hammer-progress-fill" style="width: 0%;"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Quality Display (Below Progress) -->
+                                            <div class="hammering-quality">
+                                                <div class="quality-label">Quality: <span id="current-quality">0%</span></div>
+                                            </div>
+
+                                            <!-- Forge (left side) -->
+                                            <div class="hammering-forge" id="hammering-forge">
+                                                <div class="forge-fire">🔥</div>
+                                                <div class="forge-label">Forge</div>
+                                            </div>
+
+                                            <!-- Anvil (center-right) -->
+                                            <div class="hammering-anvil" id="hammering-anvil">
+                                                <div class="anvil-surface">
+                                                    <div class="anvil-icon">🔨</div>
+                                                </div>
+                                                <div class="anvil-label">Anvil</div>
+                                            </div>
+
+                                            <!-- Quenching Barrel (right side, not interactive in phase 1) -->
+                                            <div class="hammering-barrel" id="hammering-barrel">
+                                                <div class="barrel-icon">🛢️</div>
+                                                <div class="barrel-label">Quenching<br/>(Phase 2)</div>
+                                            </div>
+
+                                            <!-- Metal Sprite (draggable) -->
+                                            <div class="metal-sprite" id="metal-sprite" style="left: 50%; top: 50%;">
+                                                <img id="metal-sprite-img" src="" alt="Metal" />
+                                            </div>
+
+                                            <!-- Timing Bar (appears during minigame) -->
+                                            <div class="timing-bar-container" id="timing-bar-container" style="display: none;">
+                                                <div class="timing-bar-label">Press SPACE when marker is in the zone!</div>
+                                                <div class="timing-bar" id="timing-bar">
+                                                    <div class="timing-zone bad-zone" style="left: 0%; width: 100%;"></div>
+                                                    <div class="timing-zone ok-zone" id="ok-zone-left"></div>
+                                                    <div class="timing-zone perfect-zone" id="perfect-zone"></div>
+                                                    <div class="timing-zone ok-zone" id="ok-zone-right"></div>
+                                                    <div class="timing-marker" id="timing-marker" style="left: 0%;"></div>
+                                                </div>
+                                                <button class="cancel-minigame-btn" id="cancel-minigame-btn">Cancel</button>
+                                            </div>
+
+                                        </div>
+
                                     </div>
 
                                     <!-- Stage Progress Indicator -->
@@ -916,8 +972,8 @@
     <script src="js/crafting/crafting.js"></script>
     <script src="js/crafting/smithing.js"></script>
     <script src="js/crafting/smithing-minigames.js"></script>
-    <script src="js/crafting/weapon-head-hammering.js"></script>
-    <script src="js/crafting/weapon-smithing-controller.js"></script>
+    <script src="js/crafting/weapon-head-hammering.js?v=7"></script>
+    <script src="js/crafting/weapon-smithing-controller.js?v=7"></script>
     <script src="js/settlement/settlement.js"></script>
     <script src="js/settlement/research.js"></script>
     <script src="js/world/map.js"></script>

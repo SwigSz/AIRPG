@@ -16,6 +16,12 @@ const Inventory = (() => {
         }
 
         inventory.items.push(item);
+
+        // Dispatch inventory change event
+        document.dispatchEvent(new CustomEvent('inventoryChanged', {
+            detail: { action: 'add', item: item }
+        }));
+
         return true;
     }
 
@@ -27,6 +33,12 @@ const Inventory = (() => {
         }
 
         const removedItem = inventory.items.splice(index, 1)[0];
+
+        // Dispatch inventory change event
+        document.dispatchEvent(new CustomEvent('inventoryChanged', {
+            detail: { action: 'remove', item: removedItem }
+        }));
+
         return removedItem;
     }
 

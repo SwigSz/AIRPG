@@ -1022,12 +1022,13 @@
 .forge-work-area {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     background-color: #0f172a;
     border: 2px dashed #334155;
     border-radius: 8px;
     padding: 1.5rem;
+    padding-top: 2.5rem;
     min-height: 200px;
 }
 

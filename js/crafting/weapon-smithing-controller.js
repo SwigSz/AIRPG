@@ -10,6 +10,7 @@ window.WeaponSmithingController = (function() {
 
     let materialsData = null;
     let hammeringConfig = null;
+    let currentWeaponType = null; // Track current weapon type for UI refresh
 
     /**
      * Initialize the controller
@@ -37,7 +38,105 @@ window.WeaponSmithingController = (function() {
         // Setup event listeners for weapon component items
         setupWeaponComponentListeners();
 
+        // Setup tab visibility listener to refresh UI
+        setupTabVisibilityListener();
+
         console.log('[WeaponSmithingController] Initialized');
+    }
+
+    /**
+     * Setup listener for tab visibility changes
+     */
+    function setupTabVisibilityListener() {
+        // Listen for inventory changes to refresh ingot counts
+        document.addEventListener('inventoryChanged', (e) => {
+            // Check if the changed item is an ingot
+            if (e.detail && e.detail.item && e.detail.item.name && e.detail.item.name.includes('Ingot')) {
+                // Refresh the dropdown if we're in weapon smithing mode
+                if (currentWeaponType) {
+                    refreshIngotDropdown();
+                }
+            }
+        });
+
+        // Also listen for tab changes to refresh ingot counts
+        document.addEventListener('click', (e) => {
+            const tabButton = e.target.closest('.tab-btn');
+            if (tabButton && tabButton.dataset.tab === 'smithing') {
+                // Refresh the UI if we're in weapon smithing mode
+                setTimeout(() => {
+                    if (currentWeaponType) {
+                        refreshIngotDropdown();
+                    }
+                }, 100);
+            }
+        });
+    }
+
+    /**
+     * Refresh the ingot dropdown with current inventory
+     */
+    function refreshIngotDropdown() {
+        if (!currentWeaponType) return;
+
+        // Get current ingots from inventory
+        const character = window.GameState ? window.GameState.getState().character : null;
+        const inventoryIngots = character && character.inventory && character.inventory.items
+            ? character.inventory.items.filter(item => item.name && item.name.includes('Ingot'))
+            : [];
+
+        // Group ingots by their exact name
+        const ingotsByName = {};
+        inventoryIngots.forEach(invItem => {
+            const name = invItem.name;
+            if (!ingotsByName[name]) {
+                ingotsByName[name] = {
+                    name: name,
+                    materialId: invItem.materialId || invItem.id,
+                    count: 0
+                };
+            }
+            ingotsByName[name].count++;
+        });
+
+        const availableIngots = Object.values(ingotsByName);
+
+        // Update the dropdown
+        const dropdown = document.getElementById('ingot-selector');
+        if (dropdown) {
+            const totalIngotCount = availableIngots.reduce((sum, ingot) => sum + ingot.count, 0);
+
+            // Rebuild dropdown options
+            dropdown.innerHTML = `
+                <option value="">-- Choose Ingot --</option>
+                ${availableIngots.map(ingot => {
+                    const material = materialsData.find(m => m.id === ingot.materialId);
+                    const icon = material ? material.icon : '🔶';
+                    return `<option value="${ingot.materialId}" data-name="${ingot.name}">${icon} ${ingot.name} x${ingot.count}</option>`;
+                }).join('')}
+            `;
+
+            // Re-attach event listener
+            dropdown.removeEventListener('change', handleDropdownChange);
+            dropdown.addEventListener('change', handleDropdownChange);
+
+            // Update the count display
+            const countDisplay = document.querySelector('#forge-materials-list .material-count');
+            if (countDisplay) {
+                countDisplay.textContent = `${totalIngotCount} / 1`;
+                countDisplay.className = `material-count ${totalIngotCount > 0 ? 'sufficient' : 'insufficient'}`;
+            }
+        }
+    }
+
+    /**
+     * Handle dropdown change event
+     */
+    function handleDropdownChange(e) {
+        const selectedIngotId = e.target.value;
+        if (selectedIngotId && currentWeaponType) {
+            startHammering(selectedIngotId, currentWeaponType);
+        }
     }
 
     /**
@@ -88,22 +187,33 @@ window.WeaponSmithingController = (function() {
             return;
         }
 
-        // Check for any available ingots
-        const ingots = materialsData.filter(m => m.classifications && m.classifications.includes('ingot'));
-        const availableIngots = ingots.filter(ingot => getItemCountById(ingot.id) > 0);
+        // Store current weapon type for UI refresh
+        currentWeaponType = weaponType;
 
-        if (availableIngots.length === 0) {
-            if (window.Modal) {
-                window.Modal.show({
-                    title: 'No Ingots',
-                    content: '<p style="text-align: center; color: #fca5a5;">You need a metal ingot to forge this weapon component. Smelt some ore first!</p>',
-                    buttons: [{ text: 'OK' }]
-                });
+        // Get all unique ingots from inventory with their actual names
+        const character = window.GameState ? window.GameState.getState().character : null;
+        const inventoryIngots = character && character.inventory && character.inventory.items
+            ? character.inventory.items.filter(item => item.name && item.name.includes('Ingot'))
+            : [];
+
+        // Group ingots by their exact name (to handle quality variants separately)
+        const ingotsByName = {};
+        inventoryIngots.forEach(invItem => {
+            const name = invItem.name;
+            if (!ingotsByName[name]) {
+                ingotsByName[name] = {
+                    name: name,
+                    materialId: invItem.materialId || invItem.id,
+                    count: 0
+                };
             }
-            return;
-        }
+            ingotsByName[name].count++;
+        });
 
-        // Show the forge UI with ingot selection
+        // Convert to array for dropdown
+        const availableIngots = Object.values(ingotsByName);
+
+        // Show the forge UI with ingot selection (even if no ingots available)
         showForgeUIWithSelection(weaponType, availableIngots);
     }
 
@@ -157,19 +267,26 @@ window.WeaponSmithingController = (function() {
         document.getElementById('forge-item-name').textContent = weaponType.displayName;
         document.getElementById('forge-item-description').textContent = weaponType.description;
 
+        // Calculate total ingot count
+        const totalIngotCount = availableIngots.reduce((sum, ingot) => sum + ingot.count, 0);
+        const hasIngots = totalIngotCount > 0;
+
         // Show dropdown and materials list inline
         const materialsListHTML = `
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <div class="ingot-selection-container" style="margin: 0; flex: 1;">
-                    <select id="ingot-selector">
-                        <option value="">-- Choose Ingot --</option>
-                        ${availableIngots.map(ingot => `<option value="${ingot.id}">${ingot.icon} ${ingot.name}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="material-item" style="margin: 0;">
+            <div style="display: grid; grid-template-columns: 2fr auto; gap: 0.5rem; align-items: start;">
+                <select id="ingot-selector" style="height: 100%;">
+                    <option value="">-- Choose Ingot --</option>
+                    ${availableIngots.map(ingot => {
+                        // Get material data for icon
+                        const material = materialsData.find(m => m.id === ingot.materialId);
+                        const icon = material ? material.icon : '🔶';
+                        return `<option value="${ingot.materialId}" data-name="${ingot.name}">${icon} ${ingot.name} x${ingot.count}</option>`;
+                    }).join('')}
+                </select>
+                <div class="material-item" style="margin: 0; padding: 0.5rem;">
                     <span class="material-icon">⚙️</span>
                     <span class="material-name">Metal Ingot</span>
-                    <span class="material-count sufficient">1 / 1</span>
+                    <span class="material-count ${hasIngots ? 'sufficient' : 'insufficient'}">${totalIngotCount} / 1</span>
                 </div>
             </div>
         `;
@@ -350,7 +467,10 @@ window.WeaponSmithingController = (function() {
         if (!character || !character.inventory || !character.inventory.items) return 0;
 
         return character.inventory.items.filter(item => {
-            return item.id && item.id.startsWith(itemId + '_');
+            // Check both materialId and item.id for matches
+            return (item.materialId === itemId) ||
+                   (item.id && item.id.startsWith(itemId + '_')) ||
+                   (item.id && item.id === itemId);
         }).length;
     }
 
@@ -362,7 +482,9 @@ window.WeaponSmithingController = (function() {
         if (!character || !window.Inventory) return;
 
         const itemToRemove = character.inventory.items.find(item =>
-            item.id && item.id.startsWith(itemId + '_')
+            (item.materialId === itemId) ||
+            (item.id && item.id.startsWith(itemId + '_')) ||
+            (item.id && item.id === itemId)
         );
 
         if (itemToRemove) {

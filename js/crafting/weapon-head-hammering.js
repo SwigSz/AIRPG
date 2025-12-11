@@ -190,119 +190,99 @@ window.WeaponHeadHammering = (function() {
     }
 
     /**
-     * Create the hammering UI elements
+     * Initialize the hammering UI elements (they already exist in HTML)
      */
     function createHammeringUI() {
-        const weaponForgeArea = document.getElementById('weapon-forge-work-area');
-        if (!weaponForgeArea) {
-            console.error('[WeaponHeadHammering] Could not find weapon-forge-work-area');
-            return;
-        }
+        console.log('[WeaponHeadHammering] Initializing hammering UI...');
 
-        // Add class to override grid layout
-        weaponForgeArea.classList.add('hammering-active');
-
-        // Clear any existing content
-        weaponForgeArea.innerHTML = '';
-
-        // Create hammering scene container
-        const hammeringContainer = document.createElement('div');
-        hammeringContainer.className = 'hammering-scene';
-        hammeringContainer.innerHTML = `
-            <!-- Forge (left) -->
-            <div class="hammering-forge" id="hammering-forge">
-                <div class="forge-fire">🔥</div>
-                <div class="forge-label">Forge</div>
-            </div>
-
-            <!-- Anvil (center-right) -->
-            <div class="hammering-anvil" id="hammering-anvil">
-                <div class="anvil-surface">
-                    <div class="anvil-icon">🔨</div>
-                </div>
-                <div class="anvil-label">Anvil</div>
-            </div>
-
-            <!-- Quenching Barrel (right, not interactive in phase 1) -->
-            <div class="hammering-barrel" id="hammering-barrel">
-                <div class="barrel-icon">🛢️</div>
-                <div class="barrel-label">Quenching<br/>(Phase 2)</div>
-            </div>
-
-            <!-- Metal Sprite (draggable) -->
-            <div class="metal-sprite" id="metal-sprite" style="left: 50%; top: 50%;">
-                <img id="metal-sprite-img" src="" alt="Metal" />
-            </div>
-
-            <!-- Timing Bar (appears during minigame) -->
-            <div class="timing-bar-container" id="timing-bar-container" style="display: none;">
-                <div class="timing-bar-label">Press SPACE when marker is in the zone!</div>
-                <div class="timing-bar" id="timing-bar">
-                    <div class="timing-zone bad-zone" style="left: 0%; width: 100%;"></div>
-                    <div class="timing-zone ok-zone" id="ok-zone-left"></div>
-                    <div class="timing-zone perfect-zone" id="perfect-zone"></div>
-                    <div class="timing-zone ok-zone" id="ok-zone-right"></div>
-                    <div class="timing-marker" id="timing-marker" style="left: 0%;"></div>
-                </div>
-                <button class="cancel-minigame-btn" id="cancel-minigame-btn">Cancel</button>
-            </div>
-
-            <!-- Hammer Progress -->
-            <div class="hammer-progress">
-                <div class="hammer-progress-label">Hammers: <span id="hammer-count">0</span> / <span id="hammer-total">5</span></div>
-                <div class="hammer-progress-bar">
-                    <div class="hammer-progress-fill" id="hammer-progress-fill" style="width: 0%;"></div>
-                </div>
-            </div>
-
-            <!-- Quality Display -->
-            <div class="hammering-quality">
-                <div class="quality-label">Quality: <span id="current-quality">0%</span></div>
-            </div>
-        `;
-
-        weaponForgeArea.appendChild(hammeringContainer);
-
-        // Debug: Log container dimensions
-        console.log('[WeaponHeadHammering] Hammering scene dimensions:', {
-            width: hammeringContainer.offsetWidth,
-            height: hammeringContainer.offsetHeight,
-            position: window.getComputedStyle(hammeringContainer).position
-        });
-
-        // Debug: Log element positions after DOM update
-        setTimeout(() => {
-            const forge = document.getElementById('hammering-forge');
-            const anvil = document.getElementById('hammering-anvil');
-            const barrel = document.getElementById('hammering-barrel');
-
-            console.log('[WeaponHeadHammering] Element positions:', {
-                forge: forge ? { left: forge.style.left, top: forge.style.top, computed: window.getComputedStyle(forge).left } : 'not found',
-                anvil: anvil ? { left: anvil.style.left, top: anvil.style.top, computed: window.getComputedStyle(anvil).left } : 'not found',
-                barrel: barrel ? { right: barrel.style.right, top: barrel.style.top, computed: window.getComputedStyle(barrel).right } : 'not found'
-            });
-        }, 100);
-
-        // Get metal sprite element
+        // Get references to existing elements
         metalSprite = document.getElementById('metal-sprite');
         metalSpriteImg = document.getElementById('metal-sprite-img');
 
+        if (!metalSprite || !metalSpriteImg) {
+            console.error('[WeaponHeadHammering] Could not find metal sprite elements');
+            return;
+        }
+
+        // Reset metal sprite position to center (will move to anvil when dragged)
+        metalSprite.style.left = '50%';
+        metalSprite.style.top = '50%';
+
         // Update hammer total display
-        document.getElementById('hammer-total').textContent = totalHammersNeeded;
+        const hammerTotal = document.getElementById('hammer-total');
+        if (hammerTotal) {
+            hammerTotal.textContent = totalHammersNeeded;
+        }
+
+        // Reset progress
+        const hammerCount = document.getElementById('hammer-count');
+        if (hammerCount) {
+            hammerCount.textContent = '0';
+        }
+
+        const progressFill = document.getElementById('hammer-progress-fill');
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+
+        // Reset quality
+        const qualityDisplay = document.getElementById('current-quality');
+        if (qualityDisplay) {
+            qualityDisplay.textContent = '0%';
+        }
+
+        // Hide timing bar initially
+        const timingBarContainer = document.getElementById('timing-bar-container');
+        if (timingBarContainer) {
+            timingBarContainer.style.display = 'none';
+        }
+
+        console.log('[WeaponHeadHammering] Hammering UI initialized');
     }
 
     /**
-     * Destroy the hammering UI
+     * Reset the hammering UI to initial state
      */
     function destroyHammeringUI() {
-        const weaponForgeArea = document.getElementById('weapon-forge-work-area');
-        if (!weaponForgeArea) return;
+        console.log('[WeaponHeadHammering] Resetting hammering UI...');
 
-        // Remove hammering-active class
-        weaponForgeArea.classList.remove('hammering-active');
+        // Reset metal sprite position
+        const metalSprite = document.getElementById('metal-sprite');
+        if (metalSprite) {
+            metalSprite.style.left = '50%';
+            metalSprite.style.top = '50%';
+        }
 
-        // Clear all content
-        weaponForgeArea.innerHTML = '';
+        // Reset metal sprite image
+        const metalSpriteImg = document.getElementById('metal-sprite-img');
+        if (metalSpriteImg) {
+            metalSpriteImg.src = '';
+        }
+
+        // Hide timing bar
+        const timingBarContainer = document.getElementById('timing-bar-container');
+        if (timingBarContainer) {
+            timingBarContainer.style.display = 'none';
+        }
+
+        // Reset progress
+        const hammerCount = document.getElementById('hammer-count');
+        if (hammerCount) {
+            hammerCount.textContent = '0';
+        }
+
+        const progressFill = document.getElementById('hammer-progress-fill');
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+
+        // Reset quality
+        const qualityDisplay = document.getElementById('current-quality');
+        if (qualityDisplay) {
+            qualityDisplay.textContent = '0%';
+        }
+
+        console.log('[WeaponHeadHammering] Hammering UI reset');
     }
 
     /**
