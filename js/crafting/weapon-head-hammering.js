@@ -296,8 +296,8 @@ window.WeaponHeadHammering = (function() {
         let metalName = selectedMetal.name;
         // Remove " Ingot" suffix if it exists
         metalName = metalName.replace(/\s*Ingot$/i, '');
-        // Capitalize first letter
-        metalName = metalName.charAt(0).toUpperCase() + metalName.slice(1);
+        // Convert to lowercase for folder name (e.g., "Copper" -> "copper")
+        metalName = metalName.toLowerCase();
         spritePath = spritePath.replace('{metal}', metalName);
 
         metalSpriteImg.src = spritePath;

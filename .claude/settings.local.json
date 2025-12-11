@@ -11,7 +11,9 @@
       "Bash(dir:*)",
       "Bash(test:*)",
       "Bash(powershell -Command \"Get-Content ''c:\\Users\\maufo\\AI-RPG\\index.html'' | Select-Object -Last 100\")",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

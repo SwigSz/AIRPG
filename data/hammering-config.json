@@ -64,9 +64,9 @@
       "displayName": "Shortsword Head",
       "description": "A short, single-edged blade",
       "spriteConfig": {
-        "ingot": "assets/sprites/{metal}Ingot.png",
-        "worked": "assets/sprites/Worked{metal}Ingot.png",
-        "finished": "assets/sprites/{metal}_Shortsword_Head.png"
+        "ingot": "assets/sprites/smithing/{metal}/ingot.png",
+        "worked": "assets/sprites/smithing/{metal}/worked_ingot.png",
+        "finished": "assets/sprites/smithing/{metal}/shortsword_head.png"
       }
     },
     {
@@ -75,9 +75,9 @@
       "displayName": "Longsword Blade",
       "description": "A long, double-edged blade",
       "spriteConfig": {
-        "ingot": "assets/sprites/{metal}Ingot.png",
-        "worked": "assets/sprites/Worked{metal}Ingot.png",
-        "finished": "assets/sprites/{metal}_Longsword_Blade.png"
+        "ingot": "assets/sprites/smithing/{metal}/ingot.png",
+        "worked": "assets/sprites/smithing/{metal}/worked_ingot.png",
+        "finished": "assets/sprites/smithing/{metal}/longsword_blade.png"
       }
     },
     {
@@ -86,9 +86,9 @@
       "displayName": "Greatsword Blade",
       "description": "A massive two-handed blade",
       "spriteConfig": {
-        "ingot": "assets/sprites/{metal}Ingot.png",
-        "worked": "assets/sprites/Worked{metal}Ingot.png",
-        "finished": "assets/sprites/{metal}_Greatsword_Blade.png"
+        "ingot": "assets/sprites/smithing/{metal}/ingot.png",
+        "worked": "assets/sprites/smithing/{metal}/worked_ingot.png",
+        "finished": "assets/sprites/smithing/{metal}/greatsword_blade.png"
       }
     },
     {
@@ -97,9 +97,9 @@
       "displayName": "Dagger Blade",
       "description": "A small, sharp blade",
       "spriteConfig": {
-        "ingot": "assets/sprites/{metal}Ingot.png",
-        "worked": "assets/sprites/Worked{metal}Ingot.png",
-        "finished": "assets/sprites/{metal}_Dagger_Blade.png"
+        "ingot": "assets/sprites/smithing/{metal}/ingot.png",
+        "worked": "assets/sprites/smithing/{metal}/worked_ingot.png",
+        "finished": "assets/sprites/smithing/{metal}/dagger_blade.png"
       }
     },
     {
@@ -108,9 +108,9 @@
       "displayName": "Axe Head",
       "description": "A heavy chopping head",
       "spriteConfig": {
-        "ingot": "assets/sprites/{metal}Ingot.png",
-        "worked": "assets/sprites/Worked{metal}Ingot.png",
-        "finished": "assets/sprites/{metal}_Axe_Head.png"
+        "ingot": "assets/sprites/smithing/{metal}/ingot.png",
+        "worked": "assets/sprites/smithing/{metal}/worked_ingot.png",
+        "finished": "assets/sprites/smithing/{metal}/axe_head.png"
       }
     },
     {
@@ -119,9 +119,9 @@
       "displayName": "Spear Head",
       "description": "A pointed thrusting head",
       "spriteConfig": {
-        "ingot": "assets/sprites/{metal}Ingot.png",
-        "worked": "assets/sprites/Worked{metal}Ingot.png",
-        "finished": "assets/sprites/{metal}_Spear_Head.png"
+        "ingot": "assets/sprites/smithing/{metal}/ingot.png",
+        "worked": "assets/sprites/smithing/{metal}/worked_ingot.png",
+        "finished": "assets/sprites/smithing/{metal}/spear_head.png"
       }
     }
   ],

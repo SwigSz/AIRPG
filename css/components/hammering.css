@@ -19,19 +19,31 @@
     transform: translateY(-50%);
     width: 100px;
     height: 120px;
-    background: linear-gradient(180deg, #7c2d12 0%, #991b1b 100%);
-    border: 3px solid #ea580c;
+    background: transparent;
+    border: none;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 30px rgba(234, 88, 12, 0.6);
+}
+
+.forge-sprite {
+    position: absolute;
+    width: 282px;
+    height: 282px;
+    object-fit: contain;
+    z-index: 1;
+    pointer-events: none;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
 }
 
 .forge-fire {
     font-size: 2.5rem;
     animation: flicker 1.5s infinite;
+    display: none; /* Hide emoji, sprite replaces it */
 }
 
 @keyframes flicker {
@@ -44,6 +56,9 @@
     color: #fb923c;
     font-weight: bold;
     font-size: 0.85rem;
+    position: relative;
+    z-index: 2;
+    display: none; /* Hide label */
 }
 
 /* Anvil (center-right) */
@@ -54,14 +69,23 @@
     transform: translate(-50%, -50%);
     width: 120px;
     height: 90px;
-    background: linear-gradient(180deg, #64748b 0%, #475569 100%);
-    border: 3px solid #94a3b8;
+    background: transparent;
+    border: none;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.anvil-sprite {
+    position: absolute;
+    width: 235px;
+    height: 188px;
+    object-fit: contain;
+    z-index: 1;
+    pointer-events: none;
+    transform: rotate(-90deg);
 }
 
 .anvil-surface {
@@ -72,6 +96,7 @@
 
 .anvil-icon {
     font-size: 2.2rem;
+    display: none; /* Hide emoji, sprite replaces it */
 }
 
 .anvil-label {
@@ -79,6 +104,9 @@
     color: #cbd5e1;
     font-weight: bold;
     font-size: 0.85rem;
+    position: relative;
+    z-index: 2;
+    display: none; /* Hide label */
 }
 
 /* Quenching Barrel (right side, not interactive in phase 1) */
