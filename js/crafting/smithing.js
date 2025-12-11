@@ -205,6 +205,13 @@ window.Smithing = (function() {
         document.getElementById('forge-default-state').style.display = 'none';
         document.getElementById('forge-work-state').style.display = 'flex';
 
+        // Show ingot smelting work area, hide weapon hammering work area
+        const ingotForgeArea = document.querySelector('.forge-work-area');
+        const weaponForgeArea = document.getElementById('weapon-forge-work-area');
+
+        if (ingotForgeArea) ingotForgeArea.style.display = 'grid';
+        if (weaponForgeArea) weaponForgeArea.style.display = 'none';
+
         // Update forge UI with selected item info
         updateForgeUI();
 
@@ -214,6 +221,12 @@ window.Smithing = (function() {
 
     // Update forge UI with selected item details
     function updateForgeUI() {
+        // Don't update if weapon hammering is active
+        if (window.WeaponHeadHammering && window.WeaponHeadHammering.isActive()) {
+            console.log('[Smithing] Skipping forge UI update - weapon hammering is active');
+            return;
+        }
+
         const oreMaterial = getMaterial(selectedOreId);
         const ingotMaterial = getMaterial(selectedIngotId);
 

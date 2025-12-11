@@ -146,23 +146,31 @@ window.WeaponSmithingController = (function() {
         if (defaultState) defaultState.style.display = 'none';
         if (workState) workState.style.display = 'flex';
 
+        // Hide ingot smelting work area, show weapon hammering work area
+        const ingotForgeArea = document.querySelector('.forge-work-area');
+        const weaponForgeArea = document.getElementById('weapon-forge-work-area');
+
+        if (ingotForgeArea) ingotForgeArea.style.display = 'none';
+        if (weaponForgeArea) weaponForgeArea.style.display = 'grid';
+
         // Update forge item info
         document.getElementById('forge-item-name').textContent = weaponType.displayName;
         document.getElementById('forge-item-description').textContent = weaponType.description;
 
-        // Show generic materials list with dropdown
+        // Show dropdown and materials list inline
         const materialsListHTML = `
-            <div class="material-item">
-                <span class="material-icon">⚙️</span>
-                <span class="material-name">Metal Ingot</span>
-                <span class="material-count sufficient">1 / 1</span>
-            </div>
-            <div class="ingot-selection-container">
-                <label for="ingot-selector">Select Ingot:</label>
-                <select id="ingot-selector">
-                    <option value="">-- Choose Ingot --</option>
-                    ${availableIngots.map(ingot => `<option value="${ingot.id}">${ingot.icon} ${ingot.name}</option>`).join('')}
-                </select>
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div class="ingot-selection-container" style="margin: 0; flex: 1;">
+                    <select id="ingot-selector">
+                        <option value="">-- Choose Ingot --</option>
+                        ${availableIngots.map(ingot => `<option value="${ingot.id}">${ingot.icon} ${ingot.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="material-item" style="margin: 0;">
+                    <span class="material-icon">⚙️</span>
+                    <span class="material-name">Metal Ingot</span>
+                    <span class="material-count sufficient">1 / 1</span>
+                </div>
             </div>
         `;
 

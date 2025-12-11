@@ -74,6 +74,9 @@ window.WeaponHeadHammering = (function() {
     let onConsumeIngot = null;
     let ingotConsumed = false;
 
+    // State flag
+    let isHammeringActive = false;
+
     /**
      * Initialize the hammering system
      */
@@ -137,6 +140,9 @@ window.WeaponHeadHammering = (function() {
         isMinigameActive = false;
         timingBarActive = false;
 
+        // Set active flag
+        isHammeringActive = true;
+
         // Initialize UI
         createHammeringUI();
         loadSprite();
@@ -151,6 +157,9 @@ window.WeaponHeadHammering = (function() {
      */
     function stop() {
         console.log('[WeaponHeadHammering] Stopping hammering phase');
+
+        // Clear active flag
+        isHammeringActive = false;
 
         // Clear intervals
         if (temperatureUpdateInterval) {
@@ -184,20 +193,17 @@ window.WeaponHeadHammering = (function() {
      * Create the hammering UI elements
      */
     function createHammeringUI() {
-        const forgeWorkArea = document.querySelector('.forge-work-area');
-        if (!forgeWorkArea) {
-            console.error('[WeaponHeadHammering] Could not find forge-work-area');
+        const weaponForgeArea = document.getElementById('weapon-forge-work-area');
+        if (!weaponForgeArea) {
+            console.error('[WeaponHeadHammering] Could not find weapon-forge-work-area');
             return;
         }
 
-        // Add class to override flex centering
-        forgeWorkArea.classList.add('hammering-active');
+        // Add class to override grid layout
+        weaponForgeArea.classList.add('hammering-active');
 
-        // Hide existing forge elements
-        const existingElements = forgeWorkArea.querySelectorAll(':scope > *');
-        existingElements.forEach(el => {
-            el.style.display = 'none';
-        });
+        // Clear any existing content
+        weaponForgeArea.innerHTML = '';
 
         // Create hammering scene container
         const hammeringContainer = document.createElement('div');
@@ -255,7 +261,7 @@ window.WeaponHeadHammering = (function() {
             </div>
         `;
 
-        forgeWorkArea.appendChild(hammeringContainer);
+        weaponForgeArea.appendChild(hammeringContainer);
 
         // Debug: Log container dimensions
         console.log('[WeaponHeadHammering] Hammering scene dimensions:', {
@@ -289,23 +295,14 @@ window.WeaponHeadHammering = (function() {
      * Destroy the hammering UI
      */
     function destroyHammeringUI() {
-        const forgeWorkArea = document.querySelector('.forge-work-area');
-        if (!forgeWorkArea) return;
+        const weaponForgeArea = document.getElementById('weapon-forge-work-area');
+        if (!weaponForgeArea) return;
 
         // Remove hammering-active class
-        forgeWorkArea.classList.remove('hammering-active');
+        weaponForgeArea.classList.remove('hammering-active');
 
-        // Remove hammering scene
-        const hammeringScene = forgeWorkArea.querySelector('.hammering-scene');
-        if (hammeringScene) {
-            hammeringScene.remove();
-        }
-
-        // Restore hidden elements
-        const hiddenElements = forgeWorkArea.querySelectorAll(':scope > *');
-        hiddenElements.forEach(el => {
-            el.style.display = '';
-        });
+        // Clear all content
+        weaponForgeArea.innerHTML = '';
     }
 
     /**
@@ -970,7 +967,8 @@ window.WeaponHeadHammering = (function() {
     return {
         init,
         start,
-        stop
+        stop,
+        isActive: () => isHammeringActive
     };
 
 })();

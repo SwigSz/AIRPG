@@ -14,15 +14,7 @@
     transition: opacity 0.3s ease;
 }
 
-/* Override parent grid/flex layout when hammering scene is present */
-.forge-work-area:has(.hammering-scene),
-.forge-work-area.hammering-active {
-    display: block !important;
-    align-items: initial !important;
-    justify-content: initial !important;
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
-}
+/* No longer needed - weapon forge has its own work area */
 
 /* Forge (left side) */
 .hammering-forge {
@@ -342,6 +334,29 @@
     background: #1e293b;
     color: #cbd5e1;
     padding: 0.5rem;
+}
+
+/* Weapon Forge Work Area (separate from ingot smelting) */
+.weapon-forge-work-area {
+    position: relative;
+    display: grid;
+    grid-template-columns: 40px 80px 200px 100px 60px;
+    grid-template-rows: 80px 200px 50px;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    background-color: #0f172a;
+    border: 2px solid #334155;
+    border-radius: 8px;
+    padding: 2rem;
+    min-height: 350px;
+}
+
+/* When hammering scene is active, use block layout instead of grid */
+.weapon-forge-work-area.hammering-active {
+    display: block !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
 }
 
 /* Responsive adjustments */
