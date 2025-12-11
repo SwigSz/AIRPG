@@ -1,0 +1,149 @@
+{
+  "temperatureColors": {
+    "unheated": "#B87333",
+    "red": "#dc2626",
+    "orangeRed": "#ea580c",
+    "yellow": "#fef08a",
+    "brightYellow": "#fde047",
+    "white": "#ffffff"
+  },
+  "materialTiers": [
+    {
+      "tier": 1,
+      "name": "Tier 1 (Copper/Tin)",
+      "hammerToWorked": 2,
+      "hammerToWeapon": 3,
+      "perfectZoneWidth": 15,
+      "okZoneWidth": 10,
+      "heatingRate": 1.5,
+      "coolingRate": 0.3,
+      "overheatThreshold": 85,
+      "extremeOverheatThreshold": 95
+    },
+    {
+      "tier": 2,
+      "name": "Tier 2 (Iron)",
+      "hammerToWorked": 3,
+      "hammerToWeapon": 3,
+      "perfectZoneWidth": 12,
+      "okZoneWidth": 8,
+      "heatingRate": 1.8,
+      "coolingRate": 0.4,
+      "overheatThreshold": 85,
+      "extremeOverheatThreshold": 95
+    },
+    {
+      "tier": 3,
+      "name": "Tier 3 (Steel/Gold/Silver)",
+      "hammerToWorked": 4,
+      "hammerToWeapon": 3,
+      "perfectZoneWidth": 10,
+      "okZoneWidth": 7,
+      "heatingRate": 2.0,
+      "coolingRate": 0.5,
+      "overheatThreshold": 85,
+      "extremeOverheatThreshold": 95
+    },
+    {
+      "tier": 4,
+      "name": "Tier 4 (Mithril)",
+      "hammerToWorked": 5,
+      "hammerToWeapon": 3,
+      "perfectZoneWidth": 8,
+      "okZoneWidth": 6,
+      "heatingRate": 2.5,
+      "coolingRate": 0.6,
+      "overheatThreshold": 85,
+      "extremeOverheatThreshold": 95
+    }
+  ],
+  "weaponTypes": [
+    {
+      "id": "shortsword",
+      "name": "Shortsword",
+      "displayName": "Shortsword Head",
+      "description": "A short, single-edged blade",
+      "spriteConfig": {
+        "ingot": "assets/sprites/{metal}Ingot.png",
+        "worked": "assets/sprites/Worked{metal}Ingot.png",
+        "finished": "assets/sprites/{metal}_Shortsword_Head.png"
+      }
+    },
+    {
+      "id": "longsword",
+      "name": "Longsword",
+      "displayName": "Longsword Blade",
+      "description": "A long, double-edged blade",
+      "spriteConfig": {
+        "ingot": "assets/sprites/{metal}Ingot.png",
+        "worked": "assets/sprites/Worked{metal}Ingot.png",
+        "finished": "assets/sprites/{metal}_Longsword_Blade.png"
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Greatsword",
+      "displayName": "Greatsword Blade",
+      "description": "A massive two-handed blade",
+      "spriteConfig": {
+        "ingot": "assets/sprites/{metal}Ingot.png",
+        "worked": "assets/sprites/Worked{metal}Ingot.png",
+        "finished": "assets/sprites/{metal}_Greatsword_Blade.png"
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Dagger",
+      "displayName": "Dagger Blade",
+      "description": "A small, sharp blade",
+      "spriteConfig": {
+        "ingot": "assets/sprites/{metal}Ingot.png",
+        "worked": "assets/sprites/Worked{metal}Ingot.png",
+        "finished": "assets/sprites/{metal}_Dagger_Blade.png"
+      }
+    },
+    {
+      "id": "axe",
+      "name": "Axe",
+      "displayName": "Axe Head",
+      "description": "A heavy chopping head",
+      "spriteConfig": {
+        "ingot": "assets/sprites/{metal}Ingot.png",
+        "worked": "assets/sprites/Worked{metal}Ingot.png",
+        "finished": "assets/sprites/{metal}_Axe_Head.png"
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Spear",
+      "displayName": "Spear Head",
+      "description": "A pointed thrusting head",
+      "spriteConfig": {
+        "ingot": "assets/sprites/{metal}Ingot.png",
+        "worked": "assets/sprites/Worked{metal}Ingot.png",
+        "finished": "assets/sprites/{metal}_Spear_Head.png"
+      }
+    }
+  ],
+  "qualityBonuses": {
+    "perfect": 5,
+    "ok": 3,
+    "bad": 1
+  },
+  "temperatureThresholds": {
+    "unworkable": 20,
+    "workableMin": 20,
+    "optimalMin": 45,
+    "optimalMax": 75,
+    "overheat": 85,
+    "extremeOverheat": 95
+  },
+  "hammeringDefaults": {
+    "temperatureDecreasePerHit": 5,
+    "minigameDimOpacity": 0.3,
+    "markerSpeed": 2.0,
+    "sparkCountPerfect": 15,
+    "sparkCountOK": 10,
+    "sparkCountBad": 5
+  }
+}

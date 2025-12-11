@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.SkillManager) await SkillManager.init();
     if (window.LootManager) await LootManager.init();
     if (window.Smithing) await Smithing.init();
+    if (window.WeaponHeadHammering) await WeaponHeadHammering.init();
+    if (window.WeaponSmithingController) await WeaponSmithingController.init();
 
     // Initialize UI systems (but NOT TabManager yet - wait until after save load)
     if (window.UIManager) {
@@ -284,6 +286,14 @@ function initializeTestCharacter() {
         const coal = ItemFactory.createItem('coal');
         if (coal) {
             Inventory.addItem(testCharacter.inventory, coal);
+        }
+    }
+
+    // Copper ingots for weapon head hammering testing
+    for (let i = 0; i < 3; i++) {
+        const copperIngot = ItemFactory.createItem('copper_ingot');
+        if (copperIngot) {
+            Inventory.addItem(testCharacter.inventory, copperIngot);
         }
     }
 

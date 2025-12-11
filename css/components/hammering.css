@@ -1,0 +1,382 @@
+/**
+ * Weapon Head Hammering Minigame Styles
+ */
+
+.hammering-scene {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border: 2px solid #334155;
+    border-radius: 8px;
+    overflow: visible;
+    transition: opacity 0.3s ease;
+}
+
+/* Override parent grid/flex layout when hammering scene is present */
+.forge-work-area:has(.hammering-scene),
+.forge-work-area.hammering-active {
+    display: block !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+}
+
+/* Forge (left side) */
+.hammering-forge {
+    position: absolute;
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100px;
+    height: 120px;
+    background: linear-gradient(180deg, #7c2d12 0%, #991b1b 100%);
+    border: 3px solid #ea580c;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(234, 88, 12, 0.6);
+}
+
+.forge-fire {
+    font-size: 2.5rem;
+    animation: flicker 1.5s infinite;
+}
+
+@keyframes flicker {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+.forge-label {
+    margin-top: 8px;
+    color: #fb923c;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+/* Anvil (center-right) */
+.hammering-anvil {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 90px;
+    background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+    border: 3px solid #94a3b8;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.anvil-surface {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.anvil-icon {
+    font-size: 2.2rem;
+}
+
+.anvil-label {
+    margin-top: 6px;
+    color: #cbd5e1;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+/* Quenching Barrel (right side, not interactive in phase 1) */
+.hammering-barrel {
+    position: absolute;
+    right: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 90px;
+    height: 110px;
+    background: linear-gradient(180deg, #78350f 0%, #92400e 100%);
+    border: 3px solid #a16207;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+}
+
+.barrel-icon {
+    font-size: 2.2rem;
+}
+
+.barrel-label {
+    margin-top: 6px;
+    color: #d97706;
+    font-weight: bold;
+    font-size: 0.7rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Metal Sprite (draggable) */
+.metal-sprite {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    cursor: grab;
+    transition: none; /* No transition for immediate drag response */
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+}
+
+.metal-sprite:active {
+    cursor: grabbing;
+}
+
+.metal-sprite img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: filter 0.3s ease;
+    pointer-events: none;
+}
+
+/* Timing Bar */
+.timing-bar-container {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    max-width: 90%;
+    background: rgba(15, 23, 42, 0.95);
+    border: 2px solid #475569;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+    z-index: 20;
+}
+
+.timing-bar-label {
+    text-align: center;
+    color: #cbd5e1;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.timing-bar {
+    position: relative;
+    width: 100%;
+    height: 40px; /* Thinner timing bar */
+    background: #1e293b;
+    border: 2px solid #475569;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.timing-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    opacity: 0.8;
+}
+
+.bad-zone {
+    background: #dc2626;
+}
+
+.ok-zone {
+    background: #fbbf24;
+}
+
+.perfect-zone {
+    background: #22c55e;
+}
+
+.timing-marker {
+    position: absolute;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    transition: none;
+}
+
+.cancel-minigame-btn {
+    display: block;
+    margin: 15px auto 0;
+    padding: 10px 30px;
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.cancel-minigame-btn:hover {
+    background: #b91c1c;
+}
+
+/* Hammer Progress */
+.hammer-progress {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 250px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #475569;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.hammer-progress-label {
+    text-align: center;
+    color: #cbd5e1;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.hammer-progress-bar {
+    width: 100%;
+    height: 16px;
+    background: #1e293b;
+    border: 2px solid #475569;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.hammer-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+    transition: width 0.5s ease;
+}
+
+/* Quality Display */
+.hammering-quality {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #475569;
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+
+.quality-label {
+    color: #fbbf24;
+    font-weight: bold;
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Instructions */
+.hammering-instructions {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #475569;
+    border-radius: 6px;
+    padding: 6px 10px;
+    max-width: 280px;
+    z-index: 5;
+}
+
+.hammering-instructions p {
+    color: #cbd5e1;
+    font-size: 0.7rem;
+    margin: 3px 0;
+    line-height: 1.25;
+}
+
+/* Ingot Selection Dropdown */
+.ingot-selection-container {
+    margin-top: 1rem;
+}
+
+.ingot-selection-container label {
+    color: #cbd5e1;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+#ingot-selector {
+    width: 100%;
+    padding: 0.5rem;
+    background: #1e293b;
+    color: #cbd5e1;
+    border: 2px solid #475569;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+#ingot-selector:hover {
+    border-color: #64748b;
+}
+
+#ingot-selector:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+#ingot-selector option {
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .hammering-scene {
+        height: 400px;
+    }
+
+    .timing-bar-container {
+        width: 500px;
+    }
+
+    .hammering-forge,
+    .hammering-anvil,
+    .hammering-barrel {
+        transform: translateY(-50%) scale(0.8);
+    }
+
+    .metal-sprite {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hammering-scene {
+        height: 350px;
+    }
+
+    .timing-bar-container {
+        width: 90%;
+    }
+
+    .hammering-instructions {
+        font-size: 0.75rem;
+        max-width: 250px;
+    }
+}
