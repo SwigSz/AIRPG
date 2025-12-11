@@ -778,8 +778,8 @@
                                             </div>
 
                                             <!-- Metal Sprite (draggable) -->
-                                            <div class="metal-sprite" id="metal-sprite" style="left: 50%; top: 50%;">
-                                                <img id="metal-sprite-img" src="" alt="Metal" />
+                                            <div class="metal-sprite" id="metal-sprite" style="left: 50%; top: 50%; display: none;">
+                                                <img id="metal-sprite-img" src="" alt="" />
                                             </div>
 
                                             <!-- Timing Bar (appears during minigame) -->
@@ -799,7 +799,21 @@
 
                                     </div>
 
-                                    <!-- Stage Progress Indicator -->
+                                    <!-- Weapon Hammering Progress Indicator -->
+                                    <div class="weapon-stage-progress" id="weapon-stage-progress" style="display: none;">
+                                        <div class="stage-step" data-stage="hammer">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">HAMMER</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Weapon Hammering Action Buttons -->
+                                    <div class="weapon-forge-action-bar" style="display: none;">
+                                        <button class="forge-btn forge-btn-secondary" id="cancel-weapon-forge-btn">Cancel</button>
+                                        <button class="forge-btn forge-btn-primary" id="start-weapon-forge-btn" disabled>Start Hammering</button>
+                                    </div>
+
+                                    <!-- Stage Progress Indicator (for ingot smelting) -->
                                     <div class="forge-stage-progress" id="forge-stage-progress">
                                         <div class="stage-step" data-stage="heat">
                                             <div class="stage-dot"></div>
@@ -812,7 +826,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Action Button Area -->
+                                    <!-- Action Button Area (for ingot smelting) -->
                                     <div class="forge-action-bar">
                                         <button class="forge-btn forge-btn-secondary" id="cancel-forge-btn">Cancel</button>
                                         <button class="forge-btn forge-btn-primary" id="start-forge-btn" disabled>Start Forging</button>
@@ -973,7 +987,7 @@
     <script src="js/crafting/smithing.js"></script>
     <script src="js/crafting/smithing-minigames.js"></script>
     <script src="js/crafting/weapon-head-hammering.js?v=7"></script>
-    <script src="js/crafting/weapon-smithing-controller.js?v=7"></script>
+    <script src="js/crafting/weapon-smithing-controller.js?v=18"></script>
     <script src="js/settlement/settlement.js"></script>
     <script src="js/settlement/research.js"></script>
     <script src="js/world/map.js"></script>

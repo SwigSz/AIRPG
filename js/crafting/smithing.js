@@ -191,6 +191,11 @@ window.Smithing = (function() {
         const oreId = item.dataset.oreId;
         const ingotId = item.dataset.ingotId;
 
+        // Skip if this isn't an ore/ingot item (might be weapon component)
+        if (!oreId && !ingotId) {
+            return;
+        }
+
         // Deselect all items
         document.querySelectorAll('.smithing-item').forEach(i => {
             i.classList.remove('selected');
@@ -211,6 +216,17 @@ window.Smithing = (function() {
 
         if (ingotForgeArea) ingotForgeArea.style.display = 'grid';
         if (weaponForgeArea) weaponForgeArea.style.display = 'none';
+
+        // Show ingot smelting UI elements (at bottom), hide weapon UI elements
+        const forgeStageProgress = document.getElementById('forge-stage-progress');
+        const forgeActionBar = document.querySelector('.forge-action-bar');
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        const weaponActionBar = document.querySelector('.weapon-forge-action-bar');
+
+        if (forgeStageProgress) forgeStageProgress.style.display = 'flex';
+        if (forgeActionBar) forgeActionBar.style.display = 'flex';
+        if (weaponStageProgress) weaponStageProgress.style.display = 'none';
+        if (weaponActionBar) weaponActionBar.style.display = 'none';
 
         // Update forge UI with selected item info
         updateForgeUI();

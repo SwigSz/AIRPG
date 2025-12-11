@@ -11,6 +11,8 @@ window.WeaponSmithingController = (function() {
     let materialsData = null;
     let hammeringConfig = null;
     let currentWeaponType = null; // Track current weapon type for UI refresh
+    let selectedIngotId = null; // Currently selected ingot for hammering
+    let selectedWeaponType = null; // Currently selected weapon type
 
     /**
      * Initialize the controller
@@ -40,6 +42,9 @@ window.WeaponSmithingController = (function() {
 
         // Setup tab visibility listener to refresh UI
         setupTabVisibilityListener();
+
+        // Setup weapon forge buttons
+        setupWeaponForgeButtons();
 
         console.log('[WeaponSmithingController] Initialized');
     }
@@ -74,6 +79,51 @@ window.WeaponSmithingController = (function() {
     }
 
     /**
+     * Setup weapon forge button listeners
+     */
+    function setupWeaponForgeButtons() {
+        const startBtn = document.getElementById('start-weapon-forge-btn');
+        const cancelBtn = document.getElementById('cancel-weapon-forge-btn');
+
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                if (selectedIngotId && selectedWeaponType) {
+                    startHammering(selectedIngotId, selectedWeaponType);
+                }
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', handleWeaponForgeCancel);
+        }
+    }
+
+    /**
+     * Handle weapon forge cancel
+     */
+    function handleWeaponForgeCancel() {
+        console.log('[WeaponSmithingController] Canceling weapon forge');
+
+        // Reset selection state
+        selectedIngotId = null;
+        selectedWeaponType = null;
+        currentWeaponType = null;
+
+        // Hide work state, show default state
+        const defaultState = document.getElementById('forge-default-state');
+        const workState = document.getElementById('forge-work-state');
+
+        if (defaultState) defaultState.style.display = 'flex';
+        if (workState) workState.style.display = 'none';
+
+        // Re-enable weapon component items
+        document.querySelectorAll('.smithing-item').forEach(item => {
+            item.style.pointerEvents = 'auto';
+            item.style.opacity = '1';
+        });
+    }
+
+    /**
      * Refresh the ingot dropdown with current inventory
      */
     function refreshIngotDropdown() {
@@ -90,13 +140,21 @@ window.WeaponSmithingController = (function() {
         inventoryIngots.forEach(invItem => {
             const name = invItem.name;
             if (!ingotsByName[name]) {
+                // Extract base material ID (remove instance suffix like _1765484714477_7armhdpfz)
+                let materialId = invItem.materialId;
+                if (!materialId && invItem.id) {
+                    // If materialId doesn't exist, extract from ID (e.g., copper_ingot_123_abc -> copper_ingot)
+                    materialId = invItem.id.replace(/_\d+_[a-z0-9]+$/i, '');
+                }
                 ingotsByName[name] = {
                     name: name,
-                    materialId: invItem.materialId || invItem.id,
-                    count: 0
+                    materialId: materialId,
+                    count: 0,
+                    invItems: [] // Store actual inventory items for this group
                 };
             }
             ingotsByName[name].count++;
+            ingotsByName[name].invItems.push(invItem);
         });
 
         const availableIngots = Object.values(ingotsByName);
@@ -167,6 +225,14 @@ window.WeaponSmithingController = (function() {
 
         console.log('[WeaponSmithingController] Clicked weapon component:', componentType, itemName);
 
+        // Deselect all smithing items (ingots and weapon components)
+        document.querySelectorAll('.smithing-item').forEach(i => {
+            i.classList.remove('selected');
+        });
+
+        // Select this weapon component
+        item.classList.add('selected');
+
         // For now, only handle blade types
         if (!componentType || !componentType.includes('blade')) {
             console.log('[WeaponSmithingController] Only blades are supported in Phase 1');
@@ -201,9 +267,15 @@ window.WeaponSmithingController = (function() {
         inventoryIngots.forEach(invItem => {
             const name = invItem.name;
             if (!ingotsByName[name]) {
+                // Extract base material ID (remove instance suffix like _1765484714477_7armhdpfz)
+                let materialId = invItem.materialId;
+                if (!materialId && invItem.id) {
+                    // If materialId doesn't exist, extract from ID (e.g., copper_ingot_123_abc -> copper_ingot)
+                    materialId = invItem.id.replace(/_\d+_[a-z0-9]+$/i, '');
+                }
                 ingotsByName[name] = {
                     name: name,
-                    materialId: invItem.materialId || invItem.id,
+                    materialId: materialId,
                     count: 0
                 };
             }
@@ -263,6 +335,18 @@ window.WeaponSmithingController = (function() {
         if (ingotForgeArea) ingotForgeArea.style.display = 'none';
         if (weaponForgeArea) weaponForgeArea.style.display = 'grid';
 
+        // Show weapon-specific UI elements (buttons and progress indicator)
+        const weaponActionBar = document.querySelector('.weapon-forge-action-bar');
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        if (weaponActionBar) weaponActionBar.style.display = 'flex';
+        if (weaponStageProgress) weaponStageProgress.style.display = 'flex';
+
+        // Hide ingot smelting UI elements (they're at the bottom of the shared container)
+        const forgeStageProgress = document.getElementById('forge-stage-progress');
+        const forgeActionBar = document.querySelector('.forge-action-bar');
+        if (forgeStageProgress) forgeStageProgress.style.display = 'none';
+        if (forgeActionBar) forgeActionBar.style.display = 'none';
+
         // Update forge item info
         document.getElementById('forge-item-name').textContent = weaponType.displayName;
         document.getElementById('forge-item-description').textContent = weaponType.description;
@@ -297,12 +381,51 @@ window.WeaponSmithingController = (function() {
         const dropdown = document.getElementById('ingot-selector');
         if (dropdown) {
             dropdown.addEventListener('change', (e) => {
-                const selectedIngotId = e.target.value;
-                if (selectedIngotId) {
-                    // Start hammering with selected ingot
-                    startHammering(selectedIngotId, weaponType);
+                const ingotId = e.target.value;
+
+                if (ingotId) {
+                    // Store selected ingot and weapon type
+                    selectedIngotId = ingotId;
+                    selectedWeaponType = weaponType;
+
+                    // Get metal material data for display
+                    const metal = materialsData.find(m => m.id === ingotId);
+
+                    if (metal) {
+                        // Update forge item name to include metal type
+                        document.getElementById('forge-item-name').textContent = `${weaponType.displayName} (${metal.name})`;
+
+                        // Update materials list to show selected ingot
+                        document.getElementById('forge-materials-list').innerHTML = `
+                            <div class="material-item">
+                                <span class="material-icon">${metal.icon}</span>
+                                <span class="material-name">${metal.name}</span>
+                                <span class="material-count sufficient">1 / 1 (ready)</span>
+                            </div>
+                        `;
+
+                        // Enable the "Start Hammering" button
+                        const startBtn = document.getElementById('start-weapon-forge-btn');
+                        if (startBtn) {
+                            startBtn.disabled = false;
+                        }
+                    }
+                } else {
+                    // No ingot selected - disable button
+                    selectedIngotId = null;
+                    selectedWeaponType = null;
+                    const startBtn = document.getElementById('start-weapon-forge-btn');
+                    if (startBtn) {
+                        startBtn.disabled = true;
+                    }
                 }
             });
+        }
+
+        // Initially disable the "Start Hammering" button
+        const startBtn = document.getElementById('start-weapon-forge-btn');
+        if (startBtn) {
+            startBtn.disabled = true;
         }
     }
 
@@ -344,6 +467,19 @@ window.WeaponSmithingController = (function() {
             </div>
         `;
 
+        // Hide only the "Start Hammering" button (keep Cancel button visible)
+        const startBtn = document.getElementById('start-weapon-forge-btn');
+        if (startBtn) startBtn.style.display = 'none';
+
+        // Mark the HAMMER stage as active
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        if (weaponStageProgress) {
+            const hammerStep = weaponStageProgress.querySelector('[data-stage="hammer"]');
+            if (hammerStep) {
+                hammerStep.classList.add('active');
+            }
+        }
+
         // Create callback to consume ingot when hammering actually starts
         const consumeIngotCallback = () => {
             removeItemById(ingotId);
@@ -379,6 +515,16 @@ window.WeaponSmithingController = (function() {
      */
     function handleHammeringComplete(result) {
         console.log('[WeaponSmithingController] Hammering complete:', result);
+
+        // Mark the HAMMER stage as completed
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        if (weaponStageProgress) {
+            const hammerStep = weaponStageProgress.querySelector('[data-stage="hammer"]');
+            if (hammerStep) {
+                hammerStep.classList.remove('active');
+                hammerStep.classList.add('completed');
+            }
+        }
 
         // Show completion modal
         const qualityGrade = getQualityGrade(result.quality);
@@ -440,6 +586,19 @@ window.WeaponSmithingController = (function() {
         if (window.Modal) {
             window.Modal.hide();
         }
+
+        // Reset weapon stage progress
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        if (weaponStageProgress) {
+            const hammerStep = weaponStageProgress.querySelector('[data-stage="hammer"]');
+            if (hammerStep) {
+                hammerStep.classList.remove('active', 'completed');
+            }
+        }
+
+        // Show start button again
+        const startBtn = document.getElementById('start-weapon-forge-btn');
+        if (startBtn) startBtn.style.display = 'block';
 
         // Reset to default state
         const defaultState = document.getElementById('forge-default-state');

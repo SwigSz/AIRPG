@@ -207,6 +207,7 @@ window.WeaponHeadHammering = (function() {
         // Reset metal sprite position to center (will move to anvil when dragged)
         metalSprite.style.left = '50%';
         metalSprite.style.top = '50%';
+        metalSprite.style.display = 'block'; // Make sprite visible when minigame starts
 
         // Update hammer total display
         const hammerTotal = document.getElementById('hammer-total');
@@ -251,6 +252,7 @@ window.WeaponHeadHammering = (function() {
         if (metalSprite) {
             metalSprite.style.left = '50%';
             metalSprite.style.top = '50%';
+            metalSprite.style.display = 'none'; // Hide sprite when minigame ends
         }
 
         // Reset metal sprite image
