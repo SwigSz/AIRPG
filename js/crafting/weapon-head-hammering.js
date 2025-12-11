@@ -81,13 +81,10 @@ window.WeaponHeadHammering = (function() {
      * Initialize the hammering system
      */
     async function init() {
-        console.log('[WeaponHeadHammering] Initializing...');
-
         // Load configuration
         try {
             const response = await fetch('data/hammering-config.json');
             hammeringConfig = await response.json();
-            console.log('[WeaponHeadHammering] Configuration loaded:', hammeringConfig);
         } catch (error) {
             console.error('[WeaponHeadHammering] Failed to load hammering-config.json:', error);
             return false;
@@ -104,8 +101,6 @@ window.WeaponHeadHammering = (function() {
      * @param {Function} consumeIngotCallback - Called when ingot should be consumed (optional)
      */
     function start(metal, weaponType, completeCallback, consumeIngotCallback) {
-        console.log('[WeaponHeadHammering] Starting hammering phase:', metal.name, weaponType.name);
-
         selectedMetal = {
             id: metal.id,
             name: metal.name,
@@ -148,16 +143,12 @@ window.WeaponHeadHammering = (function() {
         loadSprite();
         startTemperatureSystem();
         setupDragAndDrop();
-
-        console.log('[WeaponHeadHammering] Hammering phase started');
     }
 
     /**
      * Stop the hammering phase
      */
     function stop() {
-        console.log('[WeaponHeadHammering] Stopping hammering phase');
-
         // Clear active flag
         isHammeringActive = false;
 
@@ -193,8 +184,6 @@ window.WeaponHeadHammering = (function() {
      * Initialize the hammering UI elements (they already exist in HTML)
      */
     function createHammeringUI() {
-        console.log('[WeaponHeadHammering] Initializing hammering UI...');
-
         // Get references to existing elements
         metalSprite = document.getElementById('metal-sprite');
         metalSpriteImg = document.getElementById('metal-sprite-img');
@@ -237,16 +226,12 @@ window.WeaponHeadHammering = (function() {
         if (timingBarContainer) {
             timingBarContainer.style.display = 'none';
         }
-
-        console.log('[WeaponHeadHammering] Hammering UI initialized');
     }
 
     /**
      * Reset the hammering UI to initial state
      */
     function destroyHammeringUI() {
-        console.log('[WeaponHeadHammering] Resetting hammering UI...');
-
         // Reset metal sprite position
         const metalSprite = document.getElementById('metal-sprite');
         if (metalSprite) {
@@ -283,8 +268,6 @@ window.WeaponHeadHammering = (function() {
         if (qualityDisplay) {
             qualityDisplay.textContent = '0%';
         }
-
-        console.log('[WeaponHeadHammering] Hammering UI reset');
     }
 
     /**
@@ -318,7 +301,6 @@ window.WeaponHeadHammering = (function() {
         spritePath = spritePath.replace('{metal}', metalName);
 
         metalSpriteImg.src = spritePath;
-        console.log('[WeaponHeadHammering] Loaded sprite:', spritePath);
 
         // Apply current temperature color
         updateSpriteTemperatureColor();
@@ -407,7 +389,6 @@ window.WeaponHeadHammering = (function() {
         if (temperature >= thresholds.extremeOverheat) {
             // Extreme overheat: -10% quality per second
             averageQuality = Math.max(0, averageQuality - 10);
-            console.log('[WeaponHeadHammering] Extreme overheat! Quality penalty applied');
         } else if (temperature >= thresholds.overheat) {
             // Regular overheat: -1% quality per second
             averageQuality = Math.max(0, averageQuality - 1);
@@ -448,8 +429,6 @@ window.WeaponHeadHammering = (function() {
 
         document.addEventListener('mousemove', handleDocumentMouseMove);
         document.addEventListener('mouseup', handleDocumentMouseUp);
-
-        console.log('[WeaponHeadHammering] Started dragging');
     }
 
     /**
@@ -486,8 +465,6 @@ window.WeaponHeadHammering = (function() {
 
         // Check drop target
         checkDropTarget(event.clientX, event.clientY);
-
-        console.log('[WeaponHeadHammering] Stopped dragging');
     }
 
     /**
@@ -540,8 +517,6 @@ window.WeaponHeadHammering = (function() {
             metalSprite.style.left = '100px';
             metalSprite.style.top = '50%';
         }
-
-        console.log('[WeaponHeadHammering] Snapped to forge');
     }
 
     /**
@@ -554,8 +529,6 @@ window.WeaponHeadHammering = (function() {
             metalSprite.style.left = '50%';
             metalSprite.style.top = '50%';
         }
-
-        console.log('[WeaponHeadHammering] Snapped to anvil');
     }
 
     /**
@@ -574,7 +547,6 @@ window.WeaponHeadHammering = (function() {
 
         const workableMin = hammeringConfig.temperatureThresholds.workableMin;
         if (temperature < workableMin) {
-            console.log('[WeaponHeadHammering] Metal too cold to work');
             if (window.Modal) {
                 window.Modal.show({
                     title: 'Metal Too Cold',
@@ -592,15 +564,14 @@ window.WeaponHeadHammering = (function() {
      * Start the hammering minigame
      */
     function startHammeringMinigame() {
-        console.log('[WeaponHeadHammering] Starting hammering minigame');
-
         timingBarActive = true;
         markerPosition = 0;
         markerDirection = 1;
 
         // Randomize perfect zone position
-        const maxStart = 100 - perfectZoneWidth;
-        perfectZoneStart = Math.random() * maxStart;
+        // Account for yellow (ok) zones on both sides so they're always fully visible
+        const maxStart = 100 - perfectZoneWidth - (okZoneWidth * 2);
+        perfectZoneStart = okZoneWidth + (Math.random() * maxStart);
 
         // Show timing bar UI
         const timingBarContainer = document.getElementById('timing-bar-container');
@@ -741,6 +712,14 @@ window.WeaponHeadHammering = (function() {
 
             // Only resume if we haven't completed all hammers
             if (successfulHammers < totalHammersNeeded) {
+                // Randomize perfect zone position for next hit
+                const maxStart = 100 - perfectZoneWidth - (okZoneWidth * 2);
+                perfectZoneStart = okZoneWidth + (Math.random() * maxStart);
+
+                // Update zone positions with new random location
+                updateTimingZones();
+
+                // Resume the minigame
                 timingBarActive = true;
                 startTimingBarAnimation();
             }
@@ -776,8 +755,6 @@ window.WeaponHeadHammering = (function() {
      * Process a hammer hit
      */
     function processHammerHit(zone) {
-        console.log('[WeaponHeadHammering] Hammer hit in zone:', zone);
-
         // Award quality based on zone
         const qualityBonus = hammeringConfig.qualityBonuses[zone] || 1;
         qualityScores.push(qualityBonus);
@@ -845,7 +822,6 @@ window.WeaponHeadHammering = (function() {
      */
     function playHammerAnimation(zone) {
         // TODO: Implement hammer swing animation
-        console.log('[WeaponHeadHammering] Playing hammer animation for zone:', zone);
     }
 
     /**
@@ -862,15 +838,12 @@ window.WeaponHeadHammering = (function() {
         }
 
         // TODO: Implement particle system
-        console.log('[WeaponHeadHammering] Spawning', sparkCount, 'spark particles');
     }
 
     /**
      * End the hammering minigame
      */
     function endHammeringMinigame() {
-        console.log('[WeaponHeadHammering] Ending hammering minigame');
-
         timingBarActive = false;
 
         // Hide timing bar
@@ -895,8 +868,6 @@ window.WeaponHeadHammering = (function() {
      * Auto-cancel minigame (temperature dropped, etc.)
      */
     function autoCancelMinigame(reason) {
-        console.log('[WeaponHeadHammering] Auto-cancelling minigame:', reason);
-
         endHammeringMinigame();
 
         // Show message to user
@@ -917,12 +888,10 @@ window.WeaponHeadHammering = (function() {
             // Transition to worked metal
             currentSpriteStage = SPRITE_STAGES.WORKED;
             loadSprite();
-            console.log('[WeaponHeadHammering] Transitioned to worked metal sprite');
         } else if (currentSpriteStage === SPRITE_STAGES.WORKED && successfulHammers >= totalHammersNeeded) {
             // Transition to weapon head
             currentSpriteStage = SPRITE_STAGES.FINISHED;
             loadSprite();
-            console.log('[WeaponHeadHammering] Transitioned to weapon head sprite');
         }
     }
 
@@ -930,8 +899,6 @@ window.WeaponHeadHammering = (function() {
      * Complete the hammering phase
      */
     function completeHammeringPhase() {
-        console.log('[WeaponHeadHammering] Hammering phase complete! Quality:', averageQuality);
-
         // Stop the system
         stop();
 

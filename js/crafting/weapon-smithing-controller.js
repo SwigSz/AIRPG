@@ -18,8 +18,6 @@ window.WeaponSmithingController = (function() {
      * Initialize the controller
      */
     async function init() {
-        console.log('[WeaponSmithingController] Initializing...');
-
         // Load materials data (to get metal info)
         try {
             const materialsResponse = await fetch('data/materials.json');
@@ -45,8 +43,6 @@ window.WeaponSmithingController = (function() {
 
         // Setup weapon forge buttons
         setupWeaponForgeButtons();
-
-        console.log('[WeaponSmithingController] Initialized');
     }
 
     /**
@@ -102,8 +98,6 @@ window.WeaponSmithingController = (function() {
      * Handle weapon forge cancel
      */
     function handleWeaponForgeCancel() {
-        console.log('[WeaponSmithingController] Canceling weapon forge');
-
         // Reset selection state
         selectedIngotId = null;
         selectedWeaponType = null;
@@ -207,8 +201,6 @@ window.WeaponSmithingController = (function() {
         weaponItems.forEach(item => {
             item.addEventListener('click', handleWeaponComponentClick);
         });
-
-        console.log('[WeaponSmithingController] Attached listeners to', weaponItems.length, 'weapon components');
     }
 
     /**
@@ -223,8 +215,6 @@ window.WeaponSmithingController = (function() {
         const componentType = item.dataset.componentType;
         const itemName = item.dataset.item;
 
-        console.log('[WeaponSmithingController] Clicked weapon component:', componentType, itemName);
-
         // Deselect all smithing items (ingots and weapon components)
         document.querySelectorAll('.smithing-item').forEach(i => {
             i.classList.remove('selected');
@@ -235,7 +225,6 @@ window.WeaponSmithingController = (function() {
 
         // For now, only handle blade types
         if (!componentType || !componentType.includes('blade')) {
-            console.log('[WeaponSmithingController] Only blades are supported in Phase 1');
             if (window.Modal) {
                 window.Modal.show({
                     title: 'Not Available',
@@ -319,8 +308,6 @@ window.WeaponSmithingController = (function() {
      * Show forge UI with ingot selection dropdown
      */
     function showForgeUIWithSelection(weaponType, availableIngots) {
-        console.log('[WeaponSmithingController] Showing forge UI with ingot selection');
-
         // Hide default forge state, show work state
         const defaultState = document.getElementById('forge-default-state');
         const workState = document.getElementById('forge-work-state');
@@ -433,8 +420,6 @@ window.WeaponSmithingController = (function() {
      * Start the hammering minigame
      */
     function startHammering(ingotId, weaponType) {
-        console.log('[WeaponSmithingController] Starting hammering for:', ingotId, weaponType.name);
-
         // Get metal material data
         const metal = materialsData.find(m => m.id === ingotId);
         if (!metal) {
@@ -483,7 +468,6 @@ window.WeaponSmithingController = (function() {
         // Create callback to consume ingot when hammering actually starts
         const consumeIngotCallback = () => {
             removeItemById(ingotId);
-            console.log('[WeaponSmithingController] Ingot consumed:', ingotId);
 
             // Update materials list to show consumed
             document.getElementById('forge-materials-list').innerHTML = `
@@ -514,8 +498,6 @@ window.WeaponSmithingController = (function() {
      * Handle hammering completion callback
      */
     function handleHammeringComplete(result) {
-        console.log('[WeaponSmithingController] Hammering complete:', result);
-
         // Mark the HAMMER stage as completed
         const weaponStageProgress = document.getElementById('weapon-stage-progress');
         if (weaponStageProgress) {
