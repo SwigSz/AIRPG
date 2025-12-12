@@ -166,5 +166,40 @@
       "adequate": { "min": 50, "label": "Adequate Quench" },
       "poor": { "min": 0, "label": "Poor Quench" }
     }
+  },
+  "grindingConfig": {
+    "fillBar": {
+      "baseSpeed": 150,
+      "tierSpeedMultipliers": {
+        "1": 1.0,
+        "2": 1.1,
+        "3": 1.2,
+        "4": 1.3
+      },
+      "height": 300,
+      "width": 60,
+      "targetLineThickness": 12,
+      "qualityLossPer10Pixels": 1
+    },
+    "visual": {
+      "grindingWheelSize": 180,
+      "weaponPositionX": 65,
+      "weaponPositionY": 50,
+      "sparkParticleCount": 25,
+      "fillBarPositionX": 15,
+      "fillBarPositionY": 50
+    },
+    "weaponPassRequirements": {
+      "shortsword": 3,
+      "longsword": 4,
+      "greatsword": 5,
+      "dagger": 2,
+      "axe": 3,
+      "spear": 3
+    },
+    "targetLineRange": {
+      "min": 25,
+      "max": 75
+    }
   }
 }

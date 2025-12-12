@@ -87,7 +87,6 @@
     max-height: 80vh;
     overflow-y: auto;
     position: relative;
-    margin-right: 50%;
 }
 
 .modal-close {

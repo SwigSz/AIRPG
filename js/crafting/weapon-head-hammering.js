@@ -138,6 +138,9 @@ window.WeaponHeadHammering = (function() {
         // Set active flag
         isHammeringActive = true;
 
+        // Remove any existing listeners first (in case of restart without full cleanup)
+        removeDragAndDropListeners();
+
         // Initialize UI
         createHammeringUI();
         loadSprite();
@@ -193,10 +196,16 @@ window.WeaponHeadHammering = (function() {
             return;
         }
 
-        // Reset metal sprite position to center (will move to anvil when dragged)
+        // CRITICAL: Reset ALL sprite styles to ensure it's draggable
         metalSprite.style.left = '50%';
         metalSprite.style.top = '50%';
-        metalSprite.style.display = 'block'; // Make sprite visible when minigame starts
+        metalSprite.style.right = 'auto'; // Clear any right positioning from grinding
+        metalSprite.style.display = 'block';
+        metalSprite.style.cursor = 'grab'; // Ensure grab cursor
+        metalSprite.style.pointerEvents = 'auto'; // Ensure pointer events work
+        metalSprite.style.transition = 'none'; // No transition initially
+        metalSprite.style.opacity = '1'; // Ensure visible
+        metalSprite.style.filter = 'none'; // Clear any filters
 
         // Update hammer total display
         const hammerTotal = document.getElementById('hammer-total');
@@ -232,12 +241,18 @@ window.WeaponHeadHammering = (function() {
      * Reset the hammering UI to initial state
      */
     function destroyHammeringUI() {
-        // Reset metal sprite position
+        // Reset metal sprite position and ALL styles
         const metalSprite = document.getElementById('metal-sprite');
         if (metalSprite) {
             metalSprite.style.left = '50%';
             metalSprite.style.top = '50%';
+            metalSprite.style.right = 'auto';
             metalSprite.style.display = 'none'; // Hide sprite when minigame ends
+            metalSprite.style.cursor = 'grab';
+            metalSprite.style.pointerEvents = 'auto';
+            metalSprite.style.transition = 'none';
+            metalSprite.style.opacity = '1';
+            metalSprite.style.filter = 'none';
         }
 
         // Reset metal sprite image
@@ -418,9 +433,12 @@ window.WeaponHeadHammering = (function() {
      * Remove drag and drop listeners
      */
     function removeDragAndDropListeners() {
-        if (!metalSprite) return;
+        // Always get fresh reference to ensure we remove from correct element
+        const sprite = document.getElementById('metal-sprite');
+        if (sprite) {
+            sprite.removeEventListener('mousedown', handleSpriteMouseDown);
+        }
 
-        metalSprite.removeEventListener('mousedown', handleSpriteMouseDown);
         document.removeEventListener('mousemove', handleDocumentMouseMove);
         document.removeEventListener('mouseup', handleDocumentMouseUp);
 

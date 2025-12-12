@@ -557,22 +557,93 @@ window.WeaponSmithingController = (function() {
             }
         }
 
-        // Calculate average quality from hammering and quenching
-        const averageQuality = (result.hammeringQuality + result.quenchingQuality) / 2;
-        const qualityGrade = getQualityGrade(averageQuality);
+        // Automatically proceed to grinding phase after brief delay
+        setTimeout(() => {
+            startGrindingPhase(result);
+        }, 500);
+    }
 
-        // Show completion modal
+    /**
+     * Start the grinding phase (Phase 3)
+     */
+    function startGrindingPhase(quenchingResult) {
+        // Close modal
+        if (window.Modal) {
+            window.Modal.hide();
+        }
+
+        // Mark grinding stage as active
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        if (weaponStageProgress) {
+            const grindStep = weaponStageProgress.querySelector('[data-stage="grind"]');
+            if (grindStep) {
+                grindStep.classList.add('active');
+            }
+        }
+
+        // Transition from forge area to grinding area
+        const hammeringArea = document.querySelector('.hammering-area');
+        const grindingArea = document.getElementById('grinding-area');
+
+        if (hammeringArea && grindingArea) {
+            // Show grinding area first (off-screen to the right)
+            grindingArea.style.display = 'block';
+
+            // Force reflow to ensure display change is applied
+            grindingArea.offsetHeight;
+
+            // Start slide transition on next frame
+            requestAnimationFrame(() => {
+                hammeringArea.classList.add('transitioning-out');
+                grindingArea.classList.add('active');
+            });
+
+            // Wait for transition to complete, then start grinding
+            setTimeout(() => {
+                if (window.WeaponHeadGrinding) {
+                    window.WeaponHeadGrinding.start(
+                        quenchingResult.metal,
+                        quenchingResult.weaponType,
+                        quenchingResult.hammeringQuality,
+                        quenchingResult.quenchingQuality,
+                        hammeringConfig.grindingConfig,
+                        handleGrindingComplete
+                    );
+                } else {
+                    console.error('[WeaponSmithingController] WeaponHeadGrinding module not loaded');
+                }
+            }, 1300); // Match CSS transition duration (1.2s + 100ms buffer)
+        }
+    }
+
+    /**
+     * Handle grinding completion callback
+     */
+    function handleGrindingComplete(result) {
+        // Mark grinding stage as completed
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        if (weaponStageProgress) {
+            const grindStep = weaponStageProgress.querySelector('[data-stage="grind"]');
+            if (grindStep) {
+                grindStep.classList.remove('active');
+                grindStep.classList.add('completed');
+            }
+        }
+
+        const qualityGrade = getQualityGrade(result.finalQuality);
+
+        // Show final completion modal
         if (window.Modal) {
             window.Modal.show({
-                title: 'Quenching Complete!',
+                title: 'Weapon Head Complete!',
                 content: `
                     <div style="text-align: center;">
                         <p style="font-size: 1.2rem; color: #cbd5e1; margin: 1rem 0;">
-                            The ${result.weaponType.displayName} has been quenched!
+                            ${result.weaponType.displayName} crafting complete!
                         </p>
-                        <div style="font-size: 3rem; margin: 1rem 0;">💧</div>
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #f59e0b; margin: 1rem 0;">
-                            ${qualityGrade} Quality
+                        <div style="font-size: 3rem; margin: 1rem 0;">⚔️</div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #f59e0b; margin: 1rem 0;">
+                            ${qualityGrade}
                         </div>
                         <div style="color: #94a3b8; margin: 0.5rem 0;">
                             Hammering: ${Math.round(result.hammeringQuality)}%
@@ -580,26 +651,51 @@ window.WeaponSmithingController = (function() {
                         <div style="color: #94a3b8; margin: 0.5rem 0;">
                             Quenching: ${Math.round(result.quenchingQuality)}%
                         </div>
-                        <div style="color: #cbd5e1; font-weight: bold; margin: 1rem 0;">
-                            Average Quality: ${Math.round(averageQuality)}%
+                        <div style="color: #94a3b8; margin: 0.5rem 0;">
+                            Grinding: ${Math.round(result.grindingQuality)}%
                         </div>
-                        <p style="color: #64748b; margin-top: 1.5rem; font-size: 0.9rem;">
-                            Phase 3 (Grinding) coming soon!
+                        <div style="color: #10b981; font-weight: bold; font-size: 1.3rem; margin: 1.5rem 0;">
+                            Final Quality: ${Math.round(result.finalQuality)}%
+                        </div>
+                        <p style="color: #64748b; margin-top: 1rem; font-size: 0.9rem;">
+                            The weapon head has been added to your inventory.
                         </p>
                     </div>
                 `,
                 buttons: [
                     {
-                        text: 'Finish',
+                        text: 'Complete',
                         class: 'modal-btn-primary',
-                        onClick: resetForgeUI
+                        onClick: () => finalizeWeaponHead(result)
                     }
                 ]
             });
         } else {
-            alert(`Quenching complete! Average Quality: ${Math.round(averageQuality)}%`);
-            resetForgeUI();
+            alert(`Weapon head complete! Final Quality: ${Math.round(result.finalQuality)}%`);
+            finalizeWeaponHead(result);
         }
+    }
+
+    /**
+     * Finalize weapon head and add to inventory
+     */
+    function finalizeWeaponHead(result) {
+        // Close modal
+        if (window.Modal) {
+            window.Modal.hide();
+        }
+
+        // TODO: Create weapon head item and add to inventory
+        // For now, just log the result
+        console.log('[WeaponSmithingController] Weapon head crafted:', {
+            type: result.weaponType.id,
+            metal: result.metal.id,
+            quality: Math.round(result.finalQuality),
+            grade: getQualityGrade(result.finalQuality)
+        });
+
+        // Reset UI
+        resetForgeUI();
     }
 
     /**
@@ -633,6 +729,31 @@ window.WeaponSmithingController = (function() {
             window.WeaponHeadQuenching.stop();
         }
 
+        // Clean up grinding minigame
+        if (window.WeaponHeadGrinding && window.WeaponHeadGrinding.stop) {
+            window.WeaponHeadGrinding.stop();
+        }
+
+        // Reset metal sprite back to hammering scene
+        const metalSprite = document.getElementById('metal-sprite');
+        const hammeringScene = document.querySelector('.hammering-scene');
+        if (metalSprite && hammeringScene && metalSprite.parentElement !== hammeringScene) {
+            hammeringScene.appendChild(metalSprite);
+        }
+
+        // Reset grinding area
+        const grindingArea = document.getElementById('grinding-area');
+        if (grindingArea) {
+            grindingArea.style.display = 'none';
+            grindingArea.classList.remove('active');
+        }
+
+        // Reset hammering area
+        const hammeringArea = document.querySelector('.hammering-area');
+        if (hammeringArea) {
+            hammeringArea.classList.remove('transitioning-out');
+        }
+
         // Reset weapon stage progress
         const weaponStageProgress = document.getElementById('weapon-stage-progress');
         if (weaponStageProgress) {
@@ -644,6 +765,11 @@ window.WeaponSmithingController = (function() {
             const quenchStep = weaponStageProgress.querySelector('[data-stage="quench"]');
             if (quenchStep) {
                 quenchStep.classList.remove('active', 'completed');
+            }
+
+            const grindStep = weaponStageProgress.querySelector('[data-stage="grind"]');
+            if (grindStep) {
+                grindStep.classList.remove('active', 'completed');
             }
         }
 

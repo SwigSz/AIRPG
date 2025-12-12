@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="css/components/tooltips.css">
     <link rel="stylesheet" href="css/components/notifications.css">
     <link rel="stylesheet" href="css/components/hammering.css">
+    <link rel="stylesheet" href="css/components/grinding.css">
 </head>
 <body>
     <!-- Main Container - 100vh x 100vw -->
@@ -741,8 +742,10 @@
                                     <!-- Weapon Forge Work Area (for hammering weapons) -->
                                     <div class="weapon-forge-work-area" id="weapon-forge-work-area" style="display: none;">
 
-                                        <!-- Hammering Scene -->
-                                        <div class="hammering-scene" id="hammering-scene">
+                                        <!-- Hammering Area (Phases 1 & 2) -->
+                                        <div class="hammering-area">
+                                            <!-- Hammering Scene -->
+                                            <div class="hammering-scene" id="hammering-scene">
 
                                             <!-- Hammer Progress (Top) -->
                                             <div class="hammer-progress">
@@ -804,6 +807,36 @@
                                                 <button class="cancel-minigame-btn" id="cancel-minigame-btn">Cancel</button>
                                             </div>
 
+                                            </div>
+                                        </div>
+
+                                        <!-- Grinding Area (Phase 3) -->
+                                        <div class="grinding-area" id="grinding-area" style="display: none;">
+                                            <div class="grinding-scene">
+
+                                                <!-- Grinding Wheel (left-center) -->
+                                                <div class="grinding-wheel-container" id="grinding-wheel">
+                                                    <img src="assets/sprites/smithing/Grindstone.gif" alt="Grindstone" class="grinding-wheel-sprite" />
+                                                </div>
+
+                                                <!-- Fill Bar (left side) -->
+                                                <div class="grinding-fill-bar-container" id="grinding-fill-bar-container" style="display: none;">
+                                                    <div class="grinding-fill-bar">
+                                                        <div class="grinding-fill-bar-fill" id="grinding-fill-bar-fill"></div>
+                                                        <div class="grinding-target-line" id="grinding-target-line"></div>
+                                                    </div>
+                                                    <div class="grinding-fill-bar-label">Hold M1 to Fill</div>
+                                                </div>
+
+                                                <!-- Pass Counter -->
+                                                <div class="grinding-pass-counter" id="grinding-pass-counter">Pass 1 of 3</div>
+
+                                                <!-- Anvil (right side, for visual display) -->
+                                                <div class="grinding-anvil">
+                                                    <img src="assets/sprites/smithing/Anvil.png" alt="Anvil" class="grinding-anvil-sprite" />
+                                                </div>
+
+                                            </div>
                                         </div>
 
                                     </div>
@@ -813,6 +846,16 @@
                                         <div class="stage-step" data-stage="hammer">
                                             <div class="stage-dot"></div>
                                             <div class="stage-name">HAMMER</div>
+                                        </div>
+                                        <div class="stage-connector"></div>
+                                        <div class="stage-step" data-stage="quench">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">QUENCH</div>
+                                        </div>
+                                        <div class="stage-connector"></div>
+                                        <div class="stage-step" data-stage="grind">
+                                            <div class="stage-dot"></div>
+                                            <div class="stage-name">GRIND</div>
                                         </div>
                                     </div>
 
@@ -997,6 +1040,7 @@
     <script src="js/crafting/smithing-minigames.js"></script>
     <script src="js/crafting/weapon-head-hammering.js?v=7"></script>
     <script src="js/crafting/weapon-head-quenching.js?v=1"></script>
+    <script src="js/crafting/weapon-head-grinding.js?v=1"></script>
     <script src="js/crafting/weapon-smithing-controller.js?v=18"></script>
     <script src="js/settlement/settlement.js"></script>
     <script src="js/settlement/research.js"></script>
