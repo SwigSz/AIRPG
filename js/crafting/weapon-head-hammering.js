@@ -376,6 +376,10 @@ window.WeaponHeadHammering = (function() {
                 autoCancelMinigame('Metal too cold to work');
             }
         }
+
+        // Update sprite color and hammer button based on temperature
+        updateSpriteTemperatureColor();
+        updateHammerButton();
     }
 
     /**
@@ -402,7 +406,12 @@ window.WeaponHeadHammering = (function() {
         if (!metalSprite) return;
 
         metalSprite.addEventListener('mousedown', handleSpriteMouseDown);
-        metalSprite.addEventListener('click', handleSpriteClick);
+
+        // Setup hammer button
+        const hammerButton = document.getElementById('hammer-button');
+        if (hammerButton) {
+            hammerButton.addEventListener('click', handleHammerButtonClick);
+        }
     }
 
     /**
@@ -412,9 +421,14 @@ window.WeaponHeadHammering = (function() {
         if (!metalSprite) return;
 
         metalSprite.removeEventListener('mousedown', handleSpriteMouseDown);
-        metalSprite.removeEventListener('click', handleSpriteClick);
         document.removeEventListener('mousemove', handleDocumentMouseMove);
         document.removeEventListener('mouseup', handleDocumentMouseUp);
+
+        // Remove hammer button listener
+        const hammerButton = document.getElementById('hammer-button');
+        if (hammerButton) {
+            hammerButton.removeEventListener('click', handleHammerButtonClick);
+        }
     }
 
     /**
@@ -529,18 +543,35 @@ window.WeaponHeadHammering = (function() {
             metalSprite.style.left = '50%';
             metalSprite.style.top = '50%';
         }
+
+        // Show hammer button when metal is on anvil and hot enough
+        updateHammerButton();
     }
 
     /**
-     * Handle sprite click (start minigame if conditions are met)
+     * Update hammer button visibility and state
      */
-    function handleSpriteClick(event) {
-        event.preventDefault();
+    function updateHammerButton() {
+        const hammerButton = document.getElementById('hammer-button');
+        if (!hammerButton) return;
 
-        // Can only start minigame if:
-        // 1. Metal is on anvil
-        // 2. Temperature is workable (red or hotter)
-        // 3. Minigame is not already active
+        const workableMin = hammeringConfig.temperatureThresholds.workableMin;
+        const isOnAnvil = currentPosition === METAL_POSITIONS.ANVIL;
+        const isHotEnough = temperature >= workableMin;
+
+        if (isOnAnvil && !timingBarActive) {
+            hammerButton.style.display = 'flex';
+            hammerButton.disabled = !isHotEnough;
+        } else {
+            hammerButton.style.display = 'none';
+        }
+    }
+
+    /**
+     * Handle hammer button click
+     */
+    function handleHammerButtonClick(event) {
+        event.preventDefault();
 
         if (timingBarActive) return;
         if (currentPosition !== METAL_POSITIONS.ANVIL) return;
