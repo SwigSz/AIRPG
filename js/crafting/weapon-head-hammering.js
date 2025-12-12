@@ -930,8 +930,53 @@ window.WeaponHeadHammering = (function() {
      * Complete the hammering phase
      */
     function completeHammeringPhase() {
-        // Stop the system
-        stop();
+        // Clear intervals but DON'T hide the sprite (needed for quenching)
+        if (temperatureUpdateInterval) {
+            clearInterval(temperatureUpdateInterval);
+            temperatureUpdateInterval = null;
+        }
+
+        if (overheatPenaltyInterval) {
+            clearInterval(overheatPenaltyInterval);
+            overheatPenaltyInterval = null;
+        }
+
+        if (timingBarInterval) {
+            clearInterval(timingBarInterval);
+            timingBarInterval = null;
+        }
+
+        if (timingBarAnimationId) {
+            cancelAnimationFrame(timingBarAnimationId);
+            timingBarAnimationId = null;
+        }
+
+        // Remove event listeners
+        removeDragAndDropListeners();
+
+        // Hide UI elements (but keep sprite visible)
+        const timingBarContainer = document.getElementById('timing-bar-container');
+        if (timingBarContainer) {
+            timingBarContainer.style.display = 'none';
+        }
+
+        // Keep sprite visible at center with finished weapon sprite
+        if (metalSprite) {
+            metalSprite.style.transition = ''; // Clear any transitions
+            metalSprite.style.left = '50%';
+            metalSprite.style.top = '50%';
+            metalSprite.style.display = 'block'; // Keep visible!
+            metalSprite.style.filter = 'none'; // Remove temperature color
+            metalSprite.style.opacity = '1'; // Ensure fully visible
+        }
+
+        // Ensure the sprite image is loaded with finished weapon sprite
+        if (currentSpriteStage === SPRITE_STAGES.FINISHED) {
+            loadSprite();
+        }
+
+        // Clear active flag
+        isHammeringActive = false;
 
         // Call completion callback
         if (onComplete) {

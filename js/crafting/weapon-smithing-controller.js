@@ -508,29 +508,83 @@ window.WeaponSmithingController = (function() {
             }
         }
 
-        // Show completion modal
-        const qualityGrade = getQualityGrade(result.quality);
+        // Activate quenching stage
+        const quenchStep = weaponStageProgress.querySelector('[data-stage="quench"]');
+        if (quenchStep) {
+            quenchStep.classList.add('active');
+        }
 
+        // Automatically start quenching phase (no modal)
+        startQuenching(result);
+    }
+
+    /**
+     * Start the quenching phase
+     */
+    function startQuenching(hammeringResult) {
+        // Get metal data
+        const metal = materialsData.find(m => m.id === hammeringResult.metal.id);
+        if (!metal) {
+            console.error('[WeaponSmithingController] Metal not found:', hammeringResult.metal.id);
+            return;
+        }
+
+        // Start quenching minigame
+        if (window.WeaponHeadQuenching) {
+            window.WeaponHeadQuenching.start(
+                metal,
+                hammeringResult.weaponType,
+                hammeringResult.quality,
+                hammeringConfig.quenchingConfig,
+                handleQuenchingComplete
+            );
+        } else {
+            console.error('[WeaponSmithingController] WeaponHeadQuenching module not loaded');
+        }
+    }
+
+    /**
+     * Handle quenching completion callback
+     */
+    function handleQuenchingComplete(result) {
+        // Mark quenching stage as completed
+        const weaponStageProgress = document.getElementById('weapon-stage-progress');
+        if (weaponStageProgress) {
+            const quenchStep = weaponStageProgress.querySelector('[data-stage="quench"]');
+            if (quenchStep) {
+                quenchStep.classList.remove('active');
+                quenchStep.classList.add('completed');
+            }
+        }
+
+        // Calculate average quality from hammering and quenching
+        const averageQuality = (result.hammeringQuality + result.quenchingQuality) / 2;
+        const qualityGrade = getQualityGrade(averageQuality);
+
+        // Show completion modal
         if (window.Modal) {
             window.Modal.show({
-                title: 'Hammering Complete!',
+                title: 'Quenching Complete!',
                 content: `
                     <div style="text-align: center;">
                         <p style="font-size: 1.2rem; color: #cbd5e1; margin: 1rem 0;">
-                            You've forged a ${result.weaponType.displayName}!
+                            The ${result.weaponType.displayName} has been quenched!
                         </p>
-                        <div style="font-size: 3rem; margin: 1rem 0;">🔨</div>
+                        <div style="font-size: 3rem; margin: 1rem 0;">💧</div>
                         <div style="font-size: 1.5rem; font-weight: 700; color: #f59e0b; margin: 1rem 0;">
                             ${qualityGrade} Quality
                         </div>
                         <div style="color: #94a3b8; margin: 0.5rem 0;">
-                            Quality: ${Math.round(result.quality)}%
+                            Hammering: ${Math.round(result.hammeringQuality)}%
                         </div>
                         <div style="color: #94a3b8; margin: 0.5rem 0;">
-                            Metal: ${result.metal.name}
+                            Quenching: ${Math.round(result.quenchingQuality)}%
+                        </div>
+                        <div style="color: #cbd5e1; font-weight: bold; margin: 1rem 0;">
+                            Average Quality: ${Math.round(averageQuality)}%
                         </div>
                         <p style="color: #64748b; margin-top: 1.5rem; font-size: 0.9rem;">
-                            Phase 2 (Quenching) and Phase 3 (Grinding) coming soon!
+                            Phase 3 (Grinding) coming soon!
                         </p>
                     </div>
                 `,
@@ -543,7 +597,7 @@ window.WeaponSmithingController = (function() {
                 ]
             });
         } else {
-            alert(`Hammering complete! Quality: ${Math.round(result.quality)}%`);
+            alert(`Quenching complete! Average Quality: ${Math.round(averageQuality)}%`);
             resetForgeUI();
         }
     }
@@ -569,12 +623,27 @@ window.WeaponSmithingController = (function() {
             window.Modal.hide();
         }
 
+        // Clean up hammering minigame
+        if (window.WeaponHeadHammering && window.WeaponHeadHammering.stop) {
+            window.WeaponHeadHammering.stop();
+        }
+
+        // Clean up quenching minigame
+        if (window.WeaponHeadQuenching && window.WeaponHeadQuenching.stop) {
+            window.WeaponHeadQuenching.stop();
+        }
+
         // Reset weapon stage progress
         const weaponStageProgress = document.getElementById('weapon-stage-progress');
         if (weaponStageProgress) {
             const hammerStep = weaponStageProgress.querySelector('[data-stage="hammer"]');
             if (hammerStep) {
                 hammerStep.classList.remove('active', 'completed');
+            }
+
+            const quenchStep = weaponStageProgress.querySelector('[data-stage="quench"]');
+            if (quenchStep) {
+                quenchStep.classList.remove('active', 'completed');
             }
         }
 

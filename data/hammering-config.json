@@ -145,5 +145,26 @@
     "sparkCountPerfect": 15,
     "sparkCountOK": 10,
     "sparkCountBad": 5
+  },
+  "quenchingConfig": {
+    "timing": {
+      "bubbleDuration": 3.0,
+      "optimalWindow": 1.0,
+      "earlyPenaltyRate": 33.33,
+      "latePenaltyRate": 50.0
+    },
+    "visual": {
+      "bubbleCount": 20,
+      "steamParticleCount": 15,
+      "submersionDepth": 0.7,
+      "barrelWaterLevel": 0.65
+    },
+    "qualityGrades": {
+      "perfect": { "min": 95, "label": "Perfect Quench!" },
+      "excellent": { "min": 80, "label": "Excellent Quench" },
+      "good": { "min": 65, "label": "Good Quench" },
+      "adequate": { "min": 50, "label": "Adequate Quench" },
+      "poor": { "min": 0, "label": "Poor Quench" }
+    }
   }
 }
