@@ -95,7 +95,7 @@ const Settlement = (() => {
                 'data-settlement-tab',             // Data attribute
                 'settlement-',                     // Content ID prefix
                 '-content',                        // Content ID suffix
-                updateUI                           // Callback on tab change
+                onSubTabChange                     // Callback on tab change
             );
         }
 
@@ -237,8 +237,29 @@ const Settlement = (() => {
                 'data-settlement-tab',
                 'settlement-',
                 '-content',
-                updateUI
+                onSubTabChange
             );
+        }
+    }
+
+    /**
+     * Called when sub-tab changes - only updates the active tab content, NOT the header
+     */
+    function onSubTabChange(tabName) {
+        // Sync with GameState to ensure we have the latest reference
+        const gameState = window.GameState?.getState();
+        if (gameState && gameState.settlement) {
+            state.settlement = gameState.settlement;
+        }
+
+        if (!state.settlement) return;
+
+        // Only update the specific tab content that's now active
+        // DO NOT update header bar or resources panel
+        if (tabName === 'buildings') {
+            updateBuildingsTab();
+        } else if (tabName === 'population') {
+            updatePopulationTab();
         }
     }
 
@@ -269,16 +290,32 @@ const Settlement = (() => {
 
     function updateHeaderBar() {
         const s = state.settlement;
-        document.getElementById('settlement-civ-name').textContent = s.name;
+
+        // Only update if the value has changed (prevents flashing)
+        const civNameEl = document.getElementById('settlement-civ-name');
+        if (civNameEl.textContent !== s.name) {
+            civNameEl.textContent = s.name;
+        }
 
         // Support both old and new population format
         const popText = s.population?.total !== undefined
             ? `${s.population.total}/${s.population.max}`
             : s.population || 0;
-        document.getElementById('settlement-header-pop').textContent = popText;
+        const popEl = document.getElementById('settlement-header-pop');
+        if (popEl.textContent !== popText) {
+            popEl.textContent = popText;
+        }
 
-        document.getElementById('settlement-header-morale').textContent = `${s.morale}%`;
-        document.getElementById('settlement-header-day').textContent = s.day;
+        const moraleText = `${s.morale}%`;
+        const moraleEl = document.getElementById('settlement-header-morale');
+        if (moraleEl.textContent !== moraleText) {
+            moraleEl.textContent = moraleText;
+        }
+
+        const dayEl = document.getElementById('settlement-header-day');
+        if (dayEl.textContent !== s.day.toString()) {
+            dayEl.textContent = s.day;
+        }
 
         // Update top bar settlement info (real-time updates)
         // Only show if camp has been placed
