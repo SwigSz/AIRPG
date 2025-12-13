@@ -44,6 +44,15 @@ const DebugMenu = (() => {
                         </div>
                     </div>
 
+                    <div class="debug-menu-section">
+                        <h3>Materials</h3>
+                        <div class="debug-buttons">
+                            <button class="btn" id="debug-give-tin-materials">
+                                <span>⬜ Give 3x Tin Ingots + Ores</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="debug-menu-info">
                         <small style="opacity: 0.7;">Press ~ to close</small>
                     </div>
@@ -71,6 +80,12 @@ const DebugMenu = (() => {
         const giveXpBtn = document.getElementById('debug-give-xp');
         if (giveXpBtn) {
             giveXpBtn.addEventListener('click', () => giveXP(9999));
+        }
+
+        // Give Tin Materials button
+        const giveTinBtn = document.getElementById('debug-give-tin-materials');
+        if (giveTinBtn) {
+            giveTinBtn.addEventListener('click', () => giveTinMaterials());
         }
     }
 
@@ -150,6 +165,57 @@ const DebugMenu = (() => {
         // Update UI - use the global updateTopBar function
         if (window.updateTopBar) {
             updateTopBar(character);
+        }
+
+        // Auto-save
+        if (window.SaveSystem) {
+            SaveSystem.save();
+        }
+    }
+
+    /**
+     * Give tin materials (ingots and ores) to the player
+     */
+    function giveTinMaterials() {
+        if (!character) {
+            console.error('No character reference available');
+            return;
+        }
+
+        // Use ItemFactory to create tin materials
+        if (!window.ItemFactory) {
+            console.error('ItemFactory not available');
+            return;
+        }
+
+        let itemsAdded = 0;
+
+        // Add 3 tin ingots
+        for (let i = 0; i < 3; i++) {
+            const tinIngot = ItemFactory.createItem('tin_ingot');
+            if (tinIngot) {
+                Inventory.addItem(character.inventory, tinIngot);
+                itemsAdded++;
+            }
+        }
+
+        // Add 3 tin ores
+        for (let i = 0; i < 3; i++) {
+            const tinOre = ItemFactory.createItem('tin_ore');
+            if (tinOre) {
+                Inventory.addItem(character.inventory, tinOre);
+                itemsAdded++;
+            }
+        }
+
+        console.log(`Debug: Gave ${itemsAdded} tin materials to player`);
+
+        // Show feedback message
+        showFeedback('Gave 3x Tin Ingots + 3x Tin Ores!');
+
+        // Update UI
+        if (window.updateUI) {
+            updateUI();
         }
 
         // Auto-save

@@ -1291,6 +1291,7 @@
     width: 40px;
     height: 200px;
     position: relative;
+    margin-left: -30px; /* Move left by 30px */
 }
 
 .gauge-gradient {
@@ -1352,51 +1353,36 @@
 .bellows-container {
     grid-column: 2;
     grid-row: 2;
-    width: 80px;
+    width: 120px;
     height: 120px;
-    cursor: pointer;
     user-select: none;
     transition: opacity 0.2s ease;
-}
-
-.bellows-container.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.bellows-container.active .bellows {
-    transform: scaleY(0.8);
-}
-
-.bellows {
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: transform 0.1s ease;
+    margin-top: 80px; /* Move down by 80px total */
 }
 
-.bellows-body {
-    width: 60px;
-    height: 80px;
-    background: linear-gradient(135deg, #7c2d12 0%, #9a3412 50%, #7c2d12 100%);
-    border: 2px solid #451a03;
-    border-radius: 10px;
-    position: relative;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.bellows-container.disabled {
+    opacity: 0.4;
 }
 
-.bellows-handle {
-    width: 40px;
-    height: 8px;
-    background-color: #451a03;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+.bellows-sprite {
+    width: 120px;
+    height: auto;
+    object-fit: contain;
+    transition: filter 0.1s ease;
+}
+
+.bellows-hint {
+    margin-top: 4px;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    display: none; /* Hidden by default, shown when minigame starts */
 }
 
 /* Crucible (Center-Left) */

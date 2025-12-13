@@ -344,9 +344,57 @@ window.WeaponHeadHammering = (function() {
             color = hammeringConfig.temperatureColors.white;
         }
 
-        // Apply color tint using CSS filter
-        // This is a simple approach - a more sophisticated method would use canvas or SVG filters
-        metalSpriteImg.style.filter = `drop-shadow(0 0 10px ${color}) brightness(${1 + (temperature / 100)})`;
+        // Apply realistic heating effect using CSS filters
+        // Creates a red-hot metal appearance that transitions through heating stages
+        // Uses sepia to add warm/red tones that work on all metal colors (especially light ones like tin)
+
+        let filterString = '';
+
+        if (temperature < 30) {
+            // Cool - slight warmth, minimal brightness
+            const warmth = temperature / 30; // 0 to 1
+            filterString = `
+                drop-shadow(0 0 8px ${color})
+                sepia(${warmth * 0.15})
+                saturate(${1 + warmth * 0.2})
+                brightness(${1 + warmth * 0.05})
+            `;
+        } else if (temperature < 60) {
+            // Red hot - strong red/orange tint using sepia + hue-rotate
+            const redHeat = (temperature - 30) / 30; // 0 to 1
+            filterString = `
+                drop-shadow(0 0 12px ${color})
+                sepia(${0.4 + redHeat * 0.4})
+                hue-rotate(-15deg)
+                saturate(${1.5 + redHeat * 0.8})
+                brightness(${1.1 + redHeat * 0.25})
+                contrast(${1.05 + redHeat * 0.1})
+            `;
+        } else if (temperature < 85) {
+            // Orange-yellow hot - reduce sepia, shift hue toward yellow
+            const orangeHeat = (temperature - 60) / 25; // 0 to 1
+            filterString = `
+                drop-shadow(0 0 15px ${color})
+                sepia(${0.8 - orangeHeat * 0.4})
+                hue-rotate(${-15 + orangeHeat * 25}deg)
+                saturate(${2.3 - orangeHeat * 0.5})
+                brightness(${1.35 + orangeHeat * 0.35})
+                contrast(${1.15})
+            `;
+        } else {
+            // White hot - minimal sepia, very bright
+            const whiteHeat = (temperature - 85) / 15; // 0 to 1
+            filterString = `
+                drop-shadow(0 0 20px ${color})
+                sepia(${0.4 - whiteHeat * 0.3})
+                hue-rotate(${10 + whiteHeat * 5}deg)
+                saturate(${1.8 - whiteHeat * 1.0})
+                brightness(${1.7 + whiteHeat * 0.6})
+                contrast(${1.15 + whiteHeat * 0.1})
+            `;
+        }
+
+        metalSpriteImg.style.filter = filterString.replace(/\s+/g, ' ').trim();
     }
 
     /**

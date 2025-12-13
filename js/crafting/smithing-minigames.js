@@ -223,9 +223,15 @@ window.SmithingMinigames = (function() {
             bellowsContainer.classList.add('disabled');
         }
 
-        // Add event listeners
-        bellowsContainer.addEventListener('mousedown', handleBellowsMouseDown);
-        bellowsContainer.addEventListener('touchstart', handleBellowsMouseDown);
+        // Show the "Hold SPACE" hint
+        const bellowsHint = bellowsContainer.querySelector('.bellows-hint');
+        if (bellowsHint) {
+            bellowsHint.style.display = 'block';
+        }
+
+        // Add spacebar event listeners
+        document.addEventListener('keydown', handleBellowsKeyDown);
+        document.addEventListener('keyup', handleBellowsKeyUp);
     }
 
     // Remove bellows event listeners
@@ -233,18 +239,26 @@ window.SmithingMinigames = (function() {
         const bellowsContainer = document.getElementById('bellows-container');
         if (!bellowsContainer) return;
 
-        bellowsContainer.removeEventListener('mousedown', handleBellowsMouseDown);
-        bellowsContainer.removeEventListener('touchstart', handleBellowsMouseDown);
-        document.removeEventListener('mouseup', handleBellowsMouseUp);
-        document.removeEventListener('touchend', handleBellowsMouseUp);
+        document.removeEventListener('keydown', handleBellowsKeyDown);
+        document.removeEventListener('keyup', handleBellowsKeyUp);
 
         bellowsContainer.classList.add('disabled');
         bellowsContainer.classList.remove('active');
+
+        // Hide the "Hold SPACE" hint
+        const bellowsHint = bellowsContainer.querySelector('.bellows-hint');
+        if (bellowsHint) {
+            bellowsHint.style.display = 'none';
+        }
     }
 
-    // Handle bellows mouse down
-    function handleBellowsMouseDown(event) {
-        event.preventDefault();
+    // Handle bellows spacebar press
+    function handleBellowsKeyDown(event) {
+        // Only activate bellows with spacebar
+        if (event.code !== 'Space') return;
+
+        // Prevent if already active
+        if (bellowsHoldStartTime) return;
 
         // Can't use bellows if there's no coal
         if (coalInPit <= 0) {
@@ -252,23 +266,30 @@ window.SmithingMinigames = (function() {
             return;
         }
 
+        event.preventDefault();
+
         bellowsHoldStartTime = Date.now();
+
+        // Change sprite to closed
+        const bellowsSprite = document.getElementById('bellows-sprite');
+        if (bellowsSprite) {
+            bellowsSprite.src = 'assets/sprites/smithing/BellowsClosed.png';
+        }
 
         const bellowsContainer = document.getElementById('bellows-container');
         if (bellowsContainer) {
             bellowsContainer.classList.add('active');
         }
-
-        // Add global mouse up listener
-        document.addEventListener('mouseup', handleBellowsMouseUp);
-        document.addEventListener('touchend', handleBellowsMouseUp);
     }
 
-    // Handle bellows mouse up
-    function handleBellowsMouseUp(event) {
-        event.preventDefault();
+    // Handle bellows spacebar release
+    function handleBellowsKeyUp(event) {
+        // Only respond to spacebar
+        if (event.code !== 'Space') return;
 
         if (!bellowsHoldStartTime) return;
+
+        event.preventDefault();
 
         const holdDuration = Date.now() - bellowsHoldStartTime;
         const holdRatio = Math.min(holdDuration / BELLOWS_HOLD_DURATION, 1);
@@ -281,14 +302,16 @@ window.SmithingMinigames = (function() {
 
         bellowsHoldStartTime = null;
 
+        // Change sprite back to open
+        const bellowsSprite = document.getElementById('bellows-sprite');
+        if (bellowsSprite) {
+            bellowsSprite.src = 'assets/sprites/smithing/BellowsOpen.png';
+        }
+
         const bellowsContainer = document.getElementById('bellows-container');
         if (bellowsContainer) {
             bellowsContainer.classList.remove('active');
         }
-
-        // Remove global listeners
-        document.removeEventListener('mouseup', handleBellowsMouseUp);
-        document.removeEventListener('touchend', handleBellowsMouseUp);
     }
 
     // Start coal consumption timer

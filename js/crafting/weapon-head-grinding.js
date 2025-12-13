@@ -198,6 +198,13 @@ window.WeaponHeadGrinding = (function() {
         // Hide fill bar initially
         fillBarContainer.style.display = 'none';
 
+        // Initialize target line position off-screen to prevent flash
+        // (it will be properly positioned when startNextPass is called)
+        if (targetLine) {
+            targetLine.style.bottom = '-100px'; // Position off-screen initially
+            targetLine.style.height = `${grindingConfig.fillBar.targetLineThickness}px`;
+        }
+
         // Create particle container
         if (grindingScene) {
             particleContainer = document.createElement('div');
@@ -471,23 +478,38 @@ window.WeaponHeadGrinding = (function() {
      * Evaluate the current pass quality
      */
     function evaluatePass() {
-        // Calculate distance from target line center in pixels
-        const pixelsOff = Math.abs((fillPercentage - targetPercentage) / 100 * grindingConfig.fillBar.height);
-
-        // New scoring system:
-        // - Landing on target line (within thickness) = (100 / totalPasses)%
-        // - Each pixel off = -1% penalty
+        // Target line boundaries (in percentage)
+        // The target line has thickness, so we need top and bottom boundaries
         const halfThickness = grindingConfig.fillBar.targetLineThickness / 2;
+        const thicknessPercent = (grindingConfig.fillBar.targetLineThickness / grindingConfig.fillBar.height) * 100;
+        const targetLineBottom = targetPercentage; // Bottom edge of target line
+        const targetLineTop = targetPercentage + thicknessPercent; // Top edge of target line
+
+        // Check if fill bar's current position is within target line boundaries
+        let pixelsOff;
+        if (fillPercentage >= targetLineBottom && fillPercentage <= targetLineTop) {
+            // Fill bar is within target line - perfect!
+            pixelsOff = 0;
+        } else if (fillPercentage < targetLineBottom) {
+            // Fill bar is below target line - calculate distance from bottom edge
+            pixelsOff = (targetLineBottom - fillPercentage) / 100 * grindingConfig.fillBar.height;
+        } else {
+            // Fill bar is above target line - calculate distance from top edge
+            pixelsOff = (fillPercentage - targetLineTop) / 100 * grindingConfig.fillBar.height;
+        }
+
+        // Scoring system:
+        // - Landing within target line boundaries = (100 / totalPasses)%
+        // - Each pixel off = -1% penalty
         const perfectScore = 100 / totalPasses; // e.g., 25% for 4 passes
 
         let passQuality;
-        if (pixelsOff <= halfThickness) {
+        if (pixelsOff === 0) {
             // Perfect hit - full score for this pass
             passQuality = perfectScore;
         } else {
-            // Missed - lose 1% per pixel off from edge of target line
-            const pixelsOffFromEdge = pixelsOff - halfThickness;
-            passQuality = perfectScore - pixelsOffFromEdge;
+            // Missed - lose 1% per pixel off
+            passQuality = perfectScore - pixelsOff;
             passQuality = Math.max(0, passQuality); // Floor at 0
         }
 

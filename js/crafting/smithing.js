@@ -278,7 +278,7 @@ window.Smithing = (function() {
                 <span class="material-icon">${oreMaterial.icon}</span>
                 <span class="material-name">${oreMaterial.name}</span>
                 <span class="material-count ${isSufficient ? 'sufficient' : 'insufficient'}">
-                    ${oresOwned} / ${oresRequired}
+                    ${oresOwned}/${oresRequired} ores
                 </span>
             </div>
         `;
