@@ -71,6 +71,11 @@ const TabManager = (() => {
         if (tabName === 'inventory' && window.renderEquipmentUI) {
             renderEquipmentUI();
         }
+
+        // Trigger crafting UI update when switching to crafting tab
+        if (tabName === 'crafting' && window.Crafting && window.Crafting.renderWeaponCategories) {
+            Crafting.renderWeaponCategories();
+        }
     }
 
     function toggleRightSidebarContent(tabName) {

@@ -472,6 +472,11 @@ const Research = (() => {
             EventSystem.emit('research-completed', { nodeId, node });
         }
 
+        // Update crafting UI to show newly unlocked recipes
+        if (window.Crafting && window.Crafting.renderWeaponCategories) {
+            Crafting.renderWeaponCategories();
+        }
+
         // Save state
         if (window.SaveSystem) {
             SaveSystem.save();

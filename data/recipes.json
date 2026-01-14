@@ -44,7 +44,8 @@
       "category": "tools",
       "unlockRequirements": {
         "level": 1,
-        "skills": []
+        "skills": [],
+        "research": "basic_tools"
       },
       "inputs": [
         { "itemId": "stick", "count": 1 },
@@ -63,7 +64,8 @@
       "category": "tools",
       "unlockRequirements": {
         "level": 1,
-        "skills": []
+        "skills": [],
+        "research": "basic_tools"
       },
       "inputs": [
         { "itemId": "stick", "count": 1 },

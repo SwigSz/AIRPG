@@ -704,6 +704,54 @@ const Crafting = (() => {
         }
     }
 
+    /**
+     * Check if a recipe's requirements are met
+     * @param {Object} recipe - Recipe object from recipes.json
+     * @returns {boolean} - True if all requirements are met
+     */
+    function checkRecipeRequirements(recipeId) {
+        // Find the recipe in the recipes array
+        const recipe = recipes.find(r => r.id === recipeId);
+        if (!recipe) return true; // If no recipe found, allow it (might be hardcoded weapon)
+
+        // If no unlock requirements defined, recipe is always available
+        if (!recipe.unlockRequirements) return true;
+
+        const requirements = recipe.unlockRequirements;
+        const state = window.GameState ? window.GameState.getState() : null;
+
+        // Check research requirements
+        if (requirements.research) {
+            if (!state || !state.researchedNodes) return false;
+            if (!state.researchedNodes.includes(requirements.research)) {
+                return false;
+            }
+        }
+
+        // Check level requirements
+        if (requirements.level) {
+            const character = state ? state.character : null;
+            if (!character || character.level < requirements.level) {
+                return false;
+            }
+        }
+
+        // Check skill requirements
+        if (requirements.skills && requirements.skills.length > 0) {
+            const character = state ? state.character : null;
+            if (!character || !character.skills) return false;
+
+            for (const skillReq of requirements.skills) {
+                const skill = character.skills.find(s => s.name === skillReq.name);
+                if (!skill || skill.level < skillReq.level) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     async function init() {
         // Crafting initializing
 
@@ -845,7 +893,10 @@ const Crafting = (() => {
             const itemsList = document.createElement('div');
             itemsList.className = `weapon-category-items ${category.expanded ? 'expanded' : ''}`;
 
-            category.items.forEach(item => {
+            // Filter items based on requirements
+            const availableItems = category.items.filter(item => checkRecipeRequirements(item.id));
+
+            availableItems.forEach(item => {
                 const itemEl = document.createElement('div');
                 itemEl.className = `weapon-type-item ${item.id === currentSelectedWeapon ? 'selected' : ''}`;
                 itemEl.textContent = item.name;
@@ -1069,7 +1120,8 @@ const Crafting = (() => {
 
     return {
         init,
-        refreshFromSaveData
+        refreshFromSaveData,
+        renderWeaponCategories
     };
 })();
 
