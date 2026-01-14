@@ -462,6 +462,40 @@
       "requirements": {},
       "stackable": false,
       "value": 10
+    },
+    {
+      "id": "makeshift_axe",
+      "name": "Makeshift Axe",
+      "icon": "🪓",
+      "description": "A primitive axe bound together with plant fiber. Fragile but functional for basic woodcutting.",
+      "classifications": ["tool", "one-handed", "craftable"],
+      "rarity": "common",
+      "stats": {
+        "damage": 5,
+        "weight": 2,
+        "durability": 30,
+        "woodcutting": 1
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 5
+    },
+    {
+      "id": "makeshift_pickaxe",
+      "name": "Makeshift Pickaxe",
+      "icon": "⛏️",
+      "description": "A rudimentary pickaxe lashed together with fiber. Barely holds together but can mine basic materials.",
+      "classifications": ["tool", "one-handed", "craftable"],
+      "rarity": "common",
+      "stats": {
+        "damage": 4,
+        "weight": 3,
+        "durability": 25,
+        "mining": 1
+      },
+      "requirements": {},
+      "stackable": false,
+      "value": 6
     }
   ]
 }

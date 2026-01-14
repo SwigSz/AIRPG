@@ -310,6 +310,12 @@ function initializeTestCharacter() {
     GameState.updateProperty('settlement', testSettlement);
     Settlement.setState(testSettlement);
 
+    // Initialize starting recipes (Stone Axe is available from the start)
+    const state = GameState.getState();
+    if (state) {
+        state.discoveredRecipes = ['stone_axe'];
+    }
+
     // Display character data
     displayCharacterData();
 

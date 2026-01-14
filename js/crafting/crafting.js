@@ -508,6 +508,101 @@ const Crafting = (() => {
                     effect: "Comfort, warmth"
                 }
             ]
+        },
+        // Tool recipes
+        stone_axe: {
+            name: "Stone Axe",
+            category: "Tool",
+            slots: [
+                {
+                    id: "stick",
+                    label: "STICK (x1)",
+                    required: true,
+                    accepts: "Stick",
+                    effect: "Required material"
+                },
+                {
+                    id: "rock",
+                    label: "ROCK (x1)",
+                    required: true,
+                    accepts: "Rock",
+                    effect: "Required material"
+                }
+            ]
+        },
+        stone_hammer: {
+            name: "Stone Hammer",
+            category: "Tool",
+            slots: [
+                {
+                    id: "rock",
+                    label: "ROCK (x2)",
+                    required: true,
+                    accepts: "Rock",
+                    effect: "Required material"
+                },
+                {
+                    id: "stick",
+                    label: "STICK (x1)",
+                    required: true,
+                    accepts: "Stick",
+                    effect: "Required material"
+                }
+            ]
+        },
+        makeshift_axe: {
+            name: "Makeshift Axe",
+            category: "Tool",
+            slots: [
+                {
+                    id: "stick",
+                    label: "STICK (x1)",
+                    required: true,
+                    accepts: "Stick",
+                    effect: "Required material"
+                },
+                {
+                    id: "rock",
+                    label: "ROCK (x1)",
+                    required: true,
+                    accepts: "Rock",
+                    effect: "Required material"
+                },
+                {
+                    id: "fiber",
+                    label: "FIBER (x3)",
+                    required: true,
+                    accepts: "Fiber",
+                    effect: "Required material"
+                }
+            ]
+        },
+        makeshift_pickaxe: {
+            name: "Makeshift Pickaxe",
+            category: "Tool",
+            slots: [
+                {
+                    id: "stick",
+                    label: "STICK (x1)",
+                    required: true,
+                    accepts: "Stick",
+                    effect: "Required material"
+                },
+                {
+                    id: "rock",
+                    label: "ROCK (x2)",
+                    required: true,
+                    accepts: "Rock",
+                    effect: "Required material"
+                },
+                {
+                    id: "fiber",
+                    label: "FIBER (x4)",
+                    required: true,
+                    accepts: "Fiber",
+                    effect: "Required material"
+                }
+            ]
         }
     };
 
@@ -566,6 +661,33 @@ const Crafting = (() => {
                 { id: "gauntlets", name: "Gauntlets" },
                 { id: "greaves", name: "Greaves" },
                 { id: "boots", name: "Boots" }
+            ]
+        },
+        {
+            id: "makeshift-tools",
+            name: "MAKESHIFT TOOLS",
+            expanded: true,
+            items: [
+                { id: "stone_axe", name: "Stone Axe" },
+                { id: "stone_hammer", name: "Stone Hammer" },
+                { id: "makeshift_axe", name: "Makeshift Axe" },
+                { id: "makeshift_pickaxe", name: "Makeshift Pickaxe" }
+            ]
+        },
+        {
+            id: "pickaxes",
+            name: "PICKAXES",
+            expanded: true,
+            items: [
+                // Add proper pickaxe recipes here (not makeshift)
+            ]
+        },
+        {
+            id: "axes",
+            name: "AXES",
+            expanded: true,
+            items: [
+                // Add proper axe tool recipes here (not makeshift, not weapons)
             ]
         }
     ];
@@ -702,6 +824,9 @@ const Crafting = (() => {
         container.innerHTML = '';
 
         weaponCategories.forEach(category => {
+            // Skip hidden categories (empty tool categories)
+            if (category.hidden) return;
+
             const categoryEl = document.createElement('div');
             categoryEl.className = 'weapon-category';
 

@@ -53,6 +53,15 @@ const DebugMenu = (() => {
                         </div>
                     </div>
 
+                    <div class="debug-menu-section">
+                        <h3>Settlement</h3>
+                        <div class="debug-buttons">
+                            <button class="btn" id="debug-max-settlement-resources">
+                                <span>🏘️ Max Settlement Resources</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="debug-menu-info">
                         <small style="opacity: 0.7;">Press ~ to close</small>
                     </div>
@@ -86,6 +95,12 @@ const DebugMenu = (() => {
         const giveTinBtn = document.getElementById('debug-give-tin-materials');
         if (giveTinBtn) {
             giveTinBtn.addEventListener('click', () => giveTinMaterials());
+        }
+
+        // Max Settlement Resources button
+        const maxResourcesBtn = document.getElementById('debug-max-settlement-resources');
+        if (maxResourcesBtn) {
+            maxResourcesBtn.addEventListener('click', () => maxSettlementResources());
         }
     }
 
@@ -216,6 +231,44 @@ const DebugMenu = (() => {
         // Update UI
         if (window.updateUI) {
             updateUI();
+        }
+
+        // Auto-save
+        if (window.SaveSystem) {
+            SaveSystem.save();
+        }
+    }
+
+    /**
+     * Max out all settlement resources
+     */
+    function maxSettlementResources() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (!state || !state.settlement || !state.settlement.resources) {
+            console.error('Settlement resources not available');
+            showFeedback('Error: Settlement not available');
+            return;
+        }
+
+        let resourceCount = 0;
+
+        // Max out all resources to their maximum values
+        Object.keys(state.settlement.resources).forEach(resourceId => {
+            const resource = state.settlement.resources[resourceId];
+            if (resource && typeof resource.max === 'number') {
+                resource.current = resource.max;
+                resourceCount++;
+            }
+        });
+
+        console.log(`Debug: Maxed out ${resourceCount} settlement resources`);
+
+        // Show feedback message
+        showFeedback(`Maxed out ${resourceCount} settlement resources!`);
+
+        // Update UI
+        if (window.Settlement && window.Settlement.updateUI) {
+            Settlement.updateUI();
         }
 
         // Auto-save

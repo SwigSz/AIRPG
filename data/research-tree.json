@@ -3,24 +3,19 @@
     "basic_tools": {
       "id": "basic_tools",
       "name": "Basic Tools",
-      "description": "Learn to craft simple tools from sticks and stones. Unlocks: Stone Hammer recipe",
+      "description": "Learn to craft simple tools from sticks and stones. Unlocks: Stone Hammer, Makeshift Axe, and Makeshift Pickaxe recipes",
       "x": 150,
       "y": 200,
       "prerequisites": [],
-      "itemRequirements": [
-        {
-          "itemName": "Stone Axe",
-          "mustCraft": true
-        }
-      ],
+      "itemRequirements": [],
       "unlocks": [],
-      "unlocksRecipes": ["stone_hammer"],
+      "unlocksRecipes": ["stone_hammer", "makeshift_axe", "makeshift_pickaxe"],
       "resourceCosts": {
-        "wood": 20,
-        "stone": 20,
-        "food": 20
+        "wood": 10,
+        "stone": 10,
+        "food": 5
       },
-      "timeDays": 5
+      "timeDays": 3
     }
   }
 }

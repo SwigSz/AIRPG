@@ -36,6 +36,44 @@
       "outputQuantity": 1,
       "craftingTime": 5,
       "xpReward": 12
+    },
+    {
+      "id": "makeshift_axe",
+      "name": "Makeshift Axe",
+      "icon": "🪓",
+      "category": "tools",
+      "unlockRequirements": {
+        "level": 1,
+        "skills": []
+      },
+      "inputs": [
+        { "itemId": "stick", "count": 1 },
+        { "itemId": "rock", "count": 1 },
+        { "itemId": "fiber", "count": 3 }
+      ],
+      "outputItemId": "makeshift_axe",
+      "outputQuantity": 1,
+      "craftingTime": 4,
+      "xpReward": 8
+    },
+    {
+      "id": "makeshift_pickaxe",
+      "name": "Makeshift Pickaxe",
+      "icon": "⛏️",
+      "category": "tools",
+      "unlockRequirements": {
+        "level": 1,
+        "skills": []
+      },
+      "inputs": [
+        { "itemId": "stick", "count": 1 },
+        { "itemId": "rock", "count": 2 },
+        { "itemId": "fiber", "count": 4 }
+      ],
+      "outputItemId": "makeshift_pickaxe",
+      "outputQuantity": 1,
+      "craftingTime": 4,
+      "xpReward": 8
     }
   ]
 }
