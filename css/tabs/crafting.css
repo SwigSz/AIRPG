@@ -574,7 +574,7 @@
     justify-content: center;
     position: relative;
     transition: all 0.2s ease;
-    cursor: grab;
+    cursor: pointer;
     gap: 0.25rem;
     min-height: 80px;
 }

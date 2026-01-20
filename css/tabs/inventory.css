@@ -8,6 +8,7 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0.75rem;
+    flex-shrink: 0;
 }
 
 .inventory-header h2 {
@@ -43,6 +44,8 @@
     display: grid;
     grid-template-columns: 1fr 3fr;
     gap: 1.5rem;
+    height: 100%;
+    overflow: hidden;
 }
 
 .equipment-section,
@@ -51,12 +54,47 @@
     border: 1px solid #334155;
     border-radius: 8px;
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.inventory-section {
+    overflow: hidden;
 }
 
 .equipment-slots {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+    padding-right: 0.5rem;
+}
+
+.equipment-slots::-webkit-scrollbar {
+    width: 8px;
+}
+
+.equipment-slots::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 4px;
+}
+
+.equipment-slots::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+.equipment-slots::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+.equipment-section h2 {
+    flex-shrink: 0;
+    margin-bottom: 1rem;
 }
 
 .equipment-slot {
@@ -116,6 +154,32 @@
 .equipment-slot-label {
     font-size: 0.7rem;
     color: #64748b;
+}
+
+.inventory-grid-wrapper {
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+    padding-right: 0.5rem;
+}
+
+.inventory-grid-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.inventory-grid-wrapper::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 4px;
+}
+
+.inventory-grid-wrapper::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+.inventory-grid-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #475569;
 }
 
 .inventory-grid {
@@ -280,6 +344,7 @@
     background-color: #0f172a;
     border: 1px solid #334155;
     border-radius: 6px;
+    flex-shrink: 0;
 }
 
 #inventory-search {
