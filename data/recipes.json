@@ -1,43 +1,6 @@
 {
   "recipes": [
     {
-      "id": "stone_axe",
-      "name": "Stone Axe",
-      "icon": "🪓",
-      "category": "tools",
-      "unlockRequirements": {
-        "level": 1,
-        "skills": []
-      },
-      "inputs": [
-        { "itemId": "stick", "count": 1 },
-        { "itemId": "rock", "count": 1 }
-      ],
-      "outputItemId": "stone_axe",
-      "outputQuantity": 1,
-      "craftingTime": 5,
-      "xpReward": 10
-    },
-    {
-      "id": "stone_hammer",
-      "name": "Stone Hammer",
-      "icon": "🔨",
-      "category": "tools",
-      "unlockRequirements": {
-        "level": 1,
-        "skills": [],
-        "research": "basic_tools"
-      },
-      "inputs": [
-        { "itemId": "rock", "count": 2 },
-        { "itemId": "stick", "count": 1 }
-      ],
-      "outputItemId": "stone_hammer",
-      "outputQuantity": 1,
-      "craftingTime": 5,
-      "xpReward": 12
-    },
-    {
       "id": "makeshift_axe",
       "name": "Makeshift Axe",
       "icon": "🪓",

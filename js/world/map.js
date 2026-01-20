@@ -60,10 +60,12 @@ const Map = (() => {
             color: '#1a3a0f',
             icon: '🌲',
             defaultAmount: 5,
-            description: 'A sturdy tree that can be harvested for sticks',
-            itemId: 'stick',  // Use item ID instead of name
-            itemName: 'Stick',  // Keep for display
-            gatherVerb: 'chopped'
+            description: 'A tree that can be harvested for wood',
+            itemId: 'wood',
+            itemName: 'Wood',
+            gatherVerb: 'chopped',
+            requiredTool: 'woodcutting',  // Requires woodcutting tool
+            requiredToolTier: 1
         },
         rock: {
             name: 'Rock',
@@ -71,11 +73,25 @@ const Map = (() => {
             icon: '🪨',
             defaultAmount: 5,
             description: 'A large stone deposit containing valuable rocks',
-            itemId: 'rock',  // Use item ID instead of name
-            itemName: 'Rock',  // Keep for display
-            gatherVerb: 'mined'
+            itemId: 'rock',
+            itemName: 'Rock',
+            gatherVerb: 'mined',
+            requiredTool: 'mining',  // Requires mining tool
+            requiredToolTier: 1
         },
-        bush: {
+        copper_ore: {
+            name: 'Copper Ore Vein',
+            color: '#b87333',
+            icon: '🟫',
+            defaultAmount: 3,
+            description: 'A copper ore deposit',
+            itemId: 'copper_ore',
+            itemName: 'Copper Ore',
+            gatherVerb: 'mined',
+            requiredTool: 'mining',
+            requiredToolTier: 1
+        },
+        berry_bush: {
             name: 'Berry Bush',
             color: '#8b4789',
             icon: '🫐',
@@ -84,6 +100,29 @@ const Map = (() => {
             itemId: 'berries',
             itemName: 'Berries',
             gatherVerb: 'gathered'
+            // No tool required
+        },
+        stick_bush: {
+            name: 'Bush',
+            color: '#4a6741',
+            icon: '🌳',
+            defaultAmount: 4,
+            description: 'A bush that can be harvested for sticks',
+            itemId: 'stick',
+            itemName: 'Stick',
+            gatherVerb: 'gathered'
+            // No tool required
+        },
+        fiber_plant: {
+            name: 'Fiber Plant',
+            color: '#6b8e4e',
+            icon: '🌾',
+            defaultAmount: 4,
+            description: 'A plant with fibrous stalks',
+            itemId: 'fiber',
+            itemName: 'Fiber',
+            gatherVerb: 'gathered'
+            // No tool required
         }
     };
 
@@ -276,10 +315,26 @@ const Map = (() => {
         addResource(9, 11, 'rock', 5);
         addResource(15, 9, 'rock', 5);
 
+        // Copper ore veins in mountain areas (2 veins)
+        addResource(10, 9, 'copper_ore', 3);
+        addResource(14, 11, 'copper_ore', 3);
+
         // Berry bushes in various locations (3 bushes)
-        addResource(11, 5, 'bush', 3);
-        addResource(7, 15, 'bush', 3);
-        addResource(15, 13, 'bush', 3);
+        addResource(11, 5, 'berry_bush', 3);
+        addResource(7, 15, 'berry_bush', 3);
+        addResource(15, 13, 'berry_bush', 3);
+
+        // Stick bushes in forest/plains (4 bushes)
+        addResource(2, 7, 'stick_bush', 4);
+        addResource(5, 5, 'stick_bush', 4);
+        addResource(12, 8, 'stick_bush', 4);
+        addResource(8, 13, 'stick_bush', 4);
+
+        // Fiber plants in plains areas (4 plants)
+        addResource(6, 9, 'fiber_plant', 4);
+        addResource(10, 7, 'fiber_plant', 4);
+        addResource(13, 6, 'fiber_plant', 4);
+        addResource(9, 14, 'fiber_plant', 4);
     }
 
     /**
@@ -901,6 +956,34 @@ const Map = (() => {
     }
 
     /**
+     * Check if player has the required tool equipped
+     * @param {Object} character - The character object
+     * @param {string} toolType - Type of tool required ('woodcutting' or 'mining')
+     * @param {number} requiredTier - Minimum tier of tool required
+     * @returns {boolean} - True if player has required tool equipped
+     */
+    function checkHasRequiredTool(character, toolType, requiredTier) {
+        if (!character.equipment) return false;
+
+        // Check the appropriate equipment slot
+        let equippedTool = null;
+        if (toolType === 'woodcutting') {
+            equippedTool = character.equipment.woodcutting_axe;
+        } else if (toolType === 'mining') {
+            equippedTool = character.equipment.pickaxe;
+        }
+
+        if (!equippedTool) return false;
+
+        // Check tool tier (if tool has stats with the appropriate skill level)
+        // For now, makeshift tools are tier 1
+        // Future: stone tools tier 2, iron tools tier 3, etc.
+        const toolTier = equippedTool.stats?.[toolType] || 1;
+
+        return toolTier >= requiredTier;
+    }
+
+    /**
      * Gather resource at the player's current position
      */
     function gatherResourceAtPlayerPosition() {
@@ -916,6 +999,23 @@ const Map = (() => {
 
         const resourceConfig = RESOURCES[tile.resource.type];
         if (!resourceConfig) return;
+
+        // Check if resource requires a tool
+        if (resourceConfig.requiredTool) {
+            const character = window.GameState?.getState()?.character;
+            if (!character) return;
+
+            const hasRequiredTool = checkHasRequiredTool(character, resourceConfig.requiredTool, resourceConfig.requiredToolTier);
+
+            if (!hasRequiredTool) {
+                const toolName = resourceConfig.requiredTool === 'woodcutting' ? 'Woodcutting Axe' :
+                                 resourceConfig.requiredTool === 'mining' ? 'Pickaxe' : 'Tool';
+                if (window.ActivityLog) {
+                    ActivityLog.addMessage(`You need a ${toolName} equipped to harvest ${resourceConfig.name}`, 'warning');
+                }
+                return;
+            }
+        }
 
         const currentAmount = tile.resource.amount;
 
@@ -961,13 +1061,14 @@ const Map = (() => {
                 ActivityLog.addMessage(message, 'loot');
             }
 
-            // Show notification
+            // Show notification (with stacking by resource type)
             if (window.NotificationManager) {
                 NotificationManager.showNotification({
                     type: 'success',
                     icon: '✓',
                     title: 'Resource Gathered',
-                    message: `+1 ${resourceConfig.itemName}`
+                    message: `+1 ${resourceConfig.itemName}`,
+                    stackKey: `resource_${resourceConfig.itemId}` // Stack notifications by resource type
                 });
             }
 

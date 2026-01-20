@@ -15,7 +15,9 @@ const Equipment = (() => {
         OFF_HAND: 'off_hand',
         RING1: 'ring1',
         RING2: 'ring2',
-        CLOAK: 'cloak'
+        CLOAK: 'cloak',
+        PICKAXE: 'pickaxe',
+        WOODCUTTING_AXE: 'woodcutting_axe'
     };
 
     function create() {
@@ -30,7 +32,9 @@ const Equipment = (() => {
             off_hand: null,
             ring1: null,
             ring2: null,
-            cloak: null
+            cloak: null,
+            pickaxe: null,
+            woodcutting_axe: null
         };
     }
 

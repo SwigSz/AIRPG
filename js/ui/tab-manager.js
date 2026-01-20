@@ -73,8 +73,13 @@ const TabManager = (() => {
         }
 
         // Trigger crafting UI update when switching to crafting tab
-        if (tabName === 'crafting' && window.Crafting && window.Crafting.renderWeaponCategories) {
-            Crafting.renderWeaponCategories();
+        if (tabName === 'crafting' && window.Crafting) {
+            if (window.Crafting.renderWeaponCategories) {
+                Crafting.renderWeaponCategories();
+            }
+            if (window.Crafting.updateValidationMessage) {
+                Crafting.updateValidationMessage();
+            }
         }
     }
 

@@ -269,6 +269,18 @@
         "tier": 1,
         "baseColor": "#C0C0C0"
       }
+    },
+    {
+      "id": "wood",
+      "name": "Wood",
+      "icon": "🪵",
+      "description": "Raw wood harvested from trees. Used for crafting and construction.",
+      "type": "material",
+      "classifications": ["material"],
+      "stackable": true,
+      "rarity": "common",
+      "value": 3,
+      "sources": ["tree"]
     }
   ]
 }

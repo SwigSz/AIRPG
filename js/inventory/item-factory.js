@@ -37,11 +37,21 @@ const Items = (() => {
     function getItemSlot(item) {
         if (!item.classifications) return null;
 
-        const validSlots = ['head', 'neck', 'chest', 'hands', 'legs', 'feet', 'main_hand', 'off_hand', 'ring', 'cloak'];
+        const validSlots = ['head', 'neck', 'chest', 'hands', 'legs', 'feet', 'main_hand', 'off_hand', 'ring', 'cloak', 'pickaxe', 'woodcutting_axe'];
 
         // For weapons, always equip to main_hand by default
         if (item.classifications.includes('weapon')) {
             return 'main_hand';
+        }
+
+        // For tools, check if they have specific tool types
+        if (item.classifications.includes('tool')) {
+            if (item.stats && item.stats.mining !== undefined) {
+                return 'pickaxe';
+            }
+            if (item.stats && item.stats.woodcutting !== undefined) {
+                return 'woodcutting_axe';
+            }
         }
 
         // For other items, find the slot in their classifications

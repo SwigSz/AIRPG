@@ -201,7 +201,9 @@ const InventoryUI = (() => {
             { key: 'off_hand', label: 'Off Hand' },
             { key: 'ring1', label: 'Ring 1' },
             { key: 'ring2', label: 'Ring 2' },
-            { key: 'cloak', label: 'Cloak' }
+            { key: 'cloak', label: 'Cloak' },
+            { key: 'pickaxe', label: 'Pickaxe' },
+            { key: 'woodcutting_axe', label: 'Woodcutting Axe' }
         ];
 
         // Check if main hand has a two-handed weapon
@@ -434,7 +436,8 @@ const InventoryUI = (() => {
                 item.classifications.includes('weapon') ||
                 item.classifications.includes('armor') ||
                 item.classifications.includes('accessory') ||
-                item.classifications.includes('off_hand')
+                item.classifications.includes('off_hand') ||
+                item.classifications.includes('tool')
             );
 
             // Quantity badge (only show if > 1)

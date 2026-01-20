@@ -8,6 +8,7 @@ const Crafting = (() => {
     let recipes = []; // Recipe database loaded from JSON
     let craftedItems = []; // Track items that have been crafted before
     let currentSelectedWeapon = 'longsword'; // Currently selected weapon type in assembly
+    let placedComponents = {}; // Track which items are placed in which slots { slotId: { itemId, baseId, count } }
 
     // Weapon type configurations for component-based assembly
     const weaponConfigurations = {
@@ -510,46 +511,6 @@ const Crafting = (() => {
             ]
         },
         // Tool recipes
-        stone_axe: {
-            name: "Stone Axe",
-            category: "Tool",
-            slots: [
-                {
-                    id: "stick",
-                    label: "STICK (x1)",
-                    required: true,
-                    accepts: "Stick",
-                    effect: "Required material"
-                },
-                {
-                    id: "rock",
-                    label: "ROCK (x1)",
-                    required: true,
-                    accepts: "Rock",
-                    effect: "Required material"
-                }
-            ]
-        },
-        stone_hammer: {
-            name: "Stone Hammer",
-            category: "Tool",
-            slots: [
-                {
-                    id: "rock",
-                    label: "ROCK (x2)",
-                    required: true,
-                    accepts: "Rock",
-                    effect: "Required material"
-                },
-                {
-                    id: "stick",
-                    label: "STICK (x1)",
-                    required: true,
-                    accepts: "Stick",
-                    effect: "Required material"
-                }
-            ]
-        },
         makeshift_axe: {
             name: "Makeshift Axe",
             category: "Tool",
@@ -668,8 +629,6 @@ const Crafting = (() => {
             name: "MAKESHIFT TOOLS",
             expanded: true,
             items: [
-                { id: "stone_axe", name: "Stone Axe" },
-                { id: "stone_hammer", name: "Stone Hammer" },
                 { id: "makeshift_axe", name: "Makeshift Axe" },
                 { id: "makeshift_pickaxe", name: "Makeshift Pickaxe" }
             ]
@@ -787,6 +746,12 @@ const Crafting = (() => {
     }
 
     function initializeAssemblySystem() {
+        // Load placed components from save data
+        loadPlacedComponents();
+
+        // Load component filter selection
+        loadComponentFilter();
+
         // Render weapon categories navigation
         renderWeaponCategories();
 
@@ -801,6 +766,29 @@ const Crafting = (() => {
         if (clearBtn) {
             clearBtn.addEventListener('click', clearAllSlots);
         }
+
+        // Setup Craft Item button
+        const craftBtn = document.getElementById('craft-item-btn');
+        if (craftBtn) {
+            craftBtn.addEventListener('click', craftItem);
+        }
+
+        // Listen for inventory changes to update validation message and components in real-time
+        document.addEventListener('inventoryChanged', () => {
+            updateValidationMessage();
+            renderPlaceholderComponents();
+        });
+
+        // Setup component filter dropdown
+        const filterDropdown = document.querySelector('.component-filter-dropdown');
+        if (filterDropdown) {
+            filterDropdown.addEventListener('change', (e) => {
+                // Save the filter selection
+                saveComponentFilter();
+                // Re-render components with new filter
+                renderPlaceholderComponents();
+            });
+        }
     }
 
     function refreshFromSaveData() {
@@ -808,12 +796,18 @@ const Crafting = (() => {
         loadCategoryStates();
         // Load selected weapon from GameState
         loadSelectedWeapon();
+        // Load placed components from GameState
+        loadPlacedComponents();
+        // Load component filter from GameState
+        loadComponentFilter();
         // Re-render to apply loaded states
         renderWeaponCategories();
         // Re-render assembly station with saved selection
         if (currentSelectedWeapon) {
             renderAssemblyStation(currentSelectedWeapon);
         }
+        // Re-render components with saved filter
+        renderPlaceholderComponents();
     }
 
     function loadCategoryStates() {
@@ -833,6 +827,48 @@ const Crafting = (() => {
         const state = window.GameState ? window.GameState.getState() : null;
         if (state && state.craftingSelectedWeapon) {
             currentSelectedWeapon = state.craftingSelectedWeapon;
+        }
+    }
+
+    function loadPlacedComponents() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state && state.craftingPlacedComponents) {
+            placedComponents = state.craftingPlacedComponents;
+        }
+    }
+
+    function savePlacedComponents() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state) {
+            state.craftingPlacedComponents = placedComponents;
+
+            // Trigger main save system
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
+        }
+    }
+
+    function loadComponentFilter() {
+        const state = window.GameState ? window.GameState.getState() : null;
+        const filterDropdown = document.querySelector('.component-filter-dropdown');
+        if (filterDropdown && state && state.craftingComponentFilter) {
+            filterDropdown.value = state.craftingComponentFilter;
+        }
+    }
+
+    function saveComponentFilter() {
+        const filterDropdown = document.querySelector('.component-filter-dropdown');
+        if (!filterDropdown) return;
+
+        const state = window.GameState ? window.GameState.getState() : null;
+        if (state) {
+            state.craftingComponentFilter = filterDropdown.value;
+
+            // Trigger main save system
+            if (window.SaveSystem) {
+                SaveSystem.save();
+            }
         }
     }
 
@@ -920,6 +956,43 @@ const Crafting = (() => {
     }
 
     function selectWeaponType(weaponId) {
+        // Check if we're switching to a different weapon type
+        const isChangingWeapon = currentSelectedWeapon !== weaponId;
+
+        // If switching weapons, return all placed components to inventory first
+        if (isChangingWeapon && Object.keys(placedComponents).length > 0) {
+            // Return all placed components to inventory
+            Object.keys(placedComponents).forEach(slotId => {
+                const placed = placedComponents[slotId];
+                if (placed) {
+                    // Add item back to inventory
+                    const state = window.GameState ? window.GameState.getState() : null;
+                    const character = state ? state.character : null;
+                    if (character && window.Inventory) {
+                        // Add count items back to inventory
+                        for (let i = 0; i < placed.count; i++) {
+                            const item = window.ItemFactory.createItem(placed.baseId);
+                            if (item) {
+                                window.Inventory.addItem(character.inventory, item);
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Clear the placedComponents object
+            placedComponents = {};
+
+            // Save to GameState
+            savePlacedComponents();
+
+            // Trigger inventory update event
+            document.dispatchEvent(new CustomEvent('inventoryChanged'));
+
+            // Re-render components to update quantities
+            renderPlaceholderComponents();
+        }
+
         currentSelectedWeapon = weaponId;
 
         // Update selected state in navigation
@@ -955,18 +1028,85 @@ const Crafting = (() => {
             slotEl.className = 'assembly-slot';
             slotEl.dataset.slotId = slot.id;
 
-            slotEl.innerHTML = `
-                <div class="slot-header">
-                    <span class="slot-label">${slot.label}</span>
-                </div>
-                <div class="slot-dropzone">
-                    <div class="slot-placeholder">[Drop ${slot.label.toLowerCase()} component here]</div>
-                </div>
-                <div class="slot-info">
-                    <div class="slot-accepts">Accepts: ${slot.accepts}</div>
-                    <div class="slot-effect">Effect: </div>
-                </div>
-            `;
+            // Check if this slot has a placed component
+            const placedItem = placedComponents[slot.id];
+
+            if (placedItem) {
+                // Slot is filled
+                slotEl.innerHTML = `
+                    <div class="slot-header">
+                        <span class="slot-label">${slot.label}</span>
+                    </div>
+                    <div class="slot-dropzone filled">
+                        <div class="slot-filled-content">
+                            <div class="slot-item-icon">${placedItem.icon}</div>
+                            <div class="slot-item-name">${placedItem.name}</div>
+                        </div>
+                    </div>
+                    <div class="slot-info">
+                        <div class="slot-accepts">Accepts: ${slot.accepts}</div>
+                    </div>
+                `;
+            } else {
+                // Slot is empty
+                slotEl.innerHTML = `
+                    <div class="slot-header">
+                        <span class="slot-label">${slot.label}</span>
+                    </div>
+                    <div class="slot-dropzone">
+                        <div class="slot-placeholder">[Drop ${slot.label.toLowerCase()} component here]</div>
+                    </div>
+                    <div class="slot-info">
+                        <div class="slot-accepts">Accepts: ${slot.accepts}</div>
+                    </div>
+                `;
+            }
+
+            // Add drag and drop event listeners
+            const dropzone = slotEl.querySelector('.slot-dropzone');
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+
+                // Don't highlight if slot is already filled
+                if (placedComponents[slot.id]) {
+                    dropzone.classList.add('drag-over-invalid');
+                    return;
+                }
+
+                dropzone.classList.add('drag-over');
+            });
+
+            dropzone.addEventListener('dragleave', (e) => {
+                dropzone.classList.remove('drag-over');
+                dropzone.classList.remove('drag-over-invalid');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
+                dropzone.classList.remove('drag-over-invalid');
+
+                // Don't allow dropping on filled slots
+                if (placedComponents[slot.id]) {
+                    return;
+                }
+
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                    handleComponentDrop(slot.id, data);
+                } catch (error) {
+                    console.error('Failed to parse drag data:', error);
+                }
+            });
+
+            // Add click handler to remove item from slot
+            if (placedItem) {
+                dropzone.addEventListener('click', () => {
+                    handleRemoveComponent(slot.id);
+                });
+                dropzone.style.cursor = 'pointer';
+            }
 
             slotsContainer.appendChild(slotEl);
         });
@@ -979,26 +1119,450 @@ const Crafting = (() => {
         const config = weaponConfigurations[currentSelectedWeapon];
         if (!config) return;
 
-        const requiredSlots = config.slots.filter(s => s.required);
-        const missingLabels = requiredSlots.map(s => s.label).join(', ');
+        // Find the corresponding recipe in recipes.json
+        const recipe = recipes.find(r => r.id === currentSelectedWeapon);
+        if (!recipe || !recipe.inputs || recipe.inputs.length === 0) {
+            // No recipe data, show generic message
+            const requiredSlots = config.slots.filter(s => s.required);
+            const missingLabels = requiredSlots.map(s => s.label).join(', ');
+            const validationEl = document.querySelector('.validation-message');
+            if (validationEl) {
+                validationEl.textContent = `Required materials: ${missingLabels}`;
+            }
+            return;
+        }
+
+        // Check if all slots are filled
+        const allSlotsFilled = config.slots.every(slot => {
+            if (slot.required) {
+                return placedComponents[slot.id] !== undefined;
+            }
+            return true; // Optional slots don't need to be filled
+        });
+
+        // Get character inventory
+        const state = window.GameState ? window.GameState.getState() : null;
+        const character = state ? state.character : null;
+        if (!character || !character.inventory) {
+            return;
+        }
+
+        // Get stacked items to count materials
+        const stackedItems = window.Inventory ? window.Inventory.getStackedItems(character.inventory) : [];
+
+        // Helper function to extract base item ID from generated ID
+        // ItemFactory generates IDs like "stick_1768412508210_i8nnsekvp"
+        // Format: baseId_timestamp_randomString
+        // Timestamp is 13 digits (milliseconds since epoch)
+        const getBaseItemId = (itemId) => {
+            const parts = itemId.split('_');
+            if (parts.length >= 3) {
+                // Find the timestamp part (13-digit number)
+                let baseIdParts = [];
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    // Check if this part is the timestamp (13 digits, all numeric)
+                    if (!isNaN(part) && part.length === 13) {
+                        // Everything before this is the base ID
+                        break;
+                    }
+                    baseIdParts.push(part);
+                }
+                return baseIdParts.join('_');
+            }
+            return itemId; // Fallback to full ID
+        };
+
+        // Build material requirements display
+        let allMaterialsAvailable = true;
+        const materialsList = recipe.inputs.map(input => {
+            // Find the material in stacked items by matching base item ID
+            const stack = stackedItems.find(s => {
+                const baseId = getBaseItemId(s.item.id);
+                return baseId === input.itemId;
+            });
+            const currentCount = stack ? stack.quantity : 0;
+            const requiredCount = input.count;
+
+            // Get material name (capitalize first letter)
+            const materialName = input.itemId.toUpperCase().replace(/_/g, ' ');
+
+            // Check if player has enough
+            const hasEnough = currentCount >= requiredCount;
+            if (!hasEnough) {
+                allMaterialsAvailable = false;
+            }
+            const icon = hasEnough ? '✓' : '✗';
+
+            return `${icon} ${materialName} (${currentCount}/${requiredCount})`;
+        }).join(', ');
 
         const validationEl = document.querySelector('.validation-message');
         if (validationEl) {
-            validationEl.textContent = `✗ Missing required: ${missingLabels}`;
+            validationEl.textContent = `Required materials: ${materialsList}`;
+
+            // Update class based on whether all materials are available
+            if (allMaterialsAvailable) {
+                validationEl.classList.add('materials-available');
+                validationEl.classList.remove('materials-missing');
+            } else {
+                validationEl.classList.add('materials-missing');
+                validationEl.classList.remove('materials-available');
+            }
+        }
+
+        // Enable/disable craft button based on whether all required slots are filled
+        const craftBtn = document.getElementById('craft-item-btn');
+        if (craftBtn) {
+            craftBtn.disabled = !allSlotsFilled;
         }
     }
 
+    function craftItem() {
+        // Get the recipe
+        const recipe = recipes.find(r => r.id === currentSelectedWeapon);
+        if (!recipe) {
+            console.error('Recipe not found:', currentSelectedWeapon);
+            return;
+        }
+
+        // Get character
+        const state = window.GameState ? window.GameState.getState() : null;
+        const character = state ? state.character : null;
+        if (!character) {
+            console.error('Character not found');
+            return;
+        }
+
+        // Create the crafted item
+        const craftedItem = window.ItemFactory.createItem(recipe.outputItemId);
+        if (!craftedItem) {
+            console.error('Failed to create item:', recipe.outputItemId);
+            return;
+        }
+
+        // Add to inventory
+        window.Inventory.addItem(character.inventory, craftedItem);
+
+        // Clear placed components (items already removed from inventory when placed)
+        placedComponents = {};
+        savePlacedComponents();
+
+        // Re-render UI
+        renderAssemblyStation(currentSelectedWeapon);
+        renderPlaceholderComponents();
+
+        // Trigger inventory update
+        document.dispatchEvent(new CustomEvent('inventoryChanged'));
+
+        // Show success message
+        console.log(`Successfully crafted: ${craftedItem.name}`);
+    }
+
     function clearAllSlots() {
+        // Return all placed components to inventory
+        Object.keys(placedComponents).forEach(slotId => {
+            const placed = placedComponents[slotId];
+            if (placed) {
+                // Add item back to inventory
+                const state = window.GameState ? window.GameState.getState() : null;
+                const character = state ? state.character : null;
+                if (character && window.Inventory) {
+                    // Add count items back to inventory
+                    for (let i = 0; i < placed.count; i++) {
+                        const item = window.ItemFactory.createItem(placed.baseId);
+                        if (item) {
+                            window.Inventory.addItem(character.inventory, item);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Clear the placedComponents object
+        placedComponents = {};
+
+        // Save to GameState
+        savePlacedComponents();
+
         // Re-render the current assembly station to reset all slots
         renderAssemblyStation(currentSelectedWeapon);
+
+        // Re-render components to update quantities
+        renderPlaceholderComponents();
+
+        // Trigger inventory update event
+        document.dispatchEvent(new CustomEvent('inventoryChanged'));
+    }
+
+    function handleComponentDrop(slotId, draggedData) {
+        // Get the weapon configuration to check slot requirements
+        const config = weaponConfigurations[currentSelectedWeapon];
+        if (!config) return;
+
+        // Find the slot definition
+        const slotDef = config.slots.find(s => s.id === slotId);
+        if (!slotDef) return;
+
+        // Check if the dropped item is accepted by this slot
+        // The "accepts" field contains comma-separated component names
+        const acceptedItems = slotDef.accepts.split(',').map(item => item.trim().toLowerCase());
+        const droppedItemName = draggedData.name.toLowerCase();
+
+        // Check if the dropped item matches any of the accepted items
+        const isAccepted = acceptedItems.some(accepted => {
+            // Match either exact name or if the accepted name is contained in the item name
+            return droppedItemName === accepted || droppedItemName.includes(accepted) || accepted.includes(droppedItemName);
+        });
+
+        if (!isAccepted) {
+            // This slot doesn't accept this item type
+            console.log(`Slot "${slotDef.label}" does not accept "${draggedData.name}". Accepts: ${slotDef.accepts}`);
+            return;
+        }
+
+        // Get the recipe to check required quantities
+        const recipe = recipes.find(r => r.id === currentSelectedWeapon);
+        if (!recipe || !recipe.inputs) {
+            return;
+        }
+
+        // Find how many of this item the recipe needs
+        const recipeInput = recipe.inputs.find(input => input.itemId === draggedData.baseId);
+        if (!recipeInput) {
+            // This item isn't needed for this recipe
+            return;
+        }
+
+        const requiredCount = recipeInput.count;
+
+        // Check if player has enough
+        if (draggedData.quantity < requiredCount) {
+            return;
+        }
+
+        // Get character and inventory
+        const state = window.GameState ? window.GameState.getState() : null;
+        const character = state ? state.character : null;
+        if (!character || !window.Inventory) {
+            return;
+        }
+
+        // Remove required quantity from inventory
+        let removedCount = 0;
+        const inventoryItems = character.inventory.items || [];
+
+        for (let i = inventoryItems.length - 1; i >= 0 && removedCount < requiredCount; i--) {
+            const item = inventoryItems[i];
+            // Extract base ID to match
+            const parts = item.id.split('_');
+            let baseIdParts = [];
+            for (let j = 0; j < parts.length; j++) {
+                const part = parts[j];
+                if (!isNaN(part) && part.length === 13) {
+                    break;
+                }
+                baseIdParts.push(part);
+            }
+            const itemBaseId = baseIdParts.join('_');
+
+            if (itemBaseId === draggedData.baseId) {
+                window.Inventory.removeItem(character.inventory, item.id);
+                removedCount++;
+            }
+        }
+
+        // Place the component in the slot
+        placedComponents[slotId] = {
+            itemId: draggedData.itemId,
+            baseId: draggedData.baseId,
+            name: draggedData.name,
+            icon: draggedData.icon,
+            count: requiredCount
+        };
+
+        // Save to GameState
+        savePlacedComponents();
+
+        // Re-render assembly station to show filled slot
+        renderAssemblyStation(currentSelectedWeapon);
+
+        // Re-render components to update quantities
+        renderPlaceholderComponents();
+
+        // Trigger inventory update event
+        document.dispatchEvent(new CustomEvent('inventoryChanged'));
+    }
+
+    function handleRemoveComponent(slotId) {
+        const placed = placedComponents[slotId];
+        if (!placed) return;
+
+        // Add items back to inventory
+        const state = window.GameState ? window.GameState.getState() : null;
+        const character = state ? state.character : null;
+        if (character && window.Inventory) {
+            // Add count items back to inventory
+            for (let i = 0; i < placed.count; i++) {
+                const item = window.ItemFactory.createItem(placed.baseId);
+                if (item) {
+                    window.Inventory.addItem(character.inventory, item);
+                }
+            }
+        }
+
+        // Remove from placedComponents
+        delete placedComponents[slotId];
+
+        // Save to GameState
+        savePlacedComponents();
+
+        // Re-render assembly station
+        renderAssemblyStation(currentSelectedWeapon);
+
+        // Re-render components to update quantities
+        renderPlaceholderComponents();
+
+        // Trigger inventory update event
+        document.dispatchEvent(new CustomEvent('inventoryChanged'));
+    }
+
+    function handleAutoPlaceComponent(itemData) {
+        // Get the weapon configuration
+        const config = weaponConfigurations[currentSelectedWeapon];
+        if (!config) return;
+
+        // Find the first available slot that accepts this item
+        for (const slot of config.slots) {
+            // Skip if slot is already filled
+            if (placedComponents[slot.id]) {
+                continue;
+            }
+
+            // Check if this slot accepts the item
+            const acceptedItems = slot.accepts.split(',').map(item => item.trim().toLowerCase());
+            const itemName = itemData.name.toLowerCase();
+
+            const isAccepted = acceptedItems.some(accepted => {
+                return itemName === accepted || itemName.includes(accepted) || accepted.includes(itemName);
+            });
+
+            if (isAccepted) {
+                // Found a matching slot, try to place the item
+                handleComponentDrop(slot.id, itemData);
+                return; // Stop after placing in first available slot
+            }
+        }
+
+        // If we get here, no available slot was found
+        console.log(`No available slot accepts "${itemData.name}"`);
     }
 
     function renderPlaceholderComponents() {
         const container = document.querySelector('.component-placeholder-cards');
         if (!container) return;
 
-        // Clear placeholder components - they will be populated when actual components exist
+        // Get character inventory
+        const state = window.GameState ? window.GameState.getState() : null;
+        const character = state ? state.character : null;
+        if (!character || !character.inventory) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Get current filter selection
+        const filterDropdown = document.querySelector('.component-filter-dropdown');
+        const filterValue = filterDropdown ? filterDropdown.value : 'all';
+
+        // Get stacked items to count materials
+        const stackedItems = window.Inventory ? window.Inventory.getStackedItems(character.inventory) : [];
+
+        // Helper function to extract base item ID (same as in updateValidationMessage)
+        const getBaseItemId = (itemId) => {
+            const parts = itemId.split('_');
+            if (parts.length >= 3) {
+                let baseIdParts = [];
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    if (!isNaN(part) && part.length === 13) {
+                        break;
+                    }
+                    baseIdParts.push(part);
+                }
+                return baseIdParts.join('_');
+            }
+            return itemId;
+        };
+
+        // Define material categories
+        const basicMaterialIds = ['stick', 'rock', 'fiber'];
+        // Add more categories here in the future (blades, handles, guards, etc.)
+
+        // Filter materials based on selected category
+        let filteredMaterials;
+        if (filterValue === 'all') {
+            // Show all materials (anything with "material" classification)
+            filteredMaterials = stackedItems.filter(stack => {
+                return stack.item.classifications && stack.item.classifications.includes('material');
+            });
+        } else if (filterValue === 'basics') {
+            // Show only basic materials
+            filteredMaterials = stackedItems.filter(stack => {
+                const baseId = getBaseItemId(stack.item.id);
+                return basicMaterialIds.includes(baseId);
+            });
+        } else {
+            // Other categories (blades, handles, guards) - empty for now
+            filteredMaterials = [];
+        }
+
+        // Clear container
         container.innerHTML = '';
+
+        // Render each material as a component card
+        filteredMaterials.forEach(stack => {
+            const card = document.createElement('div');
+            card.className = 'component-card';
+            card.draggable = true;
+
+            const baseId = getBaseItemId(stack.item.id);
+
+            card.innerHTML = `
+                <div class="component-icon">${stack.item.icon || '📦'}</div>
+                <div class="component-name">${stack.item.name}</div>
+                <div class="component-quantity">×${stack.quantity}</div>
+            `;
+
+            // Add drag event listeners
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('application/json', JSON.stringify({
+                    itemId: stack.item.id,
+                    baseId: baseId,
+                    name: stack.item.name,
+                    icon: stack.item.icon || '📦',
+                    quantity: stack.quantity
+                }));
+                card.classList.add('dragging');
+            });
+
+            card.addEventListener('dragend', (e) => {
+                card.classList.remove('dragging');
+            });
+
+            // Add double-click listener to auto-place in appropriate slot
+            card.addEventListener('dblclick', (e) => {
+                const itemData = {
+                    itemId: stack.item.id,
+                    baseId: baseId,
+                    name: stack.item.name,
+                    icon: stack.item.icon || '📦',
+                    quantity: stack.quantity
+                };
+                handleAutoPlaceComponent(itemData);
+            });
+
+            container.appendChild(card);
+        });
     }
 
     function switchCraftingTab(tabName) {
@@ -1121,7 +1685,8 @@ const Crafting = (() => {
     return {
         init,
         refreshFromSaveData,
-        renderWeaponCategories
+        renderWeaponCategories,
+        updateValidationMessage
     };
 })();
 
