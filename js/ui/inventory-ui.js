@@ -598,10 +598,10 @@ const InventoryUI = (() => {
      */
     function setupInventoryControls(container, character, onItemAction) {
         const searchInput = document.getElementById('inventory-search');
-        const filterButtons = document.querySelectorAll('.filter-btn');
+        const filterSelect = document.getElementById('filter-select');
         const sortSelect = document.getElementById('sort-select');
 
-        if (!searchInput || !filterButtons || !sortSelect) {
+        if (!searchInput || !filterSelect || !sortSelect) {
             console.warn('Inventory control elements not found');
             return;
         }
@@ -612,17 +612,10 @@ const InventoryUI = (() => {
             renderInventoryGrid(container, character, onItemAction);
         });
 
-        // Filter buttons
-        filterButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Update active state
-                filterButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                // Update filter
-                currentFilter = btn.dataset.filter;
-                renderInventoryGrid(container, character, onItemAction);
-            });
+        // Filter dropdown
+        filterSelect.addEventListener('change', (e) => {
+            currentFilter = e.target.value;
+            renderInventoryGrid(container, character, onItemAction);
         });
 
         // Sort dropdown

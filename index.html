@@ -364,14 +364,15 @@
                             <div class="inventory-controls">
                                 <input type="text" id="inventory-search" placeholder="🔍 Search inventory..." />
 
-                                <div class="filter-buttons">
-                                    <button class="filter-btn active" data-filter="all">All</button>
-                                    <button class="filter-btn" data-filter="weapon">⚔️ Weapons</button>
-                                    <button class="filter-btn" data-filter="armor">🛡️ Armor</button>
-                                    <button class="filter-btn" data-filter="accessory">💍 Accessories</button>
-                                    <button class="filter-btn" data-filter="consumable">🧪 Consumables</button>
-                                    <button class="filter-btn" data-filter="material">🪨 Materials</button>
-                                </div>
+                                <select id="filter-select" class="sort-dropdown">
+                                    <option value="all">Filter: All</option>
+                                    <option value="weapon">Filter: Weapons</option>
+                                    <option value="armor">Filter: Armor</option>
+                                    <option value="accessory">Filter: Accessories</option>
+                                    <option value="consumable">Filter: Consumables</option>
+                                    <option value="material">Filter: Materials</option>
+                                    <option value="tool">Filter: Tools</option>
+                                </select>
 
                                 <select id="sort-select" class="sort-dropdown">
                                     <option value="default">Sort: Default</option>

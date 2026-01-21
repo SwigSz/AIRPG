@@ -29,6 +29,10 @@ const CharacterUI = (() => {
                         <span class="tab-icon">📊</span>
                         <span class="tab-label">Stats</span>
                     </button>
+                    <button class="character-tab-btn" data-char-tab="progression">
+                        <span class="tab-icon">📈</span>
+                        <span class="tab-label">Skills</span>
+                    </button>
                     <button class="character-tab-btn" data-char-tab="abilities">
                         <span class="tab-icon">⚡</span>
                         <span class="tab-label">Abilities</span>
@@ -36,10 +40,6 @@ const CharacterUI = (() => {
                     <button class="character-tab-btn" data-char-tab="powers">
                         <span class="tab-icon">✨</span>
                         <span class="tab-label">Powers</span>
-                    </button>
-                    <button class="character-tab-btn" data-char-tab="progression">
-                        <span class="tab-icon">📈</span>
-                        <span class="tab-label">Skills</span>
                     </button>
                 </div>
 

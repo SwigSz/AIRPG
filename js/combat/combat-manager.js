@@ -550,6 +550,12 @@ const CombatManager = (() => {
                 });
             }
 
+            // Award combat skill XP for winning
+            const character = GameState.getState().character;
+            if (character && window.SkillManager) {
+                SkillManager.addSkillXP(character, 'combat', 50);
+            }
+
             // Process loot drops from defeated enemies
             if (window.LootManager) {
                 deadEnemies.forEach(enemy => {
@@ -574,6 +580,12 @@ const CombatManager = (() => {
             // Track combat stats
             if (window.StatsTracker) {
                 StatsTracker.incrementStat('combat.battlesLost', 1);
+            }
+
+            // Award combat skill XP for losing (consolation prize)
+            const character = GameState.getState().character;
+            if (character && window.SkillManager) {
+                SkillManager.addSkillXP(character, 'combat', 10);
             }
         } else if (result === 'flee') {
             logCombat('Fled from combat.');
