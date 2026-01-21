@@ -1244,6 +1244,34 @@ const Crafting = (() => {
         // Add to inventory
         window.Inventory.addItem(character.inventory, craftedItem);
 
+        // Award Smithing XP
+        if (window.SkillManager) {
+            // Determine XP based on item tier/complexity
+            let xpAmount = 10; // Base XP for basic items
+
+            // Check item classifications for tier
+            if (craftedItem.classifications) {
+                // Higher tier items give more XP
+                if (craftedItem.name.toLowerCase().includes('iron')) {
+                    xpAmount = 25;
+                } else if (craftedItem.name.toLowerCase().includes('steel') || craftedItem.name.toLowerCase().includes('refined')) {
+                    xpAmount = 50;
+                } else if (craftedItem.name.toLowerCase().includes('masterwork') || craftedItem.name.toLowerCase().includes('legendary')) {
+                    xpAmount = 100;
+                }
+
+                // Weapons and armor give more XP than tools
+                if (craftedItem.classifications.includes('weapon')) {
+                    xpAmount += 5;
+                } else if (craftedItem.classifications.includes('armor')) {
+                    xpAmount += 3;
+                }
+            }
+
+            SkillManager.addSkillXP(character, 'smithing', xpAmount);
+            console.log(`Awarded ${xpAmount} Smithing XP for crafting ${craftedItem.name}`);
+        }
+
         // Clear placed components (items already removed from inventory when placed)
         placedComponents = {};
         savePlacedComponents();

@@ -25,40 +25,28 @@ const CharacterUI = (() => {
             <div class="character-tab-layout">
                 <!-- Tab Navigation -->
                 <div class="character-tab-nav">
-                    <button class="character-tab-btn active" data-char-tab="skills">
-                        <span class="tab-icon">📜</span>
-                        <span class="tab-label">Skills</span>
+                    <button class="character-tab-btn active" data-char-tab="stats">
+                        <span class="tab-icon">📊</span>
+                        <span class="tab-label">Stats</span>
                     </button>
                     <button class="character-tab-btn" data-char-tab="abilities">
                         <span class="tab-icon">⚡</span>
                         <span class="tab-label">Abilities</span>
                     </button>
-                    <button class="character-tab-btn" data-char-tab="stats">
-                        <span class="tab-icon">📊</span>
-                        <span class="tab-label">Stats</span>
+                    <button class="character-tab-btn" data-char-tab="powers">
+                        <span class="tab-icon">✨</span>
+                        <span class="tab-label">Powers</span>
+                    </button>
+                    <button class="character-tab-btn" data-char-tab="progression">
+                        <span class="tab-icon">📈</span>
+                        <span class="tab-label">Skills</span>
                     </button>
                 </div>
 
                 <!-- Tab Content Area -->
                 <div class="character-tab-content-area">
-                    <!-- Skills Tab -->
-                    <div class="character-tab-content active" id="skills-tab-content">
-                        <h2>Skills</h2>
-                        <div class="skills-grid" id="skills-grid">
-                            <!-- Skills will be rendered here -->
-                        </div>
-                    </div>
-
-                    <!-- Abilities Tab -->
-                    <div class="character-tab-content" id="abilities-tab-content">
-                        <h2>Abilities</h2>
-                        <div class="abilities-grid" id="abilities-grid">
-                            <!-- Abilities will be rendered here -->
-                        </div>
-                    </div>
-
                     <!-- Stats Tab -->
-                    <div class="character-tab-content" id="stats-tab-content">
+                    <div class="character-tab-content active" id="stats-tab-content">
                         <h2>Character Statistics</h2>
                         <div class="stats-categories">
                             <div class="stats-category">
@@ -71,6 +59,39 @@ const CharacterUI = (() => {
                                 <h3>General Stats</h3>
                                 <div class="stats-list" id="general-stats-list">
                                     <!-- General stats will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Abilities Tab -->
+                    <div class="character-tab-content" id="abilities-tab-content">
+                        <h2>Abilities</h2>
+                        <div class="abilities-grid" id="abilities-grid">
+                            <!-- Abilities will be rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Powers Tab (formerly Skills) -->
+                    <div class="character-tab-content" id="powers-tab-content">
+                        <h2>Powers</h2>
+                        <div class="powers-grid" id="powers-grid">
+                            <!-- Powers will be rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Progression Skills Tab (NEW) -->
+                    <div class="character-tab-content" id="progression-tab-content">
+                        <div class="progression-skills-layout">
+                            <div class="skill-list-panel">
+                                <h3>Skills</h3>
+                                <div class="skill-list" id="skill-list">
+                                    <!-- Skill list will be rendered here -->
+                                </div>
+                            </div>
+                            <div class="skill-details-panel">
+                                <div id="skill-details">
+                                    <p class="empty-message">Select a skill to view details</p>
                                 </div>
                             </div>
                         </div>
@@ -116,65 +137,67 @@ const CharacterUI = (() => {
     // Main render function
     function render() {
         // Get current active tab from SubTabManager
-        const activeTab = window.SubTabManager?.getCurrentSubTab('character') || 'skills';
+        const activeTab = window.SubTabManager?.getCurrentSubTab('character') || 'stats';
 
-        if (activeTab === 'skills') {
-            renderSkills();
-        } else if (activeTab === 'abilities') {
-            renderAbilities();
-        } else if (activeTab === 'stats') {
+        if (activeTab === 'stats') {
             renderStats();
             // Set up attribute buttons after rendering stats
             setTimeout(() => setupAttributeButtons(), 0);
+        } else if (activeTab === 'abilities') {
+            renderAbilities();
+        } else if (activeTab === 'powers') {
+            renderPowers();
+        } else if (activeTab === 'progression') {
+            renderProgression();
         }
     }
 
-    // Render skills
-    function renderSkills() {
-        const skillsGrid = document.getElementById('skills-grid');
-        if (!skillsGrid) return;
+    // Render powers (formerly skills)
+    function renderPowers() {
+        const powersGrid = document.getElementById('powers-grid');
+        if (!powersGrid) return;
 
-        skillsGrid.innerHTML = '';
+        powersGrid.innerHTML = '';
 
-        if (!window.SkillManager) {
-            skillsGrid.innerHTML = '<p class="empty-message">Skill system not loaded</p>';
+        if (!window.PowerManager) {
+            powersGrid.innerHTML = '<p class="empty-message">Power system not loaded</p>';
             return;
         }
 
-        const allSkills = SkillManager.getAllSkills();
-        const earnedSkills = allSkills.filter(skill => skill.earned);
+        const allPowers = PowerManager.getAllPowers();
+        const earnedPowers = allPowers.filter(power => power.earned);
 
-        if (earnedSkills.length === 0) {
-            skillsGrid.innerHTML = '<p class="empty-message">No skills earned yet. Earn your first skill by crafting an item!</p>';
+        if (earnedPowers.length === 0) {
+            powersGrid.innerHTML = '<p class="empty-message">No powers earned yet. Earn your first power by crafting an item!</p>';
             return;
         }
 
-        earnedSkills.forEach(skill => {
-            const skillCard = createSkillCard(skill);
-            skillsGrid.appendChild(skillCard);
+        earnedPowers.forEach(power => {
+            const powerCard = createPowerCard(power);
+            powersGrid.appendChild(powerCard);
         });
     }
 
-    // Create a skill card element
-    function createSkillCard(skill) {
+    // Create a power card element
+    function createPowerCard(power) {
         const card = document.createElement('div');
-        card.className = 'skill-card';
+        card.className = 'skill-card'; // Reuse skill-card styles
 
         card.innerHTML = `
-            <div class="skill-icon">${skill.icon || '📜'}</div>
-            <div class="skill-name">${skill.name}</div>
-            <div class="skill-category">${skill.category || ''}</div>
+            <div class="skill-icon">${power.icon || '✨'}</div>
+            <div class="skill-name">${power.name}</div>
+            <div class="skill-category">${power.category || ''}</div>
         `;
 
         // Add hover tooltip
         card.addEventListener('mouseenter', () => {
             if (window.TooltipManager) {
                 const tooltipData = {
-                    ...skill,
-                    unlockDescription: skill.unlockConditions ?
-                        window.ConditionEvaluator?.describeCondition(skill.unlockConditions) : null
+                    ...power,
+                    unlockDescription: power.unlockConditions ?
+                        window.ConditionEvaluator?.describeCondition(power.unlockConditions) : null
                 };
-                TooltipManager.showTooltip(card, tooltipData, 'skill');
+                TooltipManager.showTooltip(card, tooltipData, 'power');
             }
         });
 
@@ -185,6 +208,131 @@ const CharacterUI = (() => {
         });
 
         return card;
+    }
+
+    // Render progression skills (NEW SYSTEM)
+    function renderProgression() {
+        if (!window.SkillManager) {
+            const skillList = document.getElementById('skill-list');
+            if (skillList) {
+                skillList.innerHTML = '<p class="empty-message">Skill system not loaded</p>';
+            }
+            return;
+        }
+
+        renderSkillList();
+    }
+
+    // Render skill list
+    function renderSkillList() {
+        const skillListContainer = document.getElementById('skill-list');
+        if (!skillListContainer) return;
+
+        const character = window.GameState?.getState()?.character;
+        if (!character || !character.skills) {
+            skillListContainer.innerHTML = '<p class="empty-message">No skills unlocked yet.<br><br>Earn XP to unlock skills!</p>';
+            return;
+        }
+
+        skillListContainer.innerHTML = '';
+
+        // Get only unlocked skills (skills that exist in character.skills)
+        const allSkills = SkillManager.getAllSkills();
+        const unlockedSkills = allSkills
+            .filter(skill => character.skills[skill.id] !== undefined)
+            .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+
+        if (unlockedSkills.length === 0) {
+            skillListContainer.innerHTML = '<p class="empty-message">No skills unlocked yet.<br><br>Earn XP to unlock skills!</p>';
+            return;
+        }
+
+        unlockedSkills.forEach(skill => {
+            const skillData = character.skills[skill.id];
+
+            const skillRow = document.createElement('div');
+            skillRow.className = 'skill-row';
+            skillRow.dataset.skillId = skill.id;
+
+            skillRow.innerHTML = `
+                <span class="skill-row-name">${skill.name}</span>
+                <span class="skill-row-level">Lv. ${skillData.level}</span>
+            `;
+
+            skillRow.addEventListener('click', () => {
+                // Remove active class from all rows
+                document.querySelectorAll('.skill-row').forEach(row => row.classList.remove('active'));
+                // Add active class to clicked row
+                skillRow.classList.add('active');
+                // Render details for this skill
+                renderSkillDetails(skill, skillData);
+            });
+
+            skillListContainer.appendChild(skillRow);
+        });
+
+        // Auto-select first skill if available
+        if (unlockedSkills.length > 0) {
+            const firstSkillRow = skillListContainer.querySelector('.skill-row');
+            if (firstSkillRow) {
+                firstSkillRow.click();
+            }
+        }
+    }
+
+    // Render skill details panel
+    function renderSkillDetails(skill, skillData) {
+        const detailsContainer = document.getElementById('skill-details');
+        if (!detailsContainer) return;
+
+        const levelInfo = SkillManager.getLevelInfo(skillData.xp, skill.id);
+        const xpForNext = levelInfo.xpForNextLevel - skillData.xp;
+        const xpProgress = ((skillData.xp - levelInfo.xpForCurrentLevel) / (levelInfo.xpForNextLevel - levelInfo.xpForCurrentLevel)) * 100;
+
+        detailsContainer.innerHTML = `
+            <div class="skill-detail-header">
+                <div class="skill-detail-icon">${skill.icon}</div>
+                <div class="skill-detail-title">
+                    <h3>${skill.name}</h3>
+                    <p class="skill-detail-description">${skill.description || 'No description available'}</p>
+                </div>
+            </div>
+
+            <div class="skill-detail-level">
+                <h4>Level ${levelInfo.level}</h4>
+                <div class="skill-xp-info">
+                    <span>${skillData.xp.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP</span>
+                    <span>${Math.floor(xpProgress)}%</span>
+                </div>
+                <div class="skill-xp-bar">
+                    <div class="skill-xp-fill" style="width: ${xpProgress}%"></div>
+                </div>
+                <p class="xp-remaining">${xpForNext.toLocaleString()} XP until level ${levelInfo.level + 1}</p>
+            </div>
+
+            <div class="skill-detail-bonuses">
+                <h4>Bonuses</h4>
+                <div class="bonuses-list">
+                    ${renderSkillBonuses(skill, levelInfo.level)}
+                </div>
+            </div>
+        `;
+    }
+
+    // Render skill bonuses
+    function renderSkillBonuses(skill, level) {
+        const bonuses = SkillManager.getSkillBonuses(skill.id, level);
+
+        if (!bonuses || bonuses.length === 0) {
+            return '<p class="empty-message">No bonuses available yet</p>';
+        }
+
+        return bonuses.map(bonus => `
+            <div class="bonus-item">
+                <span class="bonus-icon">${bonus.icon || '+'}</span>
+                <span class="bonus-text">${bonus.description}</span>
+            </div>
+        `).join('');
     }
 
     // Render abilities

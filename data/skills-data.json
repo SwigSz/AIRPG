@@ -1,0 +1,82 @@
+{
+  "skills": [
+    {
+      "id": "smithing",
+      "name": "Smithing",
+      "icon": "⚒️",
+      "description": "The art of crafting weapons, armor, and tools. Increases quality and unlocks better materials.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null
+    },
+    {
+      "id": "combat",
+      "name": "Combat",
+      "icon": "⚔️",
+      "description": "Proficiency in melee combat. Increases damage dealt with melee weapons.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null
+    },
+    {
+      "id": "defense",
+      "name": "Defense",
+      "icon": "🛡️",
+      "description": "Training in defensive techniques. Increases armor effectiveness and survivability.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null
+    },
+    {
+      "id": "ranged",
+      "name": "Ranged",
+      "icon": "🏹",
+      "description": "Skill with bows, crossbows, and thrown weapons. Increases ranged damage and accuracy.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null
+    },
+    {
+      "id": "magic",
+      "name": "Magic",
+      "icon": "✨",
+      "description": "Mastery of arcane arts. Increases magic damage and reduces mana costs.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null
+    },
+    {
+      "id": "mining",
+      "name": "Mining",
+      "icon": "⛏️",
+      "description": "Expertise in extracting ore and minerals. Increases yield and speeds up mining.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null
+    },
+    {
+      "id": "woodcutting",
+      "name": "Woodcutting",
+      "icon": "🪓",
+      "description": "Proficiency in harvesting wood. Increases wood yield and chopping speed.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null,
+      "milestoneBonuses": [
+        { "level": 10, "icon": "+", "description": "+5% chance to get extra wood" },
+        { "level": 20, "icon": "🪓", "description": "+10% chance to get extra wood, +10% chopping speed" },
+        { "level": 30, "icon": "🌳", "description": "+15% chance to get extra wood, +5% chance for quality timber" },
+        { "level": 50, "icon": "🌳", "description": "+25% chance to get extra wood, +15% chance for quality timber" }
+      ]
+    },
+    {
+      "id": "foraging",
+      "name": "Foraging",
+      "icon": "🌿",
+      "description": "Knowledge of gathering herbs, plants, and natural resources. Increases foraging yield.",
+      "baseXP": 100,
+      "xpExponent": 1.5,
+      "unlockRequirements": null
+    }
+  ]
+}

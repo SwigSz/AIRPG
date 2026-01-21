@@ -536,6 +536,15 @@ window.Smithing = (function() {
 
         // Add to inventory (will stack with same grade ingots)
         addItemToInventory(ingotItem);
+
+        // Award Smithing XP (100 × quality percentage)
+        if (window.SkillManager) {
+            const xpAmount = Math.floor(100 * (quality / 100));
+            const character = window.GameState ? window.GameState.getState().character : null;
+            if (character) {
+                SkillManager.addSkillXP(character, 'smithing', xpAmount);
+            }
+        }
     }
 
     // Show success popup

@@ -557,12 +557,12 @@ const CombatManager = (() => {
                 });
             }
 
-            // Check for ability/skill unlocks
+            // Check for ability/power unlocks
             if (window.AbilityManager) {
                 AbilityManager.checkAndUnlockAbilities();
             }
-            if (window.SkillManager) {
-                SkillManager.checkAndEarnSkills();
+            if (window.PowerManager) {
+                PowerManager.checkAndEarnPowers();
             }
             // Refresh character UI
             if (window.CharacterUI) {

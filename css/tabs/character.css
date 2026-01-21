@@ -448,3 +448,271 @@
 .stat-item[title]:hover {
     background-color: #1e293b;
 }
+
+/* ============================================
+   PROGRESSION SKILLS TAB
+   ============================================ */
+
+.progression-skills-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Skill List Panel */
+.skill-list-panel {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.skill-list-panel h3 {
+    margin: 0 0 1rem 0;
+    color: #f59e0b;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+    padding-right: 0.5rem;
+}
+
+.skill-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.skill-list::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 4px;
+}
+
+.skill-list::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+.skill-list::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+.skill-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #0f172a;
+    border: 2px solid #334155;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.skill-row:hover {
+    border-color: #f59e0b;
+    background-color: #1e293b;
+}
+
+.skill-row.active {
+    border-color: #f59e0b;
+    background-color: #f59e0b;
+    color: #0f172a;
+}
+
+.skill-row-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.skill-row-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.skill-row-level {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.skill-row.active .skill-row-level {
+    color: #0f172a;
+}
+
+/* Skill Details Panel */
+.skill-details-panel {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1.5rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.skill-details-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.skill-details-panel::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 4px;
+}
+
+.skill-details-panel::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+.skill-details-panel::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+.skill-detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #334155;
+}
+
+.skill-detail-icon {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.skill-detail-title h3 {
+    margin: 0 0 0.5rem 0;
+    color: #f59e0b;
+    font-size: 1.5rem;
+}
+
+.skill-detail-description {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Skill Level Display */
+.skill-detail-level {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #0f172a;
+    border-radius: 6px;
+    border: 1px solid #334155;
+}
+
+.skill-detail-level h4 {
+    margin: 0 0 0.75rem 0;
+    color: #f59e0b;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.skill-xp-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.skill-xp-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #000000;
+    border: 2px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.skill-xp-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #f59e0b, #fb923c);
+    transition: width 0.3s ease;
+}
+
+.xp-remaining {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Skill Bonuses */
+.skill-detail-bonuses {
+    margin-top: 1.5rem;
+}
+
+.skill-detail-bonuses h4 {
+    margin: 0 0 1rem 0;
+    color: #f59e0b;
+    font-size: 1.1rem;
+}
+
+.bonuses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.bonus-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.bonus-item:hover {
+    border-color: #10b981;
+    background-color: #1e293b;
+}
+
+.bonus-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.bonus-text {
+    flex: 1;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Empty Message */
+.empty-message {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 2rem;
+    font-size: 0.95rem;
+}
+
+/* Powers Grid (reuse skill-card styles) */
+.powers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+}

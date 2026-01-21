@@ -31,14 +31,36 @@ const NotificationManager = (() => {
         });
     }
 
-    // Show skill unlock notification
+    // Show skill unlock notification (for Progression Skills)
     function showSkillUnlock(skill) {
         showNotification({
-            type: 'skill',
+            type: 'skill-unlock',
             icon: skill.icon,
-            title: 'New Skill Earned!',
+            title: 'New Skill Unlocked!',
             message: skill.name,
             description: skill.description
+        });
+    }
+
+    // Show power unlock notification (renamed from skills)
+    function showPowerUnlock(power) {
+        showNotification({
+            type: 'power',
+            icon: power.icon,
+            title: 'New Power Earned!',
+            message: power.name,
+            description: power.description
+        });
+    }
+
+    // Show skill level up notification (for Progression Skills)
+    function showSkillLevelUp(skill, newLevel) {
+        showNotification({
+            type: 'skill-levelup',
+            icon: skill.icon,
+            title: `${skill.name} Level Up!`,
+            message: `Level ${newLevel}`,
+            description: `Your ${skill.name} skill has reached level ${newLevel}!`
         });
     }
 
@@ -136,6 +158,8 @@ const NotificationManager = (() => {
         init,
         showAbilityUnlock,
         showSkillUnlock,
+        showPowerUnlock,
+        showSkillLevelUp,
         showNotification
     };
 })();

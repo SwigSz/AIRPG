@@ -694,6 +694,15 @@ window.WeaponSmithingController = (function() {
             grade: getQualityGrade(result.finalQuality)
         });
 
+        // Award Smithing XP (200 × quality percentage)
+        if (window.SkillManager) {
+            const xpAmount = Math.floor(200 * (result.finalQuality / 100));
+            const character = window.GameState ? window.GameState.getState().character : null;
+            if (character) {
+                SkillManager.addSkillXP(character, 'smithing', xpAmount);
+            }
+        }
+
         // Reset UI
         resetForgeUI();
     }

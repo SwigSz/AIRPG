@@ -24,7 +24,7 @@ const Character = (() => {
                 charisma: 0
             },
             attributePoints: options.attributePoints !== undefined ? options.attributePoints : 0,
-            skills: options.skills || [],
+            skills: options.skills || {}, // Skills are stored as object: { skillId: { level, xp } }
             traits: options.traits || [],
             profession: options.profession || null,
             generation: options.generation || 1,

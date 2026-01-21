@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.ItemFactory) await ItemFactory.init();
     if (window.EnemyDatabase) await EnemyDatabase.init();
     if (window.AbilityManager) await AbilityManager.init();
+    if (window.PowerManager) await PowerManager.init();
     if (window.SkillManager) await SkillManager.init();
     if (window.LootManager) await LootManager.init();
     if (window.Smithing) await Smithing.init();
@@ -171,21 +172,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Initialize Test Character with Test Data
 function initializeTestCharacter() {
-    // Create test skill
-    const woodcuttingSkill = Skills.createSkill('Woodcutting', {
-        level: 1,
-        xp: 0,
-        xpToNext: 100
-    });
-
     // Create all placeholder items for inventory
     const placeholderItems = Items.createAllPlaceholderItems();
 
     // Create test character with proper inventory and equipment structure
+    // Skills start as empty object {} and are unlocked via SkillManager.addSkillXP()
     const testCharacter = Character.create('Test Hero', {
         age: 25,
         level: 1,
-        skills: [woodcuttingSkill],
+        skills: {}, // NEW skill system uses object, not array
         inventory: Inventory.create(),
         equipment: Equipment.create()
         // Stats will default to 0 for all attributes
@@ -300,6 +295,11 @@ function initializeTestCharacter() {
     // Store in game state
     GameState.updateProperty('character', testCharacter);
 
+    // Initialize progression skills
+    if (window.SkillManager) {
+        SkillManager.initializeCharacterSkills(testCharacter);
+    }
+
     // Calculate initial stats (defense, HP, etc.)
     if (window.CharacterStats) {
         CharacterStats.applyToCharacter(testCharacter);
@@ -362,9 +362,6 @@ function displayCharacterData() {
     // Update top bar
     updateTopBar(character);
 
-    // Display skills
-    displaySkills(character.skills);
-
     // Display inventory and equipment
     renderInventoryUI();
     renderEquipmentUI();
@@ -375,7 +372,7 @@ function displayCharacterData() {
         InventoryUI.setupInventoryControls(inventoryGrid, character, handleItemAction);
     }
 
-    // Render character UI if available
+    // Render character UI if available (handles all character tab rendering)
     if (window.CharacterUI) {
         CharacterUI.render();
     }
@@ -479,22 +476,11 @@ function updateOldCharacterTabStats(character) {
 window.updateTopBar = updateTopBar;
 
 // Display Skills in Character Tab
+// NOTE: This function is deprecated - CharacterUI now handles all character tab rendering
+// Keeping for backward compatibility but it should not be called
 function displaySkills(skills) {
-    if (!skills || skills.length === 0) return;
-
-    const skillsGrid = document.querySelector('.skills-grid');
-    skillsGrid.innerHTML = ''; // Clear existing
-
-    skills.forEach(skill => {
-        const skillCard = document.createElement('div');
-        skillCard.className = 'skill-card';
-        skillCard.innerHTML = `
-            <div class="skill-name">${skill.name}</div>
-            <div class="skill-level">Level: ${skill.level}</div>
-            <div class="skill-xp">${skill.xp} / ${skill.xpToNext} XP</div>
-        `;
-        skillsGrid.appendChild(skillCard);
-    });
+    // CharacterUI.render() now handles skills display
+    console.warn('displaySkills() is deprecated - use CharacterUI.render() instead');
 }
 
 // ============================================

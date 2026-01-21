@@ -1072,6 +1072,29 @@ const Map = (() => {
                 });
             }
 
+            // Award skill XP based on resource type
+            if (window.SkillManager) {
+                let skillId = null;
+                let xpAmount = 0;
+
+                // Determine which skill and how much XP
+                if (tile.resource.type === 'tree') {
+                    skillId = 'woodcutting';
+                    xpAmount = 10;
+                } else if (tile.resource.type === 'rock') {
+                    skillId = 'mining';
+                    xpAmount = 10;
+                } else if (tile.resource.type === 'copper_ore') {
+                    skillId = 'mining';
+                    xpAmount = 20;
+                }
+
+                // Award XP if applicable
+                if (skillId && xpAmount > 0) {
+                    SkillManager.addSkillXP(character, skillId, xpAmount);
+                }
+            }
+
             // Update inventory UI
             if (window.renderInventoryUI) {
                 window.renderInventoryUI();
