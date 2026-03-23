@@ -1,0 +1,362 @@
+/* Training Grounds Styling */
+
+/* Training Progress Section */
+.training-progress-section {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: rgba(20, 30, 50, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(100, 150, 200, 0.3);
+}
+
+.training-progress-card {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.training-progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.training-skill-name {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+.training-method-name {
+    font-size: 1.1em;
+    color: #aaa;
+}
+
+.training-progress-bar-container {
+    width: 100%;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(100, 150, 200, 0.3);
+}
+
+.training-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.training-progress-text {
+    text-align: center;
+    font-size: 1.1em;
+    color: #ccc;
+}
+
+.training-progress-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* Training Grounds Layout */
+.training-grounds-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    height: 100%;
+}
+
+/* Left Panel: Skill List */
+.training-skill-list-panel {
+    background: rgba(20, 30, 50, 0.8);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(100, 150, 200, 0.3);
+}
+
+.training-skill-list-panel h3 {
+    margin-top: 0;
+    color: #f0f0f0;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+.training-skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.training-skill-item {
+    padding: 15px;
+    background: rgba(30, 40, 60, 0.8);
+    border: 2px solid rgba(100, 150, 200, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.training-skill-item:hover {
+    background: rgba(40, 50, 70, 0.9);
+    border-color: rgba(150, 200, 255, 0.5);
+}
+
+.training-skill-item.selected {
+    background: rgba(50, 70, 100, 1);
+    border-color: #ff9500;
+}
+
+.training-skill-item.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.training-skill-item.disabled:hover {
+    background: rgba(30, 40, 60, 0.8);
+    border-color: rgba(100, 150, 200, 0.3);
+}
+
+.training-skill-item-name {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #f0f0f0;
+    margin-bottom: 5px;
+}
+
+.training-skill-item-level {
+    font-size: 0.9em;
+    color: #aaa;
+}
+
+/* Right Panel: Training Config */
+.training-config-panel {
+    background: rgba(20, 30, 50, 0.8);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid rgba(100, 150, 200, 0.3);
+}
+
+.empty-message {
+    text-align: center;
+    color: #888;
+    padding: 40px;
+    font-style: italic;
+}
+
+/* Training Configuration Content */
+.training-config-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Skill Info Section */
+.training-skill-info {
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(100, 150, 200, 0.3);
+}
+
+.training-skill-info h2 {
+    margin: 0 0 10px 0;
+    color: #f0f0f0;
+}
+
+.training-skill-level {
+    font-size: 1.1em;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.training-skill-xp {
+    font-size: 0.95em;
+    color: #ccc;
+}
+
+/* Training Methods Section */
+.training-methods-section {
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(100, 150, 200, 0.3);
+}
+
+.training-methods-section h3 {
+    margin-top: 0;
+    color: #f0f0f0;
+}
+
+.training-methods-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.training-method-card {
+    padding: 15px;
+    background: rgba(30, 40, 60, 0.8);
+    border: 2px solid rgba(100, 150, 200, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.training-method-card:hover {
+    background: rgba(40, 50, 70, 0.9);
+    border-color: rgba(150, 200, 255, 0.5);
+}
+
+.training-method-card.selected {
+    background: rgba(50, 70, 100, 1);
+    border-color: #ff9500;
+}
+
+.training-method-card.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.training-method-card.locked:hover {
+    background: rgba(30, 40, 60, 0.8);
+    border-color: rgba(100, 150, 200, 0.3);
+}
+
+.training-method-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.training-method-name {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+.training-method-difficulty {
+    font-size: 0.9em;
+    padding: 3px 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    color: #aaa;
+}
+
+.training-method-xp {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.training-method-locked-msg {
+    color: #ff5555;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+/* Time Allocation Section */
+.training-time-section {
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(100, 150, 200, 0.3);
+}
+
+.training-time-section h3 {
+    margin-top: 0;
+    color: #f0f0f0;
+}
+
+.training-time-slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.training-time-value {
+    font-size: 1.2em;
+    color: #f0f0f0;
+    text-align: center;
+}
+
+.training-time-slider {
+    width: 100%;
+    height: 8px;
+    background: rgba(100, 150, 200, 0.3);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.training-time-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #ff9500;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.training-time-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #ff9500;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.training-expected-xp {
+    text-align: center;
+    color: #4CAF50;
+    font-size: 1.1em;
+    margin-top: 10px;
+}
+
+/* Training Action Section */
+.training-action-section {
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+}
+
+.training-btn {
+    padding: 12px 30px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: bold;
+}
+
+.training-btn-primary {
+    background: linear-gradient(135deg, #ff9500 0%, #ff7400 100%);
+    color: white;
+}
+
+.training-btn-primary:hover {
+    background: linear-gradient(135deg, #ffaa00 0%, #ff8500 100%);
+    transform: translateY(-2px);
+}
+
+.training-btn-primary:disabled {
+    background: #555;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.5;
+}
+
+.training-btn-secondary {
+    background: rgba(100, 150, 200, 0.3);
+    color: #f0f0f0;
+}
+
+.training-btn-secondary:hover {
+    background: rgba(120, 170, 220, 0.4);
+}
+
+.training-btn-danger {
+    background: rgba(200, 50, 50, 0.6);
+    color: white;
+}
+
+.training-btn-danger:hover {
+    background: rgba(220, 60, 60, 0.8);
+}

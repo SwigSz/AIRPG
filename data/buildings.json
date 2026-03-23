@@ -104,6 +104,49 @@
         "stone": 10
       },
       "populationCapBonus": 10
+    },
+    {
+      "id": "combatArena_tier1",
+      "name": "Combat Arena (Basic)",
+      "icon": "⚔️",
+      "description": "A basic training ground for combat practice. Unlocks Basic Training (50 XP/day).",
+      "category": "training",
+      "tier": 1,
+      "cost": {
+        "wood": 20,
+        "stone": 15
+      },
+      "unlocks": ["basic_training"]
+    },
+    {
+      "id": "combatArena_tier2",
+      "name": "Combat Arena (Advanced)",
+      "icon": "⚔️",
+      "description": "An improved training ground with advanced equipment. Unlocks Advanced Training (100 XP/day).",
+      "category": "training",
+      "tier": 2,
+      "cost": {
+        "wood": 50,
+        "stone": 40,
+        "iron": 10
+      },
+      "requires": ["combatArena_tier1"],
+      "unlocks": ["advanced_training"]
+    },
+    {
+      "id": "combatArena_tier3",
+      "name": "Combat Arena (Elite)",
+      "icon": "⚔️",
+      "description": "An elite training facility for intensive combat drills. Unlocks Intensive Training (200 XP/day).",
+      "category": "training",
+      "tier": 3,
+      "cost": {
+        "wood": 100,
+        "stone": 80,
+        "iron": 30
+      },
+      "requires": ["combatArena_tier2"],
+      "unlocks": ["intensive_training"]
     }
   ]
 }

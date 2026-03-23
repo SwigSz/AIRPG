@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="css/components/combat.css">
     <link rel="stylesheet" href="css/tabs/character.css">
     <link rel="stylesheet" href="css/tabs/settlement.css">
+    <link rel="stylesheet" href="css/tabs/training.css">
     <link rel="stylesheet" href="css/tabs/map.css">
     <link rel="stylesheet" href="css/tabs/inventory.css">
     <link rel="stylesheet" href="css/tabs/crafting.css">
@@ -191,6 +192,10 @@
                             <span class="tab-icon">🔬</span>
                             <span class="tab-label">Research</span>
                         </button>
+                        <button class="settlement-nav-tab" data-settlement-tab="training">
+                            <span class="tab-icon">⚔️</span>
+                            <span class="tab-label">Training Grounds</span>
+                        </button>
                         <button class="settlement-nav-tab" data-settlement-tab="population">
                             <span class="tab-icon">👥</span>
                             <span class="tab-label">Population</span>
@@ -228,6 +233,46 @@
                                 <h3>Technology Tree</h3>
                                 <div class="research-tree-container">
                                     <canvas id="research-tree-canvas"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Training Grounds Tab Content -->
+                            <div class="settlement-tab-content" id="settlement-training-content">
+                                <!-- Active Training Progress (shown when training is active) -->
+                                <div class="training-progress-section" id="training-progress-section" style="display: none;">
+                                    <h3>Active Training</h3>
+                                    <div class="training-progress-card">
+                                        <div class="training-progress-info">
+                                            <div class="training-skill-name" id="active-training-skill">Combat</div>
+                                            <div class="training-method-name" id="active-training-method">Basic Training</div>
+                                        </div>
+                                        <div class="training-progress-bar-container">
+                                            <div class="training-progress-bar" id="training-progress-bar"></div>
+                                        </div>
+                                        <div class="training-progress-text" id="training-progress-text">Day 0 / 10</div>
+                                        <div class="training-progress-actions">
+                                            <button class="training-btn training-btn-secondary" id="pause-training-btn">Pause</button>
+                                            <button class="training-btn training-btn-danger" id="cancel-training-btn">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Training Configuration (two-column layout) -->
+                                <div class="training-grounds-layout">
+                                    <!-- Left Column: Skill Selection -->
+                                    <div class="training-skill-list-panel">
+                                        <h3>Select Skill</h3>
+                                        <div class="training-skill-list" id="training-skill-list">
+                                            <!-- Skills will be rendered here -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column: Training Configuration -->
+                                    <div class="training-config-panel">
+                                        <div id="training-config-content">
+                                            <p class="empty-message">Select a skill to configure training</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1044,6 +1089,7 @@
     <script src="js/crafting/weapon-smithing-controller.js?v=18"></script>
     <script src="js/settlement/settlement.js"></script>
     <script src="js/settlement/research.js"></script>
+    <script src="js/settlement/training.js"></script>
     <script src="js/world/map.js"></script>
     <script src="js/combat/enemy.js"></script>
     <script src="js/combat/enemy-factory.js"></script>

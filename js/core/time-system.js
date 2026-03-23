@@ -100,6 +100,12 @@ const TimeSystem = {
             window.Research.updateResearchProgress();
         }
 
+        // Update training progress
+        if (window.Training && window.Training.onTimeAdvance) {
+            const daysAdvanced = hours / this.HOURS_PER_DAY;
+            window.Training.onTimeAdvance(daysAdvanced);
+        }
+
         // Trigger UI update
         this.updateUI();
     },
@@ -152,6 +158,14 @@ const TimeSystem = {
      */
     getCurrentHour() {
         return this.currentTime.hour;
+    },
+
+    /**
+     * Get current time in total hours (for tracking elapsed time)
+     * @returns {number} Total hours since game start
+     */
+    getCurrentTime() {
+        return this.currentTime.totalHours;
     },
 
     /**

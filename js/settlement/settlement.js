@@ -99,6 +99,24 @@ const Settlement = (() => {
             );
         }
 
+        // Training skill clicks (delegate to handle dynamic content)
+        document.addEventListener('click', (e) => {
+            if (!e.target || typeof e.target.closest !== 'function') return;
+
+            const skillItem = e.target.closest('.training-skill-item');
+            if (skillItem && skillItem.dataset.skillId) {
+                // Remove previous selection
+                document.querySelectorAll('.training-skill-item').forEach(i =>
+                    i.classList.remove('selected'));
+
+                // Select this item
+                skillItem.classList.add('selected');
+
+                // Update config panel
+                updateTrainingConfig(skillItem.dataset.skillId);
+            }
+        });
+
         // Building card clicks (delegate to parent to handle dynamic content)
         document.addEventListener('click', (e) => {
             // Check if e.target is a valid DOM element
@@ -285,6 +303,8 @@ const Settlement = (() => {
             updateBuildingsTab();
         } else if (currentTab === 'population') {
             updatePopulationTab();
+        } else if (currentTab === 'training') {
+            updateTrainingTab();
         }
     }
 
@@ -1023,6 +1043,251 @@ const Settlement = (() => {
                 const buildingType = btn.dataset.building;
                 unassignWorker(buildingType);
             });
+        });
+    }
+
+    // ============================================
+    // TRAINING TAB
+    // ============================================
+    function updateTrainingTab() {
+        if (!window.Training) return;
+
+        const character = window.GameState?.getState()?.character;
+        if (!character) return;
+
+        // Update active training progress section
+        updateTrainingProgress();
+
+        // Update skill list
+        updateTrainingSkillList();
+
+        // Update training config panel (if a skill is selected)
+        const selectedSkill = document.querySelector('.training-skill-item.selected');
+        if (selectedSkill) {
+            const skillId = selectedSkill.dataset.skillId;
+            updateTrainingConfig(skillId);
+        }
+    }
+
+    function updateTrainingProgress() {
+        const trainingState = window.Training.getTrainingState();
+        const progressSection = document.getElementById('training-progress-section');
+
+        if (!trainingState || !trainingState.active) {
+            progressSection.style.display = 'none';
+            return;
+        }
+
+        progressSection.style.display = 'block';
+
+        // Update skill and method names
+        const methods = window.Training.getTrainingMethods();
+        const method = methods[trainingState.methodId];
+
+        document.getElementById('active-training-skill').textContent =
+            trainingState.skillId.charAt(0).toUpperCase() + trainingState.skillId.slice(1);
+        document.getElementById('active-training-method').textContent = method.name;
+
+        // Update progress bar
+        const progress = (trainingState.daysCompleted / trainingState.totalDays) * 100;
+        document.getElementById('training-progress-bar').style.width = `${progress}%`;
+
+        // Update progress text
+        document.getElementById('training-progress-text').textContent =
+            `Day ${trainingState.daysCompleted} / ${trainingState.totalDays}`;
+
+        // Update buttons
+        const pauseBtn = document.getElementById('pause-training-btn');
+        if (trainingState.paused) {
+            pauseBtn.textContent = 'Resume';
+            pauseBtn.onclick = () => {
+                window.Training.resumeTraining();
+            };
+        } else {
+            pauseBtn.textContent = 'Pause';
+            pauseBtn.onclick = () => {
+                window.Training.pauseTraining();
+            };
+        }
+
+        document.getElementById('cancel-training-btn').onclick = () => {
+            if (confirm('Cancel training? You will receive partial XP for completed days.')) {
+                window.Training.cancelTraining();
+            }
+        };
+    }
+
+    function updateTrainingSkillList() {
+        const container = document.getElementById('training-skill-list');
+        if (!container) return;
+
+        const character = window.GameState?.getState()?.character;
+        if (!character || !character.skills) return;
+
+        const trainableSkills = window.Training.getTrainableSkills();
+        const allSkills = window.SkillManager?.getAllSkills() || [];
+
+        // Remember currently selected skill
+        const previousSelected = document.querySelector('.training-skill-item.selected');
+        const previousSelectedId = previousSelected?.dataset?.skillId;
+
+        let html = '';
+
+        allSkills.forEach(skillDef => {
+            const skillData = character.skills[skillDef.id];
+
+            // Only show skills that are unlocked (exist in character.skills) AND trainable
+            if (!skillData) return;
+            if (!trainableSkills.includes(skillDef.id)) return;
+
+            const level = skillData.level || 1;
+            const xp = skillData.xp || 0;
+
+            const selectedClass = (previousSelectedId === skillDef.id) ? 'selected' : '';
+
+            html += `
+                <div class="training-skill-item ${selectedClass}" data-skill-id="${skillDef.id}">
+                    <div class="training-skill-item-name">${skillDef.name}</div>
+                    <div class="training-skill-item-level">Level ${level} (${xp} XP)</div>
+                </div>
+            `;
+        });
+
+        if (html === '') {
+            html = '<p class="empty-message">No trainable skills available</p>';
+        }
+
+        container.innerHTML = html;
+
+        // Event listener is attached once in initializeUI(), no need to re-attach here
+    }
+
+    function updateTrainingConfig(skillId) {
+        const container = document.getElementById('training-config-content');
+        if (!container) return;
+
+        const character = window.GameState?.getState()?.character;
+        const skillData = character.skills?.[skillId];
+        const skillDef = window.SkillManager?.getSkillById(skillId);
+        const methods = window.Training.getTrainingMethods();
+        const trainingState = window.Training.getTrainingState();
+
+        if (!skillDef) return;
+
+        const level = skillData?.level || 1;
+        const xp = skillData?.xp || 0;
+        const levelInfo = window.SkillManager?.getLevelInfo(skillId, level);
+        const xpForNext = levelInfo?.xpForNext || 100;
+
+        // Check if character is in settlement
+        const inSettlement = character.inSettlement;
+
+        // Build HTML
+        let html = `
+            <div class="training-config-content">
+                <!-- Skill Info -->
+                <div class="training-skill-info">
+                    <h2>${skillDef.name}</h2>
+                    <div class="training-skill-level">Level ${level}</div>
+                    <div class="training-skill-xp">${xp} / ${xpForNext} XP to next level</div>
+                </div>
+
+                <!-- Training Methods -->
+                <div class="training-methods-section">
+                    <h3>Training Method</h3>
+                    <div class="training-methods-grid" id="training-methods-grid">
+        `;
+
+        Object.values(methods).forEach(method => {
+            const isUnlocked = window.Training.isTrainingMethodUnlocked(method.id);
+            const lockedClass = !isUnlocked ? 'locked' : '';
+
+            html += `
+                <div class="training-method-card ${lockedClass}" data-method-id="${method.id}">
+                    <div class="training-method-header">
+                        <span class="training-method-name">${method.name}</span>
+                        <span class="training-method-difficulty">Difficulty: ${method.difficulty}</span>
+                    </div>
+                    <div class="training-method-xp">${method.xpPerDay} XP per day</div>
+                    ${!isUnlocked ? `<div class="training-method-locked-msg">Requires ${method.requiredBuilding}</div>` : ''}
+                </div>
+            `;
+        });
+
+        html += `
+                    </div>
+                </div>
+
+                <!-- Time Allocation -->
+                <div class="training-time-section">
+                    <h3>Training Duration</h3>
+                    <div class="training-time-slider-container">
+                        <div class="training-time-value"><span id="training-days-value">1</span> days</div>
+                        <input type="range" min="1" max="30" value="1" class="training-time-slider" id="training-time-slider">
+                        <div class="training-expected-xp" id="training-expected-xp">Expected XP: 0</div>
+                    </div>
+                </div>
+
+                <!-- Begin Training Button -->
+                <div class="training-action-section">
+                    <button class="training-btn training-btn-primary" id="begin-training-btn" ${!inSettlement || trainingState?.active ? 'disabled' : ''}>
+                        ${!inSettlement ? 'Must be in settlement' : trainingState?.active ? 'Already training' : 'Begin Training'}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Set up event listeners
+        let selectedMethodId = null;
+        let selectedDays = 1;
+
+        // Method selection
+        container.querySelectorAll('.training-method-card:not(.locked)').forEach(card => {
+            card.addEventListener('click', () => {
+                container.querySelectorAll('.training-method-card').forEach(c =>
+                    c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedMethodId = card.dataset.methodId;
+                updateExpectedXP();
+                updateBeginButton();
+            });
+        });
+
+        // Time slider
+        const slider = document.getElementById('training-time-slider');
+        const daysValue = document.getElementById('training-days-value');
+        slider.addEventListener('input', (e) => {
+            selectedDays = parseInt(e.target.value);
+            daysValue.textContent = selectedDays;
+            updateExpectedXP();
+        });
+
+        function updateExpectedXP() {
+            if (!selectedMethodId) return;
+
+            const method = methods[selectedMethodId];
+            const intModifier = window.CharacterStats ?
+                window.CharacterStats.getAttributeModifier(character, 'intelligence') / 100 : 0;
+            const expectedXP = Math.floor(method.xpPerDay * selectedDays * (1 + intModifier));
+
+            document.getElementById('training-expected-xp').textContent = `Expected XP: ${expectedXP}`;
+        }
+
+        function updateBeginButton() {
+            const btn = document.getElementById('begin-training-btn');
+            btn.disabled = !selectedMethodId || !inSettlement || trainingState?.active;
+        }
+
+        // Begin training button
+        document.getElementById('begin-training-btn').addEventListener('click', () => {
+            if (selectedMethodId && inSettlement && !trainingState?.active) {
+                const success = window.Training.startTraining(skillId, selectedMethodId, selectedDays);
+                if (success) {
+                    updateUI();
+                }
+            }
         });
     }
 
