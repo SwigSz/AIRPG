@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize research tree system
     if (window.Research) await Research.init();
 
-    // Initialize map system
+    // Initialize local map system (canvas setup only — world is restored after save load)
     if (window.Map) Map.init();
 
     // Initialize save/load button event listeners
@@ -103,7 +103,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 TimeSystem.setInSettlement(true);
             }
 
-            // Restore map state (player position and resources)
+            // Restore overworld map state (seed, player position, revealed tiles, settlement)
+            if (window.WorldMap) {
+                WorldMap.init();
+                const seedDisplay = document.getElementById('overworld-seed-display');
+                if (seedDisplay) {
+                    const seed = WorldMap.getSeed();
+                    seedDisplay.textContent = seed !== null ? `Seed: ${seed}` : '';
+                }
+            }
+
+            // Restore local map state (player position and resources)
             if (window.Map && window.Map.restoreState) {
                 Map.restoreState();
             }
@@ -322,6 +332,16 @@ function initializeTestCharacter() {
     // Check for initial ability unlocks
     if (window.AbilityManager) {
         AbilityManager.checkAndUnlockAbilities();
+    }
+
+    // Initialize world map for new game (generates fresh seed)
+    if (window.WorldMap) {
+        WorldMap.init();
+        const seedDisplay = document.getElementById('overworld-seed-display');
+        if (seedDisplay) {
+            const seed = WorldMap.getSeed();
+            seedDisplay.textContent = seed !== null ? `Seed: ${seed}` : '';
+        }
     }
 
     // Auto-save the initial character

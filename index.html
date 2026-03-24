@@ -316,9 +316,31 @@
 
                 <!-- Map Tab -->
                 <div class="tab-content" id="map-tab">
-                    <!-- Normal Map View -->
-                    <div class="map-view active">
-                        <button id="set-camp-btn" class="set-camp-btn">⛺ Set Up Camp Here</button>
+
+                    <!-- Overworld Map View -->
+                    <div id="overworld-view" class="overworld-view">
+                        <!-- Canvas injected by world-map.js -->
+                        <div class="overworld-ui">
+                            <div id="overworld-info" class="overworld-info">
+                                <!-- Populated by WorldMap on move -->
+                            </div>
+                            <div class="overworld-actions">
+                                <button id="overworld-camp-btn" class="overworld-btn overworld-btn-camp">⛺ Place Settlement</button>
+                                <button id="overworld-explore-btn" class="overworld-btn overworld-btn-explore">🗺️ Explore Region</button>
+                            </div>
+                            <div class="overworld-seed-display" id="overworld-seed-display">
+                                <!-- Seed shown here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Local Map View (existing test map, hidden while overworld is active) -->
+                    <div class="map-view" style="display:none;">
+                        <div class="local-map-header">
+                            <button id="local-map-back-btn" class="local-map-back-btn">← Back to World Map</button>
+                            <span id="local-map-region-label" class="local-map-region-label"></span>
+                            <button id="set-camp-btn" class="set-camp-btn" style="display:none;">⛺ Set Up Camp Here</button>
+                        </div>
                         <div class="map-placeholder">Map View</div>
 
                         <!-- In Settlement Overlay -->
@@ -1090,6 +1112,8 @@
     <script src="js/settlement/settlement.js"></script>
     <script src="js/settlement/research.js"></script>
     <script src="js/settlement/training.js"></script>
+    <script src="js/world/noise.js"></script>
+    <script src="js/world/world-map.js"></script>
     <script src="js/world/map.js"></script>
     <script src="js/combat/enemy.js"></script>
     <script src="js/combat/enemy-factory.js"></script>

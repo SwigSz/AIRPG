@@ -3,9 +3,17 @@
 // ============================================
 
 const Map = (() => {
+    // ── Mode ────────────────────────────────────────────────────────────────
+    // TEST_MODE = true  → old hardcoded map, used for testing
+    // TEST_MODE = false → map generates per-region from overworld seed
+    const TEST_MODE = false;
+
+    // Current region context (set when entering a region from the overworld)
+    let currentRegion = null; // { x, y, biome } or null when in test mode
+
     // Constants
-    const GRID_WIDTH = 20;
-    const GRID_HEIGHT = 20;
+    const GRID_WIDTH = 40;
+    const GRID_HEIGHT = 40;
 
     // Biome Configuration - Easy to add new biomes
     const BIOMES = {
@@ -153,6 +161,10 @@ const Map = (() => {
     let keydownHandler = null;
     let resizeTimeout = null;
 
+    // Camera: top-left tile offset for the viewport
+    let cameraX = 0;
+    let cameraY = 0;
+
     /**
      * Initialize the map module
      */
@@ -171,8 +183,6 @@ const Map = (() => {
             canvas = document.createElement('canvas');
             canvas.id = 'map-canvas';
             canvas.style.display = 'block';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
 
             // Save elements before clearing
             const campButton = document.getElementById('set-camp-btn');
@@ -197,13 +207,22 @@ const Map = (() => {
         ctx = canvas.getContext('2d');
 
         // Generate the hardcoded grid
-        generateGrid();
-
-        // Load player position from game state if available
-        loadPlayerPosition();
-
-        // Load resource state from game state if available
-        loadGridState();
+        // In test mode, generate the hardcoded grid immediately.
+        // In overworld mode, grid is generated per-region when enterRegion() is called.
+        if (TEST_MODE) {
+            generateGrid();
+            loadPlayerPosition();
+            loadGridState();
+        } else {
+            // Generate a blank placeholder grid — region restore happens in restoreState()
+            grid = [];
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                grid[y] = [];
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    grid[y][x] = { type: 'plains', biome: 'plains', walkable: true, x, y, resource: null, combatEncounter: null };
+                }
+            }
+        }
 
         // Set up resize handler for responsive canvas
         setupResizeHandler();
@@ -226,9 +245,18 @@ const Map = (() => {
         // Set up leave camp button
         setupLeaveCampButton();
 
-        // Initial render
-        resizeCanvas();
-        render();
+        // Set up "Back to World Map" button (only relevant in overworld mode)
+        setupBackToOverworldButton();
+
+        // Wire overworld action buttons
+        wireOverworldButtons();
+
+        // Initial render only in test mode — in overworld mode the local map
+        // starts hidden and is rendered when the player enters a region.
+        if (TEST_MODE) {
+            resizeCanvas();
+            render();
+        }
 
         isInitialized = true;
     }
@@ -1178,31 +1206,43 @@ const Map = (() => {
     /**
      * Resize canvas to match container size
      */
+    function getViewportTiles() {
+        if (!canvas || tileSize === 0) return { cols: 0, rows: 0 };
+        return {
+            cols: Math.floor(canvas.width  / tileSize),
+            rows: Math.floor(canvas.height / tileSize)
+        };
+    }
+
+    function updateCamera() {
+        const { cols, rows } = getViewportTiles();
+        // Center camera on player, clamped to grid bounds
+        cameraX = Math.max(0, Math.min(GRID_WIDTH  - cols, playerPosition.x - Math.floor(cols / 2)));
+        cameraY = Math.max(0, Math.min(GRID_HEIGHT - rows, playerPosition.y - Math.floor(rows / 2)));
+    }
+
     function resizeCanvas() {
         if (!canvas) return;
 
-        const mapView = document.querySelector('.map-view');
-        if (!mapView) return;
+        const mapTab = document.getElementById('map-tab');
+        if (!mapTab) return;
 
-        // Get actual display size
-        const rect = mapView.getBoundingClientRect();
-        let displayWidth = rect.width;
-        let displayHeight = rect.height;
+        const rect = mapTab.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
 
-        // If the container is hidden (0 dimensions), skip resize
-        // This prevents rendering issues when tab is not visible
-        if (displayWidth === 0 || displayHeight === 0) {
-            return;
-        }
+        const pad = 12;
+        const availW = rect.width  - pad * 2;
+        const availH = rect.height - pad * 2;
 
-        // Set canvas resolution to match display size
-        canvas.width = displayWidth;
-        canvas.height = displayHeight;
+        // Tile size driven by height: fit exactly 17 rows
+        const VISIBLE_ROWS = 17;
+        tileSize = Math.max(1, Math.floor(availH / VISIBLE_ROWS));
 
-        // Calculate tile size based on the smaller dimension to fit the grid
-        const tileWidth = displayWidth / GRID_WIDTH;
-        const tileHeight = displayHeight / GRID_HEIGHT;
-        tileSize = Math.floor(Math.min(tileWidth, tileHeight));
+        // Canvas fills available area exactly — uniform padding on all sides
+        canvas.width  = availW;
+        canvas.height = availH;
+
+        updateCamera();
     }
 
     /**
@@ -1237,14 +1277,16 @@ const Map = (() => {
      * Draw all tiles
      */
     function drawTiles() {
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-            for (let x = 0; x < GRID_WIDTH; x++) {
-                const tile = grid[y][x];
+        const { cols, rows } = getViewportTiles();
+        for (let vy = 0; vy < rows; vy++) {
+            for (let vx = 0; vx < cols; vx++) {
+                const gx = cameraX + vx;
+                const gy = cameraY + vy;
+                if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+                const tile = grid[gy][gx];
                 const biomeConfig = BIOMES[tile.biome] || BIOMES.plains;
-                const color = biomeConfig.color;
-
-                ctx.fillStyle = color;
-                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                ctx.fillStyle = biomeConfig.color;
+                ctx.fillRect(vx * tileSize, vy * tileSize, tileSize, tileSize);
             }
         }
     }
@@ -1253,22 +1295,21 @@ const Map = (() => {
      * Draw grid lines
      */
     function drawGridLines() {
+        const { cols, rows } = getViewportTiles();
         ctx.strokeStyle = GRID_LINE_COLOR;
         ctx.lineWidth = GRID_LINE_WIDTH;
 
-        // Vertical lines
-        for (let x = 0; x <= GRID_WIDTH; x++) {
+        for (let x = 0; x <= cols; x++) {
             ctx.beginPath();
             ctx.moveTo(x * tileSize, 0);
-            ctx.lineTo(x * tileSize, GRID_HEIGHT * tileSize);
+            ctx.lineTo(x * tileSize, rows * tileSize);
             ctx.stroke();
         }
 
-        // Horizontal lines
-        for (let y = 0; y <= GRID_HEIGHT; y++) {
+        for (let y = 0; y <= rows; y++) {
             ctx.beginPath();
             ctx.moveTo(0, y * tileSize);
-            ctx.lineTo(GRID_WIDTH * tileSize, y * tileSize);
+            ctx.lineTo(cols * tileSize, y * tileSize);
             ctx.stroke();
         }
     }
@@ -1277,27 +1318,29 @@ const Map = (() => {
      * Draw resource nodes on tiles that have them
      */
     function drawResources() {
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-            for (let x = 0; x < GRID_WIDTH; x++) {
-                const tile = grid[y][x];
+        const { cols, rows } = getViewportTiles();
+        for (let vy = 0; vy < rows; vy++) {
+            for (let vx = 0; vx < cols; vx++) {
+                const gx = cameraX + vx;
+                const gy = cameraY + vy;
+                if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+                const tile = grid[gy][gx];
                 if (tile.resource) {
                     const resourceConfig = RESOURCES[tile.resource.type];
                     if (!resourceConfig) continue;
 
-                    // Draw darker shade overlay on tile
                     ctx.fillStyle = resourceConfig.color;
                     ctx.globalAlpha = 0.3;
-                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    ctx.fillRect(vx * tileSize, vy * tileSize, tileSize, tileSize);
                     ctx.globalAlpha = 1.0;
 
-                    // Draw resource icon centered on tile
                     const iconSize = Math.max(tileSize * 0.5, 12);
                     ctx.font = `${iconSize}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
 
-                    const centerX = x * tileSize + tileSize / 2;
-                    const centerY = y * tileSize + tileSize / 2;
+                    const centerX = vx * tileSize + tileSize / 2;
+                    const centerY = vy * tileSize + tileSize / 2;
 
                     ctx.fillText(resourceConfig.icon, centerX, centerY);
                 }
@@ -1313,27 +1356,29 @@ const Map = (() => {
      * Draw combat encounter nodes on tiles that have them
      */
     function drawCombatEncounters() {
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-            for (let x = 0; x < GRID_WIDTH; x++) {
-                const tile = grid[y][x];
+        const { cols, rows } = getViewportTiles();
+        for (let vy = 0; vy < rows; vy++) {
+            for (let vx = 0; vx < cols; vx++) {
+                const gx = cameraX + vx;
+                const gy = cameraY + vy;
+                if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+                const tile = grid[gy][gx];
                 if (tile.combatEncounter && tile.combatEncounter.active) {
                     const encounterConfig = COMBAT_ENCOUNTERS.enemy;
                     if (!encounterConfig) continue;
 
-                    // Draw darker red overlay on tile
                     ctx.fillStyle = encounterConfig.color;
                     ctx.globalAlpha = 0.4;
-                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    ctx.fillRect(vx * tileSize, vy * tileSize, tileSize, tileSize);
                     ctx.globalAlpha = 1.0;
 
-                    // Draw combat icon centered on tile
                     const iconSize = Math.max(tileSize * 0.6, 14);
                     ctx.font = `${iconSize}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
 
-                    const centerX = x * tileSize + tileSize / 2;
-                    const centerY = y * tileSize + tileSize / 2;
+                    const centerX = vx * tileSize + tileSize / 2;
+                    const centerY = vy * tileSize + tileSize / 2;
 
                     ctx.fillText(encounterConfig.icon, centerX, centerY);
                 }
@@ -1351,21 +1396,18 @@ const Map = (() => {
     function drawCamp() {
         if (!campLocation || !campLocation.isPlaced) return;
 
-        const x = campLocation.x;
-        const y = campLocation.y;
+        const vx = campLocation.x - cameraX;
+        const vy = campLocation.y - cameraY;
+        const { cols, rows } = getViewportTiles();
+        if (vx < 0 || vx >= cols || vy < 0 || vy >= rows) return;
 
-        // Draw camp icon centered on tile (slightly smaller than player)
         const iconSize = Math.max(tileSize * 0.8, 16);
         ctx.font = `${iconSize}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const centerX = x * tileSize + tileSize / 2;
-        const centerY = y * tileSize + tileSize / 2;
+        ctx.fillText('⛺', vx * tileSize + tileSize / 2, vy * tileSize + tileSize / 2);
 
-        ctx.fillText('⛺', centerX, centerY);
-
-        // Reset text alignment
         ctx.textAlign = 'start';
         ctx.textBaseline = 'alphabetic';
     }
@@ -1374,8 +1416,10 @@ const Map = (() => {
      * Draw player as a yellow circle
      */
     function drawPlayer() {
-        const centerX = playerPosition.x * tileSize + tileSize / 2;
-        const centerY = playerPosition.y * tileSize + tileSize / 2;
+        const vx = playerPosition.x - cameraX;
+        const vy = playerPosition.y - cameraY;
+        const centerX = vx * tileSize + tileSize / 2;
+        const centerY = vy * tileSize + tileSize / 2;
         const radius = tileSize * PLAYER_RADIUS_RATIO;
 
         ctx.fillStyle = PLAYER_COLOR;
@@ -1391,8 +1435,11 @@ const Map = (() => {
      * @returns {boolean} - True if move was successful
      */
     function movePlayer(newX, newY) {
-        // Validate boundaries
+        // Validate boundaries — in overworld mode, walking off the edge exits the region
         if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
+            if (!TEST_MODE && currentRegion) {
+                exitToOverworld();
+            }
             return false;
         }
 
@@ -1404,6 +1451,7 @@ const Map = (() => {
 
         // Update player position
         playerPosition = { x: newX, y: newY };
+        updateCamera();
 
         // Save to game state
         savePlayerPosition();
@@ -1413,8 +1461,9 @@ const Map = (() => {
             TimeSystem.advanceDays(0.5);
         }
 
-        // Check for combat encounter
-        if (targetTile.combatEncounter && targetTile.combatEncounter.active) {
+        // Check for combat encounter (respects debug encounter toggle)
+        const encountersEnabled = window.WorldMap ? WorldMap.isEncountersEnabled() : true;
+        if (encountersEnabled && targetTile.combatEncounter && targetTile.combatEncounter.active) {
             initiateCombatEncounter(newX, newY);
         }
 
@@ -1814,6 +1863,306 @@ const Map = (() => {
         }
     }
 
+    // ─── Overworld Integration ───────────────────────────────────────────────
+
+    /**
+     * Called by WorldMap when the player enters a region.
+     * Generates the local map for this region and shows it.
+     * @param {number} regionX - Overworld X coord
+     * @param {number} regionY - Overworld Y coord
+     * @param {string} biome   - Biome type for this region
+     */
+    function enterRegion(regionX, regionY, biome) {
+        currentRegion = { x: regionX, y: regionY, biome };
+
+        if (TEST_MODE) {
+            // In test mode just re-init the hardcoded map
+            generateGrid();
+        } else {
+            // Seed the local map from overworld seed + region coords
+            if (window.Noise) {
+                const worldSeed = window.GameState?.getState()?.world?.seed || 0;
+                // Create a deterministic local seed from world seed + region position
+                const localSeedStr = `${worldSeed}_${regionX}_${regionY}`;
+                Noise.setSeed(localSeedStr);
+            }
+            generateRegionGrid(biome);
+        }
+
+        // Load saved resource deltas for this region
+        loadRegionState(regionX, regionY);
+
+        // Update the region label in the UI
+        const label = document.getElementById('local-map-region-label');
+        if (label) {
+            const biomeConfig = BIOMES[biome] || BIOMES.plains;
+            label.textContent = `${biomeConfig.name} Region (${regionX}, ${regionY})`;
+        }
+
+        // Save current region to game state so it persists on reload
+        const worldState = window.GameState?.getState()?.world || {};
+        worldState.currentRegion = { x: regionX, y: regionY, biome };
+        window.GameState?.updateProperty('world', worldState);
+
+        // Load saved player position, or default to center if none
+        const savedPos = window.GameState?.getState()?.world?.playerPosition;
+        if (savedPos) {
+            playerPosition = { ...savedPos };
+        } else {
+            playerPosition = { x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2) };
+            savePlayerPosition();
+        }
+
+        resizeCanvas();
+        render();
+    }
+
+    /**
+     * Generate a local map grid for a given biome using noise.
+     * Resources are placed procedurally based on biome type.
+     */
+    function generateRegionGrid(biome) {
+        grid = [];
+
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            grid[y] = [];
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                // Use noise to vary terrain within the region
+                const n = window.Noise ? Noise.fbm01(x * 0.3, y * 0.3, 2, 0.5, 2.0) : 0.5;
+
+                let tileBiome = biome;
+
+                // Add natural variation — pockets of water or mountains
+                if (x === 0 || x === GRID_WIDTH - 1 || y === 0 || y === GRID_HEIGHT - 1) {
+                    tileBiome = biome; // Keep borders as the region biome
+                } else if (n < 0.15) {
+                    tileBiome = 'water';
+                } else if (n > 0.88) {
+                    tileBiome = 'mountain';
+                }
+
+                const biomeConfig = BIOMES[tileBiome] || BIOMES.plains;
+                grid[y][x] = {
+                    type: tileBiome,
+                    biome: tileBiome,
+                    walkable: biomeConfig.walkable,
+                    x, y,
+                    resource: null,
+                    combatEncounter: null
+                };
+            }
+        }
+
+        // Place resources based on biome
+        placeRegionResources(biome);
+
+        // Place random encounters based on biome
+        placeRegionEncounters(biome);
+    }
+
+    /**
+     * Place resources procedurally for a given biome.
+     */
+    function placeRegionResources(biome) {
+        // Resource pools per biome
+        const BIOME_RESOURCES = {
+            forest:  ['tree', 'stick_bush', 'berry_bush', 'fiber_plant'],
+            plains:  ['stick_bush', 'berry_bush', 'fiber_plant', 'rock'],
+            desert:  ['rock', 'copper_ore'],
+            tundra:  ['rock', 'stick_bush'],
+            swamp:   ['fiber_plant', 'berry_bush', 'stick_bush'],
+            mountain: ['rock', 'copper_ore'],
+            water:   []
+        };
+
+        const pool = BIOME_RESOURCES[biome] || BIOME_RESOURCES.plains;
+        if (pool.length === 0) return;
+
+        // Place ~8 resource nodes, seeded via Noise RNG
+        const targetCount = 8;
+        let placed = 0;
+        let attempts = 0;
+
+        while (placed < targetCount && attempts < 200) {
+            attempts++;
+            // Use noise to get a pseudo-random position
+            const n1 = window.Noise ? Noise.noise2D(attempts * 3.1, 0.5) : Math.random() * 2 - 1;
+            const n2 = window.Noise ? Noise.noise2D(0.5, attempts * 2.7) : Math.random() * 2 - 1;
+            const rx = Math.floor(((n1 + 1) / 2) * (GRID_WIDTH  - 2)) + 1;
+            const ry = Math.floor(((n2 + 1) / 2) * (GRID_HEIGHT - 2)) + 1;
+
+            const tile = grid[ry]?.[rx];
+            if (!tile || !tile.walkable || tile.resource) continue;
+
+            // Pick a resource type from the pool (seeded)
+            const n3 = window.Noise ? Noise.noise2D(attempts * 1.3, attempts * 0.9) : 0;
+            const idx = Math.floor(((n3 + 1) / 2) * pool.length);
+            const resourceType = pool[Math.min(idx, pool.length - 1)];
+
+            addResource(rx, ry, resourceType);
+            placed++;
+        }
+    }
+
+    /**
+     * Place random combat encounter tiles for a region.
+     * Encounter count scales with biome danger.
+     */
+    function placeRegionEncounters(biome) {
+        const ENCOUNTER_COUNTS = {
+            plains:   2,
+            forest:   3,
+            desert:   3,
+            tundra:   3,
+            swamp:    4,
+            mountain: 4
+        };
+
+        const count = ENCOUNTER_COUNTS[biome] || 2;
+        let placed = 0;
+        let attempts = 0;
+
+        while (placed < count && attempts < 100) {
+            attempts++;
+            const n1 = window.Noise ? Noise.noise2D(attempts * 4.1, 99.5) : Math.random() * 2 - 1;
+            const n2 = window.Noise ? Noise.noise2D(99.5, attempts * 3.3) : Math.random() * 2 - 1;
+            const rx = Math.floor(((n1 + 1) / 2) * (GRID_WIDTH  - 2)) + 1;
+            const ry = Math.floor(((n2 + 1) / 2) * (GRID_HEIGHT - 2)) + 1;
+
+            const tile = grid[ry]?.[rx];
+            if (!tile || !tile.walkable || tile.combatEncounter || tile.resource) continue;
+
+            addCombatEncounter(rx, ry, biome);
+            placed++;
+        }
+    }
+
+    /**
+     * Set up the "Back to World Map" button handler.
+     */
+    function setupBackToOverworldButton() {
+        const btn = document.getElementById('local-map-back-btn');
+        if (!btn) return;
+
+        btn.addEventListener('click', () => {
+            exitToOverworld();
+        });
+    }
+
+    /**
+     * Exit local map and return to the overworld.
+     */
+    function exitToOverworld() {
+        // Save this region's resource state before leaving
+        if (currentRegion) {
+            saveRegionState(currentRegion.x, currentRegion.y);
+        }
+
+        currentRegion = null;
+
+        // Clear saved region from game state
+        const worldState = window.GameState?.getState()?.world || {};
+        delete worldState.currentRegion;
+        window.GameState?.updateProperty('world', worldState);
+
+        // Tell WorldMap to show the overworld again
+        if (window.WorldMap) {
+            WorldMap.exitRegion();
+        }
+    }
+
+    /**
+     * Save resource/encounter deltas for the current region.
+     */
+    function saveRegionState(regionX, regionY) {
+        if (!window.GameState) return;
+
+        const state = GameState.getState();
+        const world = state.world || {};
+        if (!world.regions) world.regions = {};
+
+        const key = `${regionX},${regionY}`;
+        const resources = {};
+
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                const tile = grid[y][x];
+                if (tile.resource && tile.resource.amount !== tile.resource.maxAmount) {
+                    resources[`${x},${y}`] = { amount: tile.resource.amount };
+                } else if (!tile.resource) {
+                    // Fully depleted
+                    resources[`${x},${y}`] = { amount: 0 };
+                }
+            }
+        }
+
+        world.regions[key] = { visited: true, resources };
+        GameState.updateProperty('world', world);
+        if (window.SaveSystem) SaveSystem.save();
+    }
+
+    /**
+     * Load resource deltas for a region and apply them over the generated grid.
+     */
+    function loadRegionState(regionX, regionY) {
+        const state = window.GameState?.getState();
+        if (!state?.world?.regions) return;
+
+        const key = `${regionX},${regionY}`;
+        const saved = state.world.regions[key];
+        if (!saved?.resources) return;
+
+        Object.entries(saved.resources).forEach(([coord, data]) => {
+            const [x, y] = coord.split(',').map(Number);
+            const tile = grid[y]?.[x];
+            if (!tile) return;
+
+            if (data.amount <= 0) {
+                tile.resource = null;
+            } else if (tile.resource) {
+                tile.resource.amount = data.amount;
+            }
+        });
+    }
+
+    /**
+     * Called by WorldMap when player enters their settlement from the overworld.
+     */
+    function enterCampFromOverworld() {
+        enterCamp();
+    }
+
+    /**
+     * Called by WorldMap to register where the settlement was placed on the overworld.
+     * Stores it so the local camp system stays in sync.
+     */
+    function setOverworldCamp(pos) {
+        campLocation = { x: pos.x, y: pos.y, isPlaced: true };
+        if (window.GameState) {
+            window.GameState.updateProperty('campLocation', campLocation);
+        }
+        updateCampButtonVisibility();
+    }
+
+    // ─── Overworld button wiring (called from init) ───────────────────────────
+
+    function wireOverworldButtons() {
+        const campBtn    = document.getElementById('overworld-camp-btn');
+        const exploreBtn = document.getElementById('overworld-explore-btn');
+
+        if (campBtn) {
+            campBtn.addEventListener('click', () => {
+                if (window.WorldMap) WorldMap.placeSettlement();
+            });
+        }
+
+        if (exploreBtn) {
+            exploreBtn.addEventListener('click', () => {
+                if (window.WorldMap) WorldMap.enterRegion();
+            });
+        }
+    }
+
     /**
      * Force a refresh of the map (useful for external calls)
      */
@@ -1829,6 +2178,17 @@ const Map = (() => {
      */
     function restoreState() {
         if (!isInitialized) return;
+
+        if (!TEST_MODE) {
+            // If player was inside a region, restore that view
+            const savedRegion = window.GameState?.getState()?.world?.currentRegion;
+            if (savedRegion) {
+                // Switch UI to local map view (WorldMap is now initialized)
+                if (window.WorldMap) WorldMap.hide();
+                enterRegion(savedRegion.x, savedRegion.y, savedRegion.biome);
+                return; // enterRegion handles position + render
+            }
+        }
 
         // Reload player position from game state
         loadPlayerPosition();
@@ -1866,7 +2226,12 @@ const Map = (() => {
         getAllResources,
         harvestResource,
         handleCombatVictory,
-        handleCombatFleeOrDefeat
+        handleCombatFleeOrDefeat,
+        // Overworld integration
+        enterRegion,
+        exitToOverworld,
+        setOverworldCamp,
+        enterCampFromOverworld
     };
 })();
 

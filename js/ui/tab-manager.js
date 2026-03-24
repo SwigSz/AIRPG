@@ -61,6 +61,16 @@ const TabManager = (() => {
             activeTabContent.style.display = 'block'; // Explicitly show
         }
 
+        // Toggle map-active class on center-content for full-bleed map layout
+        const centerContent = document.getElementById('center-content');
+        if (centerContent) {
+            if (tabName === 'map') {
+                centerContent.classList.add('map-active');
+            } else {
+                centerContent.classList.remove('map-active');
+            }
+        }
+
         // Toggle right sidebar content based on active tab
         toggleRightSidebarContent(tabName);
 
@@ -107,12 +117,8 @@ const TabManager = (() => {
                 settlementResources.style.display = 'flex';
             }
         } else if (tabName === 'map') {
-            // Show right sidebar on map tab
-            if (rightSidebar) rightSidebar.style.display = 'flex';
-
-            // Show Activity Log and Quick Slots on map tab
-            if (activityLog) activityLog.style.display = 'flex';
-            if (quickSlots) quickSlots.style.display = 'block';
+            // Hide right sidebar on map tab — give map full width
+            if (rightSidebar) rightSidebar.style.display = 'none';
 
             // Hide settlement resources
             const settlementResources = document.getElementById('settlement-resources-sidebar');

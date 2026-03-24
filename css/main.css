@@ -48,6 +48,7 @@ html, body {
     position: relative;
 }
 
+
 /* Hide ALL tabs until JavaScript restoration is complete (prevents flash) */
 body:not(.tabs-ready) .tab-content,
 body:not(.tabs-ready) .settlement-tab-content,

@@ -62,6 +62,21 @@ const DebugMenu = (() => {
                         </div>
                     </div>
 
+                    <div class="debug-menu-section">
+                        <h3>World Map</h3>
+                        <div class="debug-buttons">
+                            <button class="btn" id="debug-toggle-encounters">
+                                <span>⚔️ Encounters: ON</span>
+                            </button>
+                            <button class="btn" id="debug-reveal-map">
+                                <span>🗺️ Reveal Full Map</span>
+                            </button>
+                            <button class="btn" id="debug-toggle-fog">
+                                <span>🌫️ Fog of War: ON</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="debug-menu-info">
                         <small style="opacity: 0.7;">Press ~ to close</small>
                     </div>
@@ -101,6 +116,40 @@ const DebugMenu = (() => {
         const maxResourcesBtn = document.getElementById('debug-max-settlement-resources');
         if (maxResourcesBtn) {
             maxResourcesBtn.addEventListener('click', () => maxSettlementResources());
+        }
+
+        // Toggle encounters button
+        const toggleEncountersBtn = document.getElementById('debug-toggle-encounters');
+        if (toggleEncountersBtn) {
+            toggleEncountersBtn.addEventListener('click', () => {
+                if (!window.WorldMap) return;
+                const enabled = WorldMap.toggleEncounters();
+                toggleEncountersBtn.querySelector('span').textContent = `⚔️ Encounters: ${enabled ? 'ON' : 'OFF'}`;
+                toggleEncountersBtn.style.opacity = enabled ? '1' : '0.5';
+                showFeedback(`Random encounters ${enabled ? 'enabled' : 'disabled'}`);
+            });
+        }
+
+        // Reveal full map button
+        const revealMapBtn = document.getElementById('debug-reveal-map');
+        if (revealMapBtn) {
+            revealMapBtn.addEventListener('click', () => {
+                if (!window.WorldMap) return;
+                WorldMap.revealAllTiles();
+                showFeedback('Full map revealed!');
+            });
+        }
+
+        // Toggle fog of war button
+        const toggleFogBtn = document.getElementById('debug-toggle-fog');
+        if (toggleFogBtn) {
+            toggleFogBtn.addEventListener('click', () => {
+                if (!window.WorldMap) return;
+                const enabled = WorldMap.toggleFog();
+                toggleFogBtn.querySelector('span').textContent = `🌫️ Fog of War: ${enabled ? 'ON' : 'OFF'}`;
+                toggleFogBtn.style.opacity = enabled ? '1' : '0.5';
+                showFeedback(`Fog of war ${enabled ? 'enabled' : 'disabled'}`);
+            });
         }
     }
 

@@ -559,10 +559,10 @@ const CharacterUI = (() => {
     function setupAttributeButtons() {
         const buttons = document.querySelectorAll('.attribute-plus-btn');
         buttons.forEach(button => {
-            button.addEventListener('click', () => {
+            button.onclick = () => {
                 const attributeName = button.getAttribute('data-attribute');
                 handleAttributePointSpend(attributeName);
-            });
+            };
         });
     }
 

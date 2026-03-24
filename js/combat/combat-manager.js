@@ -1336,8 +1336,12 @@ const CombatManager = (() => {
             fleeBtn.classList.add('disabled');
         }
 
+        // Base 50% flee chance + 1% per point of dexterity above 0
+        const character = window.GameState?.getState()?.character;
+        const dex = character?.stats?.dexterity || 0;
+        const fleeThreshold = Math.max(0.05, 0.5 - (dex * 0.01));
         const fleeChance = Math.random();
-        const success = fleeChance > 0.5;
+        const success = fleeChance > fleeThreshold;
 
         // Show visual indicator
         showFleeIndicator(success);
