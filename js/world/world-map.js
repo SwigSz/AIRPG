@@ -457,13 +457,12 @@ const WorldMap = (() => {
         if (window.TabManager) TabManager.updateSettlementTabVisibility();
         if (window.Research?.onSettlementEnter) Research.onSettlementEnter();
 
-        // Show leave camp button, hide other action buttons
-        document.getElementById('overworld-camp-btn')?.style.setProperty('display', 'none');
-        document.getElementById('overworld-explore-btn')?.style.setProperty('display', 'none');
-        const leaveBtn = document.getElementById('overworld-leave-camp-btn');
-        if (leaveBtn) {
-            leaveBtn.style.display = 'block';
-            leaveBtn.onclick = leaveOverworldCamp;
+        // Show the settlement overlay centered over the overworld canvas
+        const overlay = document.getElementById('in-settlement-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            const btn = document.getElementById('leave-camp-btn');
+            if (btn) btn.onclick = leaveOverworldCamp;
         }
 
         render();
@@ -481,10 +480,9 @@ const WorldMap = (() => {
         if (window.TabManager) TabManager.updateSettlementTabVisibility();
         if (window.Research?.onSettlementLeave) Research.onSettlementLeave();
 
-        // Restore action buttons
-        document.getElementById('overworld-leave-camp-btn')?.style.setProperty('display', 'none');
-        updateCampButtonVisibility();
-        updateExploreButton();
+        // Hide the settlement overlay
+        const overlay = document.getElementById('in-settlement-overlay');
+        if (overlay) overlay.style.display = 'none';
 
         render();
         if (window.SaveSystem) SaveSystem.save();
@@ -625,6 +623,32 @@ const WorldMap = (() => {
 
         ctx = canvas.getContext('2d');
         resizeCanvas();
+
+        // Click + cursor handlers for canvas-drawn buttons (e.g. Leave Camp)
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const cx = (e.clientX - rect.left) * scaleX;
+            const cy = (e.clientY - rect.top)  * scaleY;
+            const btn = canvas._leaveCampBtn;
+            if (btn && cx >= btn.x && cx <= btn.x + btn.w && cy >= btn.y && cy <= btn.y + btn.h) {
+                leaveOverworldCamp();
+            }
+        });
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const cx = (e.clientX - rect.left) * scaleX;
+            const cy = (e.clientY - rect.top)  * scaleY;
+            const btn = canvas._leaveCampBtn;
+            if (btn && cx >= btn.x && cx <= btn.x + btn.w && cy >= btn.y && cy <= btn.y + btn.h) {
+                canvas.style.cursor = 'pointer';
+            } else {
+                canvas.style.cursor = 'default';
+            }
+        });
     }
 
     function setupResizeHandler() {
@@ -672,11 +696,37 @@ const WorldMap = (() => {
         drawSettlement();
         drawPlayer();
 
-        // Dim the map when in camp
+        // Dim the map and draw Leave Camp button when in camp
         const character = window.GameState?.getState()?.character;
         if (character?.inSettlement) {
+            // Dim
             ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Leave Camp button centered on canvas
+            const dpr = window.devicePixelRatio || 1;
+            const btnW = 200 * dpr, btnH = 50 * dpr;
+            const btnX = (canvas.width  - btnW) / 2;
+            const btnY = (canvas.height - btnH) / 2;
+            const radius = 8 * dpr;
+
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.roundRect(btnX, btnY, btnW, btnH, radius);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${18 * dpr}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Leave Camp', canvas.width / 2, canvas.height / 2);
+            ctx.textAlign = 'start';
+            ctx.textBaseline = 'alphabetic';
+
+            // Store button bounds for click detection
+            canvas._leaveCampBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+        } else {
+            canvas._leaveCampBtn = null;
         }
     }
 
@@ -834,9 +884,10 @@ const WorldMap = (() => {
         const state = GameState.getState();
         const world = state.world || {};
 
-        if (delta.seed       !== undefined) world.seed          = delta.seed;
-        if (delta.playerPos  !== undefined) world.overworldPos  = delta.playerPos;
-        if (delta.settlementPos !== undefined) world.overworldSettlement = delta.settlementPos;
+        if (delta.seed              !== undefined) world.seed               = delta.seed;
+        if (delta.playerPos         !== undefined) world.overworldPos        = delta.playerPos;
+        if (delta.settlementPos     !== undefined) world.overworldSettlement = delta.settlementPos;
+        if (delta.encountersEnabled !== undefined) world.encountersEnabled   = delta.encountersEnabled;
 
         // Serialize revealedTiles Set → array
         world.revealedTiles = Array.from(revealedTiles);
@@ -864,6 +915,10 @@ const WorldMap = (() => {
             settlementPos = { ...world.overworldSettlement };
         }
 
+        if (world.encountersEnabled !== undefined) {
+            encountersEnabled = world.encountersEnabled;
+        }
+
         if (Array.isArray(world.revealedTiles)) {
             revealedTiles = new Set(world.revealedTiles);
         }
@@ -874,12 +929,11 @@ const WorldMap = (() => {
         // Restore in-settlement UI state if player was in camp on save
         const character = window.GameState?.getState()?.character;
         if (character?.inSettlement) {
-            document.getElementById('overworld-camp-btn')?.style.setProperty('display', 'none');
-            document.getElementById('overworld-explore-btn')?.style.setProperty('display', 'none');
-            const leaveBtn = document.getElementById('overworld-leave-camp-btn');
-            if (leaveBtn) {
-                leaveBtn.style.display = 'block';
-                leaveBtn.onclick = leaveOverworldCamp;
+            const overlay = document.getElementById('in-settlement-overlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                const btn = document.getElementById('leave-camp-btn');
+                if (btn) btn.onclick = leaveOverworldCamp;
             }
         }
     }
@@ -918,6 +972,7 @@ const WorldMap = (() => {
 
     function toggleEncounters() {
         encountersEnabled = !encountersEnabled;
+        saveToGameState({ encountersEnabled });
         return encountersEnabled;
     }
 

@@ -135,6 +135,7 @@
     background-color: #0a0a0a;
     border: 1px solid #334155;
     overflow: hidden;
+    isolation: isolate;
 }
 
 #overworld-canvas {

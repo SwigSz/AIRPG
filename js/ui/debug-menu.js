@@ -121,6 +121,14 @@ const DebugMenu = (() => {
         // Toggle encounters button
         const toggleEncountersBtn = document.getElementById('debug-toggle-encounters');
         if (toggleEncountersBtn) {
+            // Sync button state with saved value on load
+            const syncEncounterBtn = () => {
+                if (!window.WorldMap) return;
+                const enabled = WorldMap.isEncountersEnabled();
+                toggleEncountersBtn.querySelector('span').textContent = `⚔️ Encounters: ${enabled ? 'ON' : 'OFF'}`;
+                toggleEncountersBtn.style.opacity = enabled ? '1' : '0.5';
+            };
+            syncEncounterBtn();
             toggleEncountersBtn.addEventListener('click', () => {
                 if (!window.WorldMap) return;
                 const enabled = WorldMap.toggleEncounters();
