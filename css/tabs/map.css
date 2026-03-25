@@ -84,15 +84,15 @@
     display: none;
 }
 
-/* In Settlement Overlay */
+/* In Settlement Overlay — covers the full map-tab area */
 .in-settlement-overlay {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 5;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -142,6 +142,8 @@
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     flex-shrink: 0;
+    position: relative;
+    z-index: 0;
 }
 
 /* Overworld UI overlay — sits inside .overworld-view */
@@ -225,6 +227,16 @@
 }
 .overworld-btn-explore:hover {
     background-color: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.overworld-btn-leave {
+    background-color: #dc2626;
+    color: #fff;
+    border-color: #b91c1c;
+}
+.overworld-btn-leave:hover {
+    background-color: #b91c1c;
     transform: translateY(-1px);
 }
 

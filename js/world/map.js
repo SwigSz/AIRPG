@@ -863,7 +863,10 @@ const Map = (() => {
      * Update in-settlement overlay visibility
      */
     function updateInSettlementOverlay() {
-        const overlay = document.querySelector('.in-settlement-overlay');
+        // In overworld mode, camp UI is handled entirely by world-map.js
+        if (!TEST_MODE) return;
+
+        const overlay = document.getElementById('in-settlement-overlay');
         if (!overlay) return;
 
         const character = window.GameState?.getState()?.character;
@@ -1394,6 +1397,9 @@ const Map = (() => {
      * Draw camp marker if camp has been placed
      */
     function drawCamp() {
+        // Camp icon only shown on the local map in TEST_MODE.
+        // In overworld mode the camp is drawn on the overworld by WorldMap.drawSettlement().
+        if (!TEST_MODE) return;
         if (!campLocation || !campLocation.isPlaced) return;
 
         const vx = campLocation.x - cameraX;
@@ -1872,7 +1878,7 @@ const Map = (() => {
      * @param {number} regionY - Overworld Y coord
      * @param {string} biome   - Biome type for this region
      */
-    function enterRegion(regionX, regionY, biome) {
+    function enterRegion(regionX, regionY, biome, fromDir) {
         currentRegion = { x: regionX, y: regionY, biome };
 
         if (TEST_MODE) {
@@ -1904,12 +1910,25 @@ const Map = (() => {
         worldState.currentRegion = { x: regionX, y: regionY, biome };
         window.GameState?.updateProperty('world', worldState);
 
-        // Load saved player position, or default to center if none
-        const savedPos = window.GameState?.getState()?.world?.playerPosition;
-        if (savedPos) {
-            playerPosition = { ...savedPos };
+        // fromDir is null when restoring from a save (page reload) — use saved position.
+        // Otherwise spawn at the edge the player entered from.
+        if (fromDir === null || fromDir === undefined) {
+            const savedPos = window.GameState?.getState()?.world?.playerPosition;
+            if (savedPos) {
+                playerPosition = { ...savedPos };
+            } else {
+                playerPosition = { x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2) };
+                savePlayerPosition();
+            }
         } else {
-            playerPosition = { x: Math.floor(GRID_WIDTH / 2), y: Math.floor(GRID_HEIGHT / 2) };
+            const midX = Math.floor(GRID_WIDTH  / 2);
+            const midY = Math.floor(GRID_HEIGHT / 2);
+            const edge = 1;
+            if      (fromDir === 'up')    playerPosition = { x: midX, y: GRID_HEIGHT - edge - 1 };
+            else if (fromDir === 'down')  playerPosition = { x: midX, y: edge };
+            else if (fromDir === 'left')  playerPosition = { x: GRID_WIDTH - edge - 1, y: midY };
+            else if (fromDir === 'right') playerPosition = { x: edge, y: midY };
+            else                          playerPosition = { x: midX, y: midY };
             savePlayerPosition();
         }
 
@@ -2231,7 +2250,8 @@ const Map = (() => {
         enterRegion,
         exitToOverworld,
         setOverworldCamp,
-        enterCampFromOverworld
+        enterCampFromOverworld,
+        showEnterCampModal
     };
 })();
 

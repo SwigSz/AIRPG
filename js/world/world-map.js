@@ -72,6 +72,9 @@ const WorldMap = (() => {
     // Player position on overworld grid
     let playerPos = { x: 15, y: 15 };
 
+    // Direction of last move: 'up','down','left','right'
+    let lastMoveDir = 'down';
+
     // Camera top-left corner (in overworld tile coords)
     let camera = { x: 0, y: 0 };
 
@@ -247,6 +250,14 @@ const WorldMap = (() => {
             return false;
         }
 
+        // Track direction of movement
+        const dx = newX - playerPos.x;
+        const dy = newY - playerPos.y;
+        if      (dy < 0) lastMoveDir = 'up';
+        else if (dy > 0) lastMoveDir = 'down';
+        else if (dx < 0) lastMoveDir = 'left';
+        else if (dx > 0) lastMoveDir = 'right';
+
         playerPos = { x: newX, y: newY };
 
         // Reveal surrounding tiles
@@ -369,11 +380,9 @@ const WorldMap = (() => {
     function enterRegion() {
         const tile = regionGrid[playerPos.y][playerPos.x];
 
-        // If this is the settlement tile, enter settlement instead
+        // If this is the settlement tile, prompt to enter camp
         if (settlementPos && playerPos.x === settlementPos.x && playerPos.y === settlementPos.y) {
-            if (window.Map) {
-                Map.enterCampFromOverworld();
-            }
+            showOverworldEnterCampPrompt();
             return;
         }
 
@@ -384,7 +393,7 @@ const WorldMap = (() => {
 
         // Tell Map (local map system) which region we're entering
         if (window.Map) {
-            Map.enterRegion(playerPos.x, playerPos.y, tile.biome);
+            Map.enterRegion(playerPos.x, playerPos.y, tile.biome, lastMoveDir);
         }
 
         // Hide overworld, show local map
@@ -398,6 +407,88 @@ const WorldMap = (() => {
     function exitRegion() {
         show();
         render();
+    }
+
+    /**
+     * Show a prompt asking the player if they want to enter their camp.
+     * Handles enter/leave camp entirely from the overworld context.
+     */
+    function showOverworldEnterCampPrompt() {
+        const modal = document.getElementById('enter-camp-modal');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+
+        const yesBtn = document.getElementById('enter-camp-yes-btn');
+        const noBtn  = document.getElementById('enter-camp-no-btn');
+        const newYes = yesBtn.cloneNode(true);
+        const newNo  = noBtn.cloneNode(true);
+        yesBtn.replaceWith(newYes);
+        noBtn.replaceWith(newNo);
+
+        newYes.addEventListener('click', () => {
+            modal.style.display = 'none';
+            enterOverworldCamp();
+        });
+        newNo.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        const keyHandler = (e) => {
+            if (e.key === 'Enter') {
+                modal.style.display = 'none';
+                document.removeEventListener('keydown', keyHandler);
+                enterOverworldCamp();
+            } else if (e.key === 'Escape') {
+                modal.style.display = 'none';
+                document.removeEventListener('keydown', keyHandler);
+            }
+        };
+        document.addEventListener('keydown', keyHandler);
+    }
+
+    function enterOverworldCamp() {
+        const character = window.GameState?.getState()?.character;
+        if (!character) return;
+
+        character.inSettlement = true;
+
+        if (window.TimeSystem) TimeSystem.setInSettlement(true);
+        if (window.TabManager) TabManager.updateSettlementTabVisibility();
+        if (window.Research?.onSettlementEnter) Research.onSettlementEnter();
+
+        // Show leave camp button, hide other action buttons
+        document.getElementById('overworld-camp-btn')?.style.setProperty('display', 'none');
+        document.getElementById('overworld-explore-btn')?.style.setProperty('display', 'none');
+        const leaveBtn = document.getElementById('overworld-leave-camp-btn');
+        if (leaveBtn) {
+            leaveBtn.style.display = 'block';
+            leaveBtn.onclick = leaveOverworldCamp;
+        }
+
+        render();
+        if (window.SaveSystem) SaveSystem.save();
+        if (window.ActivityLog) ActivityLog.addMessage('Entered camp.', 'info');
+    }
+
+    function leaveOverworldCamp() {
+        const character = window.GameState?.getState()?.character;
+        if (!character) return;
+
+        character.inSettlement = false;
+
+        if (window.TimeSystem) TimeSystem.setInSettlement(false);
+        if (window.TabManager) TabManager.updateSettlementTabVisibility();
+        if (window.Research?.onSettlementLeave) Research.onSettlementLeave();
+
+        // Restore action buttons
+        document.getElementById('overworld-leave-camp-btn')?.style.setProperty('display', 'none');
+        updateCampButtonVisibility();
+        updateExploreButton();
+
+        render();
+        if (window.SaveSystem) SaveSystem.save();
+        if (window.ActivityLog) ActivityLog.addMessage('Left camp.', 'info');
     }
 
     // ─── Settlement Placement ─────────────────────────────────────────────────
@@ -580,6 +671,13 @@ const WorldMap = (() => {
         drawGridLines();
         drawSettlement();
         drawPlayer();
+
+        // Dim the map when in camp
+        const character = window.GameState?.getState()?.character;
+        if (character?.inSettlement) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
     }
 
     function drawTiles() {
@@ -648,8 +746,14 @@ const WorldMap = (() => {
         const vy = settlementPos.y - camera.y;
         if (vx < 0 || vx >= VIEWPORT_W || vy < 0 || vy >= VIEWPORT_H) return;
 
-        const px = vx * tileSize + tileSize / 2;
-        const py = vy * tileSize + tileSize / 2;
+        const tx = vx * tileSize;
+        const ty = vy * tileSize;
+        const px = tx + tileSize / 2;
+        const py = ty + tileSize / 2;
+
+        // Grey background
+        ctx.fillStyle = '#6b7280';
+        ctx.fillRect(tx, ty, tileSize, tileSize);
 
         const iconSize = Math.max(tileSize * 0.7, 14);
         ctx.font = `${iconSize}px Arial`;
@@ -696,6 +800,10 @@ const WorldMap = (() => {
             // Don't move if combat is active
             const combatOverlay = document.querySelector('.combat-overlay');
             if (combatOverlay && combatOverlay.classList.contains('active')) return;
+
+            // Don't move if in settlement
+            const character = window.GameState?.getState()?.character;
+            if (character && character.inSettlement) return;
 
             let dx = 0, dy = 0;
 
@@ -762,6 +870,18 @@ const WorldMap = (() => {
 
         // Always reveal current position on load
         revealAroundPlayer();
+
+        // Restore in-settlement UI state if player was in camp on save
+        const character = window.GameState?.getState()?.character;
+        if (character?.inSettlement) {
+            document.getElementById('overworld-camp-btn')?.style.setProperty('display', 'none');
+            document.getElementById('overworld-explore-btn')?.style.setProperty('display', 'none');
+            const leaveBtn = document.getElementById('overworld-leave-camp-btn');
+            if (leaveBtn) {
+                leaveBtn.style.display = 'block';
+                leaveBtn.onclick = leaveOverworldCamp;
+            }
+        }
     }
 
     // ─── Public API ───────────────────────────────────────────────────────────

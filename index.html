@@ -320,6 +320,10 @@
                     <!-- Overworld Map View -->
                     <div id="overworld-view" class="overworld-view">
                         <!-- Canvas injected by world-map.js -->
+                        <!-- In Settlement Overlay -->
+                        <div id="in-settlement-overlay" class="in-settlement-overlay" style="display: none;">
+                            <button id="leave-camp-btn" class="leave-camp-btn">Leave Camp</button>
+                        </div>
                         <div class="overworld-ui">
                             <div id="overworld-info" class="overworld-info">
                                 <!-- Populated by WorldMap on move -->
@@ -327,6 +331,7 @@
                             <div class="overworld-actions">
                                 <button id="overworld-camp-btn" class="overworld-btn overworld-btn-camp">⛺ Place Settlement</button>
                                 <button id="overworld-explore-btn" class="overworld-btn overworld-btn-explore">🗺️ Explore Region</button>
+                                <button id="overworld-leave-camp-btn" class="overworld-btn overworld-btn-leave" style="display:none;">🚪 Leave Camp</button>
                             </div>
                             <div class="overworld-seed-display" id="overworld-seed-display">
                                 <!-- Seed shown here -->
@@ -342,12 +347,8 @@
                             <button id="set-camp-btn" class="set-camp-btn" style="display:none;">⛺ Set Up Camp Here</button>
                         </div>
                         <div class="map-placeholder">Map View</div>
-
-                        <!-- In Settlement Overlay -->
-                        <div class="in-settlement-overlay" style="display: none;">
-                            <button id="leave-camp-btn" class="leave-camp-btn">Leave Camp</button>
-                        </div>
                     </div>
+
 
                     <!-- Combat Overlay (sits on top of map-view) -->
                     <div class="combat-overlay">
