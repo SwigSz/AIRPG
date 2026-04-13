@@ -123,6 +123,11 @@ const SaveSystem = (() => {
                 };
             }
 
+            // Migrate training state (initialize to null if not present)
+            if (!Object.prototype.hasOwnProperty.call(state, 'training')) {
+                state.training = null;
+            }
+
             // Game loaded successfully
             return state;
         } catch (error) {

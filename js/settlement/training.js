@@ -177,13 +177,13 @@ const Training = (function() {
 
         const training = state.training;
 
+        // Clear training state FIRST to prevent re-entrant calls
+        state.training = null;
+
         // Grant proportional XP for days completed
         if (training.daysCompleted > 0) {
-            grantTrainingXP(training.daysCompleted);
+            grantTrainingXP(training);
         }
-
-        // Clear training state
-        state.training = null;
 
         if (window.SaveSystem) {
             SaveSystem.save();
@@ -206,11 +206,11 @@ const Training = (function() {
 
         const training = state.training;
 
-        // Grant full XP
-        grantTrainingXP(training.totalDays);
-
-        // Clear training state
+        // Clear training state FIRST to prevent re-entrant calls from ticks
         state.training = null;
+
+        // Grant full XP
+        grantTrainingXP(training);
 
         if (window.SaveSystem) {
             SaveSystem.save();
@@ -229,29 +229,48 @@ const Training = (function() {
     }
 
     /**
-     * Grant XP for training
+     * Grant XP for training (pass the training snapshot, not state.training which may be null)
      */
-    function grantTrainingXP(days) {
+    function grantTrainingXP(training) {
         const state = GameState.getState();
-        const training = state.training;
         const character = state.character;
 
         if (!training || !character) return;
 
-        // Calculate XP: base XP × days × (1 + INT modifier)
-        const intModifier = window.CharacterStats ?
-            CharacterStats.getAttributeModifier(character, 'intelligence') / 100 : 0;
+        const days = training.daysCompleted < training.totalDays
+            ? training.daysCompleted  // cancelled early
+            : training.totalDays;     // completed fully
 
-        const totalXP = Math.floor(training.xpPerDay * days * (1 + intModifier));
+        const totalXP = Math.floor(training.xpPerDay * days);
+        if (totalXP <= 0) return;
 
-        // Grant XP to skill
         if (window.SkillManager) {
-            SkillManager.addSkillXP(character, training.skillId, totalXP);
+            const skillId = training.skillId;
+            const oldLevel = SkillManager.getLevelFromXP(
+                character.skills?.[skillId]?.xp || 0, skillId);
+
+            // Add XP silently (suppress individual level-up notifications)
+            if (!character.skills) character.skills = {};
+            if (!character.skills[skillId]) {
+                character.skills[skillId] = { level: 1, xp: 0 };
+            }
+            character.skills[skillId].xp += totalXP;
+            const newLevel = SkillManager.getLevelFromXP(character.skills[skillId].xp, skillId);
+            character.skills[skillId].level = newLevel;
+
+            // Show a single notification for the final result
+            if (newLevel > oldLevel && window.NotificationManager) {
+                NotificationManager.showSkillLevelUp(
+                    SkillManager.getSkillById(skillId), newLevel);
+            }
+
+            if (window.SaveSystem) SaveSystem.save();
+            if (window.CharacterUI) CharacterUI.render();
         }
 
         if (window.ActivityLog) {
             ActivityLog.addEntry(
-                `Gained ${totalXP} XP in ${training.skillId} skill from training`,
+                `Gained ${totalXP} XP in ${training.skillId} from training`,
                 'training'
             );
         }
