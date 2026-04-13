@@ -278,6 +278,8 @@ const Settlement = (() => {
             updateBuildingsTab();
         } else if (tabName === 'population') {
             updatePopulationTab();
+        } else if (tabName === 'training') {
+            updateTrainingTab();
         }
     }
 
@@ -1134,14 +1136,13 @@ const Settlement = (() => {
         let html = '';
 
         allSkills.forEach(skillDef => {
-            const skillData = character.skills[skillDef.id];
-
-            // Only show skills that are unlocked (exist in character.skills) AND trainable
-            if (!skillData) return;
+            // Only show trainable skills
             if (!trainableSkills.includes(skillDef.id)) return;
 
-            const level = skillData.level || 1;
-            const xp = skillData.xp || 0;
+            const skillData = character.skills[skillDef.id];
+
+            const level = skillData?.level || 1;
+            const xp = skillData?.xp || 0;
 
             const selectedClass = (previousSelectedId === skillDef.id) ? 'selected' : '';
 
@@ -1159,7 +1160,15 @@ const Settlement = (() => {
 
         container.innerHTML = html;
 
-        // Event listener is attached once in initializeUI(), no need to re-attach here
+        // Attach click listeners directly to each skill item
+        container.querySelectorAll('.training-skill-item').forEach(item => {
+            item.addEventListener('click', () => {
+                container.querySelectorAll('.training-skill-item').forEach(i =>
+                    i.classList.remove('selected'));
+                item.classList.add('selected');
+                updateTrainingConfig(item.dataset.skillId);
+            });
+        });
     }
 
     function updateTrainingConfig(skillId) {
