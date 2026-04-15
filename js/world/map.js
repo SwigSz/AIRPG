@@ -923,6 +923,11 @@ const Map = (() => {
                 return;
             }
 
+            // Block movement while time is paused
+            if (window.TimeSystem?.isPaused) {
+                return;
+            }
+
             let moved = false;
             const currentPos = getPlayerPosition();
             let newX = currentPos.x;
@@ -1441,6 +1446,7 @@ const Map = (() => {
      * @returns {boolean} - True if move was successful
      */
     function movePlayer(newX, newY) {
+        if (window.TimeSystem?.isPaused) return false;
         // Validate boundaries — in overworld mode, walking off the edge exits the region
         if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
             if (!TEST_MODE && currentRegion) {

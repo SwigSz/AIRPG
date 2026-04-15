@@ -75,6 +75,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         SaveSystem.startAutosave(30);
     }
 
+    // Save on page close/reload so state is always current
+    window.addEventListener('beforeunload', () => {
+        if (window.SaveSystem && window.GameState?.getState()?.character) {
+            SaveSystem.save(true);
+        }
+    });
+
     // Try to load existing save data
     if (SaveSystem.hasSave()) {
         const savedState = SaveSystem.load();
@@ -96,6 +103,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Restore time system state
             if (window.TimeSystem && savedState.time) {
                 TimeSystem.loadSaveData(savedState.time);
+                // Sync pause button to restored state
+                const pauseBtn = document.getElementById('time-pause-btn');
+                if (pauseBtn && TimeSystem.isPaused) {
+                    pauseBtn.textContent = 'Resume';
+                    pauseBtn.classList.add('paused');
+                }
             }
 
             // Restore settlement state for time system
@@ -722,6 +735,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Save/Load Controls Initialization
 function initializeSaveLoadControls() {
+    const pauseBtn = document.getElementById('time-pause-btn');
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', () => {
+            const paused = window.TimeSystem.togglePause();
+            pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+            pauseBtn.classList.toggle('paused', paused);
+        });
+    }
+
     const exportBtn = document.getElementById('export-save-btn');
     const importBtn = document.getElementById('import-save-btn');
     const wipeBtn = document.getElementById('wipe-save-btn');

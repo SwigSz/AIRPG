@@ -128,6 +128,42 @@
     font-size: 0.85rem;
 }
 
+/* Pause Button Section */
+#pause-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+}
+
+.time-pause-btn {
+    padding: 0.4rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    background-color: transparent;
+    border: 2px solid #f59e0b;
+    color: #f59e0b;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.05em;
+}
+
+.time-pause-btn:hover {
+    background-color: #f59e0b;
+    color: #1e293b;
+}
+
+.time-pause-btn.paused {
+    border-color: #22c55e;
+    color: #22c55e;
+}
+
+.time-pause-btn.paused:hover {
+    background-color: #22c55e;
+    color: #1e293b;
+}
+
 /* Save Controls Section */
 #save-controls {
     display: flex;

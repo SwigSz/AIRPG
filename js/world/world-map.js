@@ -242,6 +242,7 @@ const WorldMap = (() => {
      * Returns true if successful.
      */
     function movePlayer(newX, newY) {
+        if (window.TimeSystem?.isPaused) { showPausedFeedback(); return false; }
         if (newX < 0 || newX >= WORLD_WIDTH || newY < 0 || newY >= WORLD_HEIGHT) return false;
 
         const tile = regionGrid[newY][newX];
@@ -378,6 +379,7 @@ const WorldMap = (() => {
      * Switches from overworld view to local map view.
      */
     function enterRegion() {
+        if (window.TimeSystem?.isPaused) { showPausedFeedback(); return; }
         const tile = regionGrid[playerPos.y][playerPos.x];
 
         // If this is the settlement tile, prompt to enter camp
@@ -604,6 +606,51 @@ const WorldMap = (() => {
         }
     }
 
+    let pausedMessageTimeout = null;
+    let pausedMessageVisible = false;
+
+    function showPausedFeedback() {
+        pausedMessageVisible = true;
+        if (pausedMessageTimeout) clearTimeout(pausedMessageTimeout);
+        pausedMessageTimeout = setTimeout(() => {
+            pausedMessageVisible = false;
+            pausedMessageTimeout = null;
+            // Trigger a redraw to clear the message
+            if (canvas && ctx) render();
+        }, 2000);
+        // Draw immediately
+        if (canvas && ctx) {
+            drawPausedMessage();
+        }
+    }
+
+    function drawPausedMessage() {
+        if (!pausedMessageVisible || !canvas || !ctx) return;
+        const msg = 'Cannot travel while game is paused!';
+        const x = canvas.width / 2;
+        const y = canvas.height / 2;
+        const pad = 18;
+        ctx.save();
+        ctx.font = 'bold 18px "Courier New", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const w = ctx.measureText(msg).width + pad * 2;
+        const h = 48;
+        // Background
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        const rx = x - w / 2, ry = y - h / 2;
+        ctx.beginPath();
+        ctx.roundRect(rx, ry, w, h, 8);
+        ctx.fill();
+        ctx.stroke();
+        // Text
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText(msg, x, y);
+        ctx.restore();
+    }
+
     // ─── Canvas Setup ─────────────────────────────────────────────────────────
 
     function setupCanvas() {
@@ -728,6 +775,9 @@ const WorldMap = (() => {
         } else {
             canvas._leaveCampBtn = null;
         }
+
+        // Draw paused message overlay if active
+        drawPausedMessage();
     }
 
     function drawTiles() {

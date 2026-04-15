@@ -23,6 +23,7 @@ const TimeSystem = {
     // Settlement time tracking
     lastTickTime: 0,
     isInSettlement: false,
+    isPaused: false,
 
     /**
      * Initialize the time system
@@ -47,20 +48,37 @@ const TimeSystem = {
      */
     startTickSystem() {
         setInterval(() => {
-            if (this.isInSettlement) {
+            if (this.isInSettlement && !this.isPaused) {
                 const now = Date.now();
                 const deltaTime = now - this.lastTickTime;
                 this.lastTickTime = now;
 
-                // Calculate hours to add based on delta time
-                // 1 day (24 hours) per 2 seconds = 12 hours per second
                 const hoursToAdd = (deltaTime / 1000) * (this.HOURS_PER_DAY / (this.SETTLEMENT_DAY_DURATION / 1000));
                 this.advanceTime(hoursToAdd);
             } else {
-                // Reset last tick time when not in settlement to prevent time jumps
+                // Reset last tick time to prevent time jumps when resuming
                 this.lastTickTime = Date.now();
             }
-        }, 50); // Update 20 times per second for smooth progression
+        }, 50);
+    },
+
+    pause() {
+        this.isPaused = true;
+        this.lastTickTime = Date.now();
+    },
+
+    resume() {
+        this.isPaused = false;
+        this.lastTickTime = Date.now();
+    },
+
+    togglePause() {
+        if (this.isPaused) {
+            this.resume();
+        } else {
+            this.pause();
+        }
+        return this.isPaused;
     },
 
     /**
@@ -195,7 +213,8 @@ const TimeSystem = {
             month: this.currentTime.month,
             day: this.currentTime.day,
             hour: this.currentTime.hour,
-            totalHours: this.currentTime.totalHours
+            totalHours: this.currentTime.totalHours,
+            isPaused: this.isPaused
         };
     },
 
@@ -210,6 +229,7 @@ const TimeSystem = {
             this.currentTime.day = saveData.day || 0;
             this.currentTime.hour = saveData.hour || 0;
             this.currentTime.totalHours = saveData.totalHours || 0;
+            this.isPaused = saveData.isPaused === true;
             this.updateUI();
         }
     }
