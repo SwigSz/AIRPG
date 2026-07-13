@@ -289,6 +289,8 @@ const Settlement = (() => {
             updateTrainingTab();
         } else if (tabName === 'territory') {
             updateTerritoryTab();
+        } else if (tabName === 'trade' && window.Trade) {
+            Trade.updateTradeTab();
         }
     }
 
@@ -318,6 +320,8 @@ const Settlement = (() => {
             updateTrainingTab();
         } else if (currentTab === 'territory') {
             updateTerritoryTab();
+        } else if (currentTab === 'trade' && window.Trade) {
+            Trade.updateTradeTab();
         }
     }
 
@@ -722,7 +726,9 @@ const Settlement = (() => {
             return rates;
         }
 
-        // Add production from buildings ONLY where workers are assigned
+        // Add production from buildings ONLY where workers are assigned.
+        // Morale multiplies output — motivated settlers work harder.
+        const moraleMult = getMoraleProductionMultiplier();
         for (const buildingId in state.settlement.buildings) {
             const building = state.settlement.buildings[buildingId];
             const buildingData = state.buildingsData.find(b => b.id === buildingId);
@@ -738,7 +744,7 @@ const Settlement = (() => {
                 for (const resource in buildingData.production) {
                     if (rates[resource] !== undefined) {
                         // Only active buildings (with workers) produce
-                        rates[resource] += buildingData.production[resource] * activeBuildings;
+                        rates[resource] += buildingData.production[resource] * activeBuildings * moraleMult;
                     }
                 }
             }
@@ -880,6 +886,7 @@ const Settlement = (() => {
                 for (let i = 0; i < peopleToRemove; i++) {
                     if (state.settlement.population.total > 0) {
                         state.settlement.population.total--;
+                        adjustMorale(-5, 'a settler has left, starving');
 
                         // Remove from idle first, then from assigned workers
                         if (state.settlement.population.idle > 0) {
@@ -905,6 +912,15 @@ const Settlement = (() => {
         } else {
             // Food is available, reset starvation counter
             state.settlement.starvationDays = 0;
+        }
+
+        // Morale drifts toward its baseline; roster follows the headcount
+        driftMorale(daysAdvanced);
+        syncSettlerRoster();
+
+        // Trade caravans come and go with the calendar
+        if (window.Trade && window.Trade.onTimeAdvance) {
+            Trade.onTimeAdvance();
         }
 
         // Update UI in real-time (including current tab)
@@ -1131,13 +1147,146 @@ const Settlement = (() => {
         const currentFood = state.settlement.resources.food?.current || 0;
         if (currentFood === 0) return;
 
-        const spawnChance = getWandererSpawnChance();
+        // Word spreads about happy settlements — morale scales arrivals
+        const spawnChance = getWandererSpawnChance() * (state.settlement.morale / 100);
         const roll = Math.random();
 
         if (roll < spawnChance) {
             pop.total++;
             pop.idle++;
+
+            // The wanderer is a person, not a number
+            const settler = createSettler();
+            if (!Array.isArray(state.settlement.settlers)) state.settlement.settlers = [];
+            state.settlement.settlers.push(settler);
+            const trait = getTraitDef(settler.trait);
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(`${settler.name} (${trait.name}) has joined the settlement.`, 'success');
+            }
+            if (window.Succession) Succession.recordDeed('settlersJoined');
         }
+    }
+
+    // ============================================
+    // NAMED SETTLERS (Living Frontier — loop closure)
+    // ============================================
+    // Settlers are individuals: name + trait. The roster is kept in sync with
+    // the population counters (counters stay authoritative for assignment
+    // math). Traits matter for heir choice (the heir's trait grants +1 to a
+    // mapped stat on succession) and will feed militia/foremen later.
+
+    const SETTLER_NAMES = [
+        'Aldric', 'Brenna', 'Cassia', 'Doran', 'Elara', 'Fenwick', 'Gwyn',
+        'Hale', 'Isolde', 'Joren', 'Kestrel', 'Lysa', 'Marek', 'Nadia',
+        'Osric', 'Petra', 'Quinn', 'Rowan', 'Sable', 'Torin', 'Una', 'Wren',
+        'Ansel', 'Bryn', 'Corin', 'Delia', 'Edric', 'Faye', 'Garrick', 'Hild'
+    ];
+
+    const SETTLER_TRAITS = [
+        { id: 'stalwart',  name: 'Stalwart',   stat: 'strength',     blurb: 'Broad-shouldered and unshakable.' },
+        { id: 'clever',    name: 'Clever',     stat: 'intelligence', blurb: 'Quick with numbers and letters.' },
+        { id: 'swift',     name: 'Swift',      stat: 'dexterity',    blurb: 'Fast hands, faster feet.' },
+        { id: 'hardy',     name: 'Hardy',      stat: 'constitution', blurb: 'Never sick a day in their life.' },
+        { id: 'devout',    name: 'Devout',     stat: 'wisdom',       blurb: 'Sees further than most.' },
+        { id: 'charming',  name: 'Charming',   stat: 'charisma',     blurb: 'Everyone\'s favorite neighbor.' }
+    ];
+
+    function createSettler() {
+        return {
+            id: 'settler_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            name: SETTLER_NAMES[Math.floor(Math.random() * SETTLER_NAMES.length)],
+            trait: SETTLER_TRAITS[Math.floor(Math.random() * SETTLER_TRAITS.length)].id
+        };
+    }
+
+    function getTraitDef(traitId) {
+        return SETTLER_TRAITS.find(t => t.id === traitId) || SETTLER_TRAITS[0];
+    }
+
+    /**
+     * Keep the settler roster in sync with population.total.
+     * Self-healing: generates missing settlers, trims the departed
+     * (never trimming the anointed heir until they're the only one left).
+     */
+    function syncSettlerRoster() {
+        if (!state.settlement) return;
+        if (!Array.isArray(state.settlement.settlers)) state.settlement.settlers = [];
+
+        const roster = state.settlement.settlers;
+        const total = state.settlement.population?.total || 0;
+
+        while (roster.length < total) {
+            roster.push(createSettler());
+        }
+
+        if (roster.length > total) {
+            const heir = window.Succession ? Succession.getHeir() : null;
+            while (roster.length > total) {
+                // Trim from the end, skipping the heir while others remain
+                let idx = roster.length - 1;
+                if (heir && roster[idx].id === heir.settlerId && roster.length > 1) {
+                    idx = roster.length - 2;
+                }
+                const [gone] = roster.splice(idx, 1);
+                // If the heir was the only one left to trim, they're gone too
+                if (heir && gone.id === heir.settlerId && window.Succession) {
+                    Succession.clearHeir(`${gone.name} — your heir — has left or perished!`);
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove a specific settler (used when the heir becomes the player).
+     */
+    function removeSettlerById(settlerId) {
+        if (!state.settlement?.settlers) return;
+        const idx = state.settlement.settlers.findIndex(s => s.id === settlerId);
+        if (idx >= 0) state.settlement.settlers.splice(idx, 1);
+    }
+
+    function getSettlers() {
+        syncSettlerRoster();
+        return state.settlement?.settlers || [];
+    }
+
+    // ============================================
+    // MORALE (live)
+    // ============================================
+    // Morale drifts toward a baseline and is pushed around by events.
+    // It multiplies settlement production and wanderer arrival chance.
+
+    const MORALE_BASELINE = 75;
+    const MORALE_DRIFT_PER_DAY = 0.5;
+
+    function adjustMorale(delta, reason) {
+        if (!state.settlement) return;
+        const before = Math.round(state.settlement.morale);
+        state.settlement.morale = Math.max(10, Math.min(100, state.settlement.morale + delta));
+        const after = Math.round(state.settlement.morale);
+        if (reason && after !== before && window.ActivityLog) {
+            const arrow = delta > 0 ? '▲' : '▼';
+            ActivityLog.addMessage(`Morale ${arrow} ${after}% — ${reason}`, delta > 0 ? 'success' : 'warning');
+        }
+    }
+
+    function driftMorale(daysAdvanced) {
+        if (!state.settlement) return;
+        const m = state.settlement.morale;
+        if (m < MORALE_BASELINE) {
+            state.settlement.morale = Math.min(MORALE_BASELINE, m + MORALE_DRIFT_PER_DAY * daysAdvanced);
+        } else if (m > MORALE_BASELINE) {
+            state.settlement.morale = Math.max(MORALE_BASELINE, m - MORALE_DRIFT_PER_DAY * daysAdvanced);
+        }
+    }
+
+    /**
+     * Production multiplier from morale: 100% morale = 1.13x, 75% = 1.0x,
+     * 40% = 0.83x, 10% = 0.68x.
+     */
+    function getMoraleProductionMultiplier() {
+        if (!state.settlement) return 1;
+        return 0.63 + state.settlement.morale / 200;
     }
 
     // ============================================
@@ -1207,6 +1356,9 @@ const Settlement = (() => {
         return true;
     }
 
+    // Whether the heir-selection chooser is open on the population tab
+    let anointChooserOpen = false;
+
     /**
      * Update the population tab UI
      */
@@ -1219,7 +1371,10 @@ const Settlement = (() => {
         if (container.offsetParent === null) return;
 
         const pop = state.settlement.population;
-        const spawnChance = (getWandererSpawnChance() * 100).toFixed(1);
+        const spawnChance = (getWandererSpawnChance() * (state.settlement.morale / 100) * 100).toFixed(1);
+
+        syncSettlerRoster();
+        const settlers = state.settlement.settlers || [];
 
         // Production buildings that can have workers assigned
         const productionBuildings = state.buildingsData.filter(
@@ -1232,7 +1387,9 @@ const Settlement = (() => {
         // +/- button presses).
         const heir = window.Succession ? Succession.getHeir() : null;
         const fingerprint = productionBuildings.map(b => b.id).join(',')
-            + `|heir:${heir ? heir.name : 'none'}`;
+            + `|heir:${heir ? heir.name : 'none'}`
+            + `|roster:${settlers.map(s => s.id).join(',')}`
+            + `|chooser:${anointChooserOpen ? 1 : 0}`;
 
         if (container.dataset.buildingFingerprint === fingerprint && container.querySelector('.worker-list')) {
             // IN-PLACE UPDATE — no DOM rebuild
@@ -1290,6 +1447,21 @@ const Settlement = (() => {
                 </div>
             </div>
 
+            <div class="settler-roster">
+                <h4>Settlers</h4>
+                ${settlers.length === 0
+                    ? '<p class="help-text">No settlers yet — build a tavern and keep food stocked to attract wanderers.</p>'
+                    : `<div class="settler-chips">${settlers.map(s => {
+                        const trait = getTraitDef(s.trait);
+                        const isHeir = heir && heir.settlerId === s.id;
+                        return `<span class="settler-chip${isHeir ? ' settler-chip-heir' : ''}" title="${trait.blurb}">
+                            ${isHeir ? '👑 ' : ''}${s.name} <em>· ${trait.name}</em>
+                            ${anointChooserOpen && !heir ? `<button class="settler-anoint-pick" data-settler="${s.id}">Anoint</button>` : ''}
+                        </span>`;
+                    }).join('')}</div>`}
+                ${anointChooserOpen && !heir ? '<p class="help-text">Choose who will carry on your line. Their trait shapes them (+1 to its stat when they succeed you).</p>' : ''}
+            </div>
+
             <div class="worker-allocation">
                 <h4>Worker Allocation</h4>
                 <p class="help-text">Assign workers to buildings to produce resources. Each building requires 1 worker.</p>
@@ -1341,21 +1513,32 @@ const Settlement = (() => {
             });
         });
 
-        // Anoint heir button (Living Frontier Phase 4)
+        // Anoint heir: opens the settler chooser (pick a real person)
         const anointBtn = container.querySelector('#anoint-heir-btn');
         if (anointBtn) {
             anointBtn.addEventListener('click', () => {
                 if (!window.Succession) return;
-                const suggested = Succession.suggestHeirName();
-                const name = prompt('Name your heir (a settler who will continue your line):', suggested);
-                if (name === null) return; // cancelled
-                const result = Succession.anointHeir(name || suggested);
-                if (!result.ok) {
-                    alert(result.reason);
+                if ((state.settlement.settlers || []).length === 0) {
+                    alert('You need at least one settler to anoint.');
+                    return;
                 }
+                anointChooserOpen = !anointChooserOpen;
                 updateUI();
             });
         }
+
+        // Settler pick buttons (visible while the chooser is open)
+        container.querySelectorAll('.settler-anoint-pick').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const settler = (state.settlement.settlers || []).find(s => s.id === btn.dataset.settler);
+                if (!settler || !window.Succession) return;
+                const result = Succession.anointHeir(settler);
+                if (!result.ok) alert(result.reason);
+                anointChooserOpen = false;
+                updateUI();
+                if (window.SaveSystem) SaveSystem.save();
+            });
+        });
     }
 
     // ============================================
@@ -1649,6 +1832,12 @@ const Settlement = (() => {
         create,
         updateUI,
         onTimeAdvance,
+        // Named settlers & morale (Living Frontier loop closures)
+        getSettlers,
+        getTraitDef,
+        removeSettlerById,
+        adjustMorale,
+        getMoraleProductionMultiplier,
         getState: () => {
             // Include resource accumulators in state
             return {

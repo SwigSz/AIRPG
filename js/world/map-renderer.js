@@ -19,6 +19,42 @@ const MapRenderer = (() => {
     // Loaded tileset: { image: HTMLImageElement, atlas: { key: {x,y,w,h} } }
     let tileset = null;
 
+    // ─── Default tileset: Kenney Roguelike/RPG pack (CC0) ───────────────────
+    // 16px tiles with 1px spacing → tile (col,row) is at (col*17, row*17).
+    const T = (c, r) => ({ x: c * 17, y: r * 17, w: 16, h: 16 });
+
+    const DEFAULT_TILESET_URL = 'assets/sprites/roguelike-sheet.png';
+    const DEFAULT_ATLAS = {
+        // Terrain bases
+        'terrain/plains':   T(5, 0),    // light grass
+        'terrain/forest':   T(20, 25),  // deeper green
+        'terrain/desert':   T(2, 26),   // sand
+        'terrain/tundra':   T(45, 26),  // snow
+        'terrain/swamp':    T(6, 0),    // muddy bog
+        'terrain/water':    T(16, 28),  // water
+        'terrain/mountain': T(16, 12),  // grey stone
+
+        // Resource nodes
+        'node/tree':        T(16, 9),   // pine
+        'node/stick_bush':  T(21, 9),   // round bush
+        'node/berry_bush':  T(19, 9),   // hedge bush
+        'node/fiber_plant': T(22, 10),  // sprout
+        'node/rock':        T(53, 21),  // tan rock pile (quarry)
+        'node/stone':       T(54, 21),  // grey rock pile (loose stones)
+        'node/copper_ore':  T(45, 10),  // ore nuggets
+
+        // Markers
+        'marker/nest':      T(50, 0),   // raider banner
+        'marker/grave':     T(52, 9)    // headstone
+    };
+
+    /**
+     * Load the bundled default tileset (Kenney Roguelike/RPG pack).
+     */
+    function loadDefaultTileset() {
+        return setTileset(DEFAULT_TILESET_URL, DEFAULT_ATLAS);
+    }
+
     /**
      * Load a sprite tileset. Draw calls with a matching `sprite` key switch
      * to sprites automatically.
@@ -48,6 +84,7 @@ const MapRenderer = (() => {
     function drawTerrain(ctx, px, py, size, visual) {
         if (hasSprite(visual)) {
             const s = tileset.atlas[visual.sprite];
+            ctx.imageSmoothingEnabled = false; // crisp pixel art
             ctx.drawImage(tileset.image, s.x, s.y, s.w, s.h, px, py, size, size);
             return;
         }
@@ -62,8 +99,9 @@ const MapRenderer = (() => {
     function drawIcon(ctx, px, py, size, visual, scale = 0.55) {
         if (hasSprite(visual)) {
             const s = tileset.atlas[visual.sprite];
-            const iconSize = size * Math.max(scale, 0.5);
+            const iconSize = size * Math.max(scale, 0.6);
             const off = (size - iconSize) / 2;
+            ctx.imageSmoothingEnabled = false; // crisp pixel art
             ctx.drawImage(tileset.image, s.x, s.y, s.w, s.h, px + off, py + off, iconSize, iconSize);
             return;
         }
@@ -98,6 +136,7 @@ const MapRenderer = (() => {
 
     return {
         setTileset,
+        loadDefaultTileset,
         drawTerrain,
         drawIcon,
         drawFog,

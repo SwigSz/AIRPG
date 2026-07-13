@@ -829,3 +829,93 @@
 .outpost-upgrade-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .outpost-max-tier { color: #4ade80; font-size: 0.85rem; }
+
+/* Settler roster (named settlers) */
+.settler-roster {
+    margin: 0.9rem 0;
+}
+
+.settler-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+.settler-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 4px 12px;
+    font-size: 0.82rem;
+    color: #cbd5e1;
+}
+
+.settler-chip em {
+    color: #94a3b8;
+    font-style: normal;
+    font-size: 0.75rem;
+}
+
+.settler-chip-heir {
+    border-color: #fcd34d;
+    color: #fde68a;
+}
+
+.settler-anoint-pick {
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid #b45309;
+    background-color: #78350f;
+    color: #fde68a;
+    font-size: 0.72rem;
+    cursor: pointer;
+}
+.settler-anoint-pick:hover { background-color: #92400e; }
+
+/* Trade caravan tab */
+.caravan-status {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin: 0.75rem 0;
+    color: #cbd5e1;
+}
+
+.caravan-offers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.caravan-offer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.caravan-offer.offer-done {
+    opacity: 0.45;
+}
+
+.caravan-trade-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid #0e7490;
+    background-color: #155e75;
+    color: #a5f3fc;
+    font-weight: 600;
+    cursor: pointer;
+}
+.caravan-trade-btn:hover:not(:disabled) { background-color: #0e7490; }
+.caravan-trade-btn:disabled { opacity: 0.45; cursor: not-allowed; }

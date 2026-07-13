@@ -20,42 +20,49 @@ const LocalMap = (() => {
         forest: {
             name: 'Forest',
             color: '#2d5016',
+            sprite: 'terrain/forest',
             walkable: true,
             description: 'Dense woodland with tall trees'
         },
         plains: {
             name: 'Plains',
             color: '#6b8e23',
+            sprite: 'terrain/plains',
             walkable: true,
             description: 'Open grassland with rolling hills'
         },
         desert: {
             name: 'Desert',
             color: '#d4a574',
+            sprite: 'terrain/desert',
             walkable: true,
             description: 'Sandy dunes under scorching sun'
         },
         tundra: {
             name: 'Tundra',
             color: '#b8c5d6',
+            sprite: 'terrain/tundra',
             walkable: true,
             description: 'Frozen wasteland covered in snow'
         },
         swamp: {
             name: 'Swamp',
             color: '#4a5f4a',
+            sprite: 'terrain/swamp' /* bog */,
             walkable: true,
             description: 'Murky wetlands with thick vegetation'
         },
         water: {
             name: 'Water',
             color: '#1e3a5f',
+            sprite: 'terrain/water',
             walkable: false,
             description: 'Deep water, impassable'
         },
         mountain: {
             name: 'Mountain',
             color: '#4a4a4a',
+            sprite: 'terrain/mountain',
             walkable: false,
             description: 'Rocky peaks, too steep to climb'
         }
@@ -66,6 +73,7 @@ const LocalMap = (() => {
         tree: {
             name: 'Tree',
             color: '#1a3a0f',
+            sprite: 'node/tree',
             icon: '🌲',
             defaultAmount: 5,
             description: 'A tree that can be harvested for wood',
@@ -78,6 +86,7 @@ const LocalMap = (() => {
         rock: {
             name: 'Rock Quarry',
             color: '#666666',
+            sprite: 'node/rock',
             icon: '⛰️',
             defaultAmount: 5,
             description: 'A large stone deposit that must be mined',
@@ -90,6 +99,7 @@ const LocalMap = (() => {
         stone: {
             name: 'Loose Stones',
             color: '#8a8a8a',
+            sprite: 'node/stone',
             icon: '🪨',
             defaultAmount: 2,
             description: 'Small stones scattered on the ground',
@@ -101,6 +111,7 @@ const LocalMap = (() => {
         copper_ore: {
             name: 'Copper Ore Vein',
             color: '#b87333',
+            sprite: 'node/copper_ore',
             icon: '🟫',
             defaultAmount: 3,
             description: 'A copper ore deposit',
@@ -113,6 +124,7 @@ const LocalMap = (() => {
         berry_bush: {
             name: 'Berry Bush',
             color: '#8b4789',
+            sprite: 'node/berry_bush',
             icon: '🫐',
             defaultAmount: 3,
             description: 'A bush bearing edible berries',
@@ -124,6 +136,7 @@ const LocalMap = (() => {
         stick_bush: {
             name: 'Bush',
             color: '#4a6741',
+            sprite: 'node/stick_bush',
             icon: '🌳',
             defaultAmount: 4,
             description: 'A bush that can be harvested for sticks',
@@ -135,6 +148,7 @@ const LocalMap = (() => {
         fiber_plant: {
             name: 'Fiber Plant',
             color: '#6b8e4e',
+            sprite: 'node/fiber_plant',
             icon: '🌾',
             defaultAmount: 4,
             description: 'A plant with fibrous stalks',
@@ -160,6 +174,7 @@ const LocalMap = (() => {
     const NEST = {
         color: '#3b0d0d',
         icon: '🏴',
+        sprite: 'marker/nest',
         guardColor: '#5c1010',
         // Loot granted per nest level on destruction: [{itemId, quantity}]
         lootPerLevel: [
@@ -1122,7 +1137,7 @@ const LocalMap = (() => {
                 if (!isLocalTileRevealed(gx, gy)) continue;
                 const tile = grid[gy][gx];
                 if (tile.grave) {
-                    MapRenderer.drawIcon(ctx, vx * tileSize, vy * tileSize, tileSize, { icon: '🪦' }, 0.55);
+                    MapRenderer.drawIcon(ctx, vx * tileSize, vy * tileSize, tileSize, { icon: '🪦', sprite: 'marker/grave' }, 0.55);
                 }
             }
         }
@@ -1148,12 +1163,26 @@ const LocalMap = (() => {
         const boss = window.EnemyFactory ? EnemyFactory.createEnemy(enemyId) : null;
         if (!boss) return;
 
-        // Scale the boss by nest level
+        // Scale the boss by nest level. Defense scales too — the gear demand
+        // curve: higher nests expect the smithing ladder to keep pace.
         const hpMult = 1 + level * NEST.bossHpMultPerLevel;
         boss.name = `Nest Chieftain (${boss.name})`;
         boss.hp = Math.round(boss.hp * hpMult);
         boss.maxHp = Math.round(boss.maxHp * hpMult);
+        boss.defense = (boss.defense || 0) + level * 2;
         boss.xpReward = Math.round((boss.xpReward || 10) * (1 + level * NEST.bossXpMultPerLevel));
+
+        // Warn when the player's weapon won't bite
+        if (window.DamageCalculator && window.ActivityLog) {
+            const attacker = window.GameState?.getState()?.character;
+            const playerDmg = attacker ? DamageCalculator.calculateCurrentWeaponDamage(attacker) : 0;
+            if (playerDmg <= boss.defense + 2) {
+                ActivityLog.addMessage(
+                    "Your weapon can barely scratch this chieftain's hide — better arms may be needed.",
+                    'warning'
+                );
+            }
+        }
 
         const character = window.GameState?.getState()?.character;
         if (!character) return;
@@ -1224,6 +1253,10 @@ const LocalMap = (() => {
 
         if (window.ActivityLog) {
             ActivityLog.addMessage(`The raider nest in ${regionName} is destroyed! The region is cleared.`, 'success');
+        }
+        if (window.Succession) Succession.recordDeed('nestsCleared');
+        if (window.Settlement?.adjustMorale) {
+            Settlement.adjustMorale(10, `the nest in ${regionName} is destroyed`);
         }
         if (window.NotificationManager) {
             NotificationManager.showNotification({
@@ -2447,9 +2480,12 @@ const LocalMap = (() => {
         if (!TEST_MODE && window.RegionManager) {
             const visit = RegionManager.visitRegion(regionX, regionY, biome);
             regionRecord = visit.record;
-            if (visit.firstVisit && regionRecord && window.ActivityLog) {
-                const stars = '★'.repeat(regionRecord.richness) + '☆'.repeat(5 - regionRecord.richness);
-                ActivityLog.addMessage(`Discovered ${regionRecord.name}! Richness: ${stars}`, 'success');
+            if (visit.firstVisit && regionRecord) {
+                if (window.ActivityLog) {
+                    const stars = '★'.repeat(regionRecord.richness) + '☆'.repeat(5 - regionRecord.richness);
+                    ActivityLog.addMessage(`Discovered ${regionRecord.name}! Richness: ${stars}`, 'success');
+                }
+                if (window.Succession) Succession.recordDeed('regionsDiscovered');
             }
         }
 

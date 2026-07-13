@@ -100,16 +100,45 @@ const Succession = (() => {
             if (dying) return; // died of old age mid-loop
         }
 
-        // If the heir was a settler and the settlement emptied out, they're gone
+        // If the heir was a settler and the settlement emptied out, they're
+        // gone (the settler roster sync also calls clearHeir by id)
         if (dynasty.heir) {
             const pop = state.settlement?.population;
             if (pop && pop.total <= 0) {
-                dynasty.heir = null;
-                if (window.ActivityLog) {
-                    ActivityLog.addMessage('Your heir has perished with the settlement... you must anoint another.', 'warning');
-                }
+                clearHeir('Your heir has perished with the settlement... you must anoint another.');
             }
         }
+    }
+
+    /**
+     * The heir is gone (starved, scattered). Called by the settler roster sync.
+     */
+    function clearHeir(message) {
+        const dynasty = ensureDynasty();
+        if (!dynasty || !dynasty.heir) return;
+        dynasty.heir = null;
+        if (message && window.ActivityLog) {
+            ActivityLog.addMessage(message, 'warning');
+        }
+    }
+
+    // ─── Deeds (Chronicle bookkeeping) ───────────────────────────────────────
+
+    /**
+     * Record a deed for the current generation. Keys: regionsDiscovered,
+     * nestsCleared, outpostsFounded, gravesHonored, settlersJoined.
+     */
+    function recordDeed(key, amount = 1) {
+        const dynasty = ensureDynasty();
+        if (!dynasty) return;
+        if (!dynasty.deeds) dynasty.deeds = {};
+        const gen = String(dynasty.generation);
+        if (!dynasty.deeds[gen]) dynasty.deeds[gen] = {};
+        dynasty.deeds[gen][key] = (dynasty.deeds[gen][key] || 0) + amount;
+    }
+
+    function getDynasty() {
+        return ensureDynasty();
     }
 
     function onBirthday(character) {
@@ -149,10 +178,11 @@ const Succession = (() => {
     }
 
     /**
-     * Anoint a settler as heir. Requires a living settler to anoint.
-     * @param {string} name - the heir's name
+     * Anoint a settler as heir.
+     * @param {Object|string} settler - a settler object ({id, name, trait})
+     *        from the settlement roster, or a plain name string (legacy)
      */
-    function anointHeir(name) {
+    function anointHeir(settler) {
         const state = window.GameState?.getState();
         const dynasty = ensureDynasty();
         if (!state || !dynasty) return { ok: false, reason: 'No game state' };
@@ -163,10 +193,21 @@ const Succession = (() => {
             return { ok: false, reason: 'You need at least one settler to anoint' };
         }
 
-        dynasty.heir = {
-            name: (name || suggestHeirName()).trim().slice(0, 24) || suggestHeirName(),
-            anointedDay: window.RegionManager ? RegionManager.getCurrentDay() : 0
-        };
+        if (typeof settler === 'object' && settler !== null) {
+            dynasty.heir = {
+                name: settler.name,
+                settlerId: settler.id,
+                trait: settler.trait || null,
+                anointedDay: window.RegionManager ? RegionManager.getCurrentDay() : 0
+            };
+        } else {
+            dynasty.heir = {
+                name: (String(settler || '') || suggestHeirName()).trim().slice(0, 24) || suggestHeirName(),
+                settlerId: null,
+                trait: null,
+                anointedDay: window.RegionManager ? RegionManager.getCurrentDay() : 0
+            };
+        }
 
         if (window.ActivityLog) {
             ActivityLog.addMessage(`${dynasty.heir.name} has been anointed as your heir. The line will continue.`, 'success');
@@ -263,6 +304,9 @@ const Succession = (() => {
             pop.total--;
             if (pop.idle > 0) pop.idle--;
         }
+        if (heir.settlerId && window.Settlement?.removeSettlerById) {
+            Settlement.removeSettlerById(heir.settlerId);
+        }
 
         // World + gear only: inventory and equipment transfer, nothing else
         const newCharacter = Character.create(heir.name, {
@@ -274,6 +318,19 @@ const Succession = (() => {
         });
         newCharacter.lifespan = LIFESPAN_MIN + Math.floor(Math.random() * (LIFESPAN_SPREAD + 1));
         newCharacter.ageDaysAccum = 0;
+
+        // The heir's trait shapes them: +1 to its mapped stat
+        if (heir.trait && window.Settlement?.getTraitDef) {
+            const trait = Settlement.getTraitDef(heir.trait);
+            if (trait && trait.stat) {
+                newCharacter.stats[trait.stat] = (newCharacter.stats[trait.stat] || 0) + 1;
+            }
+        }
+
+        // Losing a leader weighs on the settlement
+        if (window.Settlement?.adjustMorale) {
+            Settlement.adjustMorale(-15, `${oldCharacter.name} is mourned`);
+        }
 
         if (window.SkillManager) SkillManager.initializeCharacterSkills(newCharacter);
         if (window.CharacterStats) CharacterStats.applyToCharacter(newCharacter);
@@ -466,6 +523,7 @@ const Succession = (() => {
 
         grave.honoredBy.push(dynasty.generation);
         character.attributePoints = (character.attributePoints || 0) + 1;
+        recordDeed('gravesHonored');
 
         if (window.ActivityLog) {
             ActivityLog.addMessage(
@@ -489,9 +547,12 @@ const Succession = (() => {
         init,
         onTimeAdvance,
         anointHeir,
+        clearHeir,
         suggestHeirName,
         getHeir,
         getGeneration,
+        getDynasty,
+        recordDeed,
         die,
         arriveAsNewFounder,
         honorGrave

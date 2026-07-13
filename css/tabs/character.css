@@ -716,3 +716,47 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
 }
+
+/* ============================================
+   CHRONICLE TAB (dynasty history)
+   ============================================ */
+.chronicle-entry {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-left: 4px solid #64748b;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+.chronicle-entry-current {
+    border-left-color: #fcd34d;
+}
+
+.chronicle-entry-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fcd34d;
+    margin-bottom: 0.3rem;
+}
+
+.chronicle-entry-title em {
+    color: #4ade80;
+    font-size: 0.85rem;
+}
+
+.chronicle-entry-line {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+}
+
+.chronicle-entry-deeds {
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+
+.chronicle-deeds-none {
+    font-style: italic;
+    color: #64748b;
+}

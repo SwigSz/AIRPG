@@ -41,6 +41,10 @@ const CharacterUI = (() => {
                         <span class="tab-icon">✨</span>
                         <span class="tab-label">Powers</span>
                     </button>
+                    <button class="character-tab-btn" data-char-tab="chronicle">
+                        <span class="tab-icon">📜</span>
+                        <span class="tab-label">Chronicle</span>
+                    </button>
                 </div>
 
                 <!-- Tab Content Area -->
@@ -77,6 +81,14 @@ const CharacterUI = (() => {
                         <h2>Powers</h2>
                         <div class="powers-grid" id="powers-grid">
                             <!-- Powers will be rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Chronicle Tab (dynasty history) -->
+                    <div class="character-tab-content" id="chronicle-tab-content">
+                        <h2>The Chronicle</h2>
+                        <div id="chronicle-content">
+                            <!-- Dynasty history rendered here -->
                         </div>
                     </div>
 
@@ -149,7 +161,72 @@ const CharacterUI = (() => {
             renderPowers();
         } else if (activeTab === 'progression') {
             renderProgression();
+        } else if (activeTab === 'chronicle') {
+            renderChronicle();
         }
+    }
+
+    // Render the dynasty Chronicle (Living Frontier legacy)
+    function renderChronicle() {
+        const container = document.getElementById('chronicle-content');
+        if (!container) return;
+
+        if (!window.Succession) {
+            container.innerHTML = '<p class="empty-message">The chronicle is blank.</p>';
+            return;
+        }
+
+        const dynasty = Succession.getDynasty();
+        const character = window.GameState?.getState()?.character;
+        const deeds = dynasty?.deeds || {};
+
+        const DEED_LABELS = {
+            regionsDiscovered: '🗺️ regions discovered',
+            nestsCleared: '🏴 nests destroyed',
+            outpostsFounded: '🏕️ outposts founded',
+            gravesHonored: '🪦 graves honored',
+            settlersJoined: '👥 settlers welcomed'
+        };
+
+        const deedsHtml = (gen) => {
+            const d = deeds[String(gen)];
+            if (!d || Object.keys(d).length === 0) return '<span class="chronicle-deeds-none">No deeds recorded.</span>';
+            return Object.keys(d)
+                .map(key => `<span class="chronicle-deed">${d[key]} ${DEED_LABELS[key] || key}</span>`)
+                .join(' · ');
+        };
+
+        let html = '';
+
+        // The living chapter
+        if (character) {
+            const heir = Succession.getHeir();
+            html += `
+                <div class="chronicle-entry chronicle-entry-current">
+                    <div class="chronicle-entry-title">Generation ${character.generation || 1} — ${character.name} <em>(living)</em></div>
+                    <div class="chronicle-entry-line">Age ${Math.floor(character.age || 0)}. ${heir ? `Heir: 👑 ${heir.name}.` : 'No heir anointed — the line hangs by a thread.'}</div>
+                    <div class="chronicle-entry-deeds">${deedsHtml(character.generation || 1)}</div>
+                </div>
+            `;
+        }
+
+        // The closed chapters, most recent first
+        const past = (dynasty?.pastCharacters || []).slice().reverse();
+        past.forEach(p => {
+            html += `
+                <div class="chronicle-entry">
+                    <div class="chronicle-entry-title">Generation ${p.generation} — ${p.name}</div>
+                    <div class="chronicle-entry-line">${p.cause ? p.cause.charAt(0).toUpperCase() + p.cause.slice(1) : 'Passed'} at age ${p.ageAtDeath}, day ${p.diedDay}.${p.region ? ` Rests at (${p.region.x}, ${p.region.y}).` : ''}</div>
+                    <div class="chronicle-entry-deeds">${deedsHtml(p.generation)}</div>
+                </div>
+            `;
+        });
+
+        if (past.length === 0 && !character) {
+            html = '<p class="empty-message">The chronicle is blank. Live a life worth writing down.</p>';
+        }
+
+        container.innerHTML = html;
     }
 
     // Render powers (formerly skills)

@@ -91,7 +91,8 @@ When you need to edit specific functionality, look in these locations:
 - **Region state**: `js/world/region-manager.js` - Living Frontier region records (seeded names, richness, lifecycle state, lazy simulation, resource regrowth, fog persistence). All per-region persistent state goes through RegionManager — do not write `world.regions` directly
 - **Map renderer**: `js/world/map-renderer.js` - ALL tile/icon drawing goes through MapRenderer (drawTerrain/drawIcon/drawFog/drawTint). It renders color+emoji fallbacks today and switches to a sprite tileset via `setTileset()` with no game-logic changes — never fillRect terrain directly in map code
 - **Noise/RNG**: `js/world/noise.js` - Seeded Perlin noise. Use `Noise.noise2D`/`fbm` for smooth terrain, but `Noise.hash2D(x, y)` for per-tile "dice rolls" (uniform distribution; thresholding Perlin noise against a probability massively under-places). For values that must not depend on Noise's mutable seed (it's re-seeded per region!), use `RegionManager`'s internal world-seed hash pattern
-- **Settlements**: `js/settlement/settlement.js` - Settlement management and resources
+- **Settlements**: `js/settlement/settlement.js` - Settlement management, resources, named settlers (roster synced to population counters), live morale
+- **Trade caravans**: `js/settlement/trade.js` - Road-frequency caravan arrivals, barter offers, Trade tab
 - **Settlement resources**: `data/resources.json` - All settlement resource definitions (data-driven)
 - **Settlement buildings**: `data/buildings.json` - Building definitions and resource costs/production
 - **Settlement upgrades**: `data/settlement-upgrades.json` - Upgrade definitions

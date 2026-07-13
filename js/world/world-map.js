@@ -46,13 +46,13 @@ const WorldMap = (() => {
 
     // Biome visual config
     const BIOME_CONFIG = {
-        plains:   { name: 'Plains',   color: '#6b8e23', icon: '🌿' },
-        forest:   { name: 'Forest',   color: '#2d5016', icon: '🌲' },
-        desert:   { name: 'Desert',   color: '#c8a45a', icon: '🏜️' },
-        tundra:   { name: 'Tundra',   color: '#a8bdd1', icon: '❄️' },
-        swamp:    { name: 'Swamp',    color: '#3d5c3d', icon: '🌫️' },
-        mountain: { name: 'Mountain', color: '#5a5a5a', icon: '⛰️' },
-        water:    { name: 'Water',    color: '#1a3a6b', icon: '🌊' }
+        plains:   { name: 'Plains',   color: '#6b8e23', icon: '🌿', sprite: 'terrain/plains' },
+        forest:   { name: 'Forest',   color: '#2d5016', icon: '🌲', sprite: 'terrain/forest', iconSprite: 'node/tree' },
+        desert:   { name: 'Desert',   color: '#c8a45a', icon: '🏜️', sprite: 'terrain/desert' },
+        tundra:   { name: 'Tundra',   color: '#a8bdd1', icon: '❄️', sprite: 'terrain/tundra' },
+        swamp:    { name: 'Swamp',    color: '#3d5c3d', icon: '🌫️', sprite: 'terrain/swamp' /* bog */ },
+        mountain: { name: 'Mountain', color: '#5a5a5a', icon: '⛰️', sprite: 'terrain/mountain' },
+        water:    { name: 'Water',    color: '#1a3a6b', icon: '🌊', sprite: 'terrain/water' }
     };
 
     // Noise sampling scale — lower = larger biome blobs
@@ -669,6 +669,10 @@ const WorldMap = (() => {
                     description: 'Your domain grows — and so does the world\'s attention.'
                 });
             }
+            if (window.Succession) Succession.recordDeed('outpostsFounded');
+            if (window.Settlement?.adjustMorale) {
+                Settlement.adjustMorale(5, 'the domain grows');
+            }
             if (window.Settlement) Settlement.updateUI();
             if (window.SaveSystem) SaveSystem.save();
         } else if (window.ActivityLog) {
@@ -1078,9 +1082,17 @@ const WorldMap = (() => {
                 // Draw biome terrain
                 MapRenderer.drawTerrain(ctx, px, py, tileSize, biome);
 
-                // Draw biome icon if tile is large enough
+                // Draw biome icon if tile is large enough. With the sprite
+                // tileset active, terrain art already distinguishes biomes —
+                // only forest keeps a tree icon for texture.
                 if (tileSize >= 20) {
-                    MapRenderer.drawIcon(ctx, px, py, tileSize, biome, 0.55);
+                    if (MapRenderer.isUsingTileset()) {
+                        if (biome.iconSprite) {
+                            MapRenderer.drawIcon(ctx, px, py, tileSize, { sprite: biome.iconSprite }, 0.6);
+                        }
+                    } else {
+                        MapRenderer.drawIcon(ctx, px, py, tileSize, biome, 0.55);
+                    }
                 }
 
                 // Region state markers (Living Frontier)

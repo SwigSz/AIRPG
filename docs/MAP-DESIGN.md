@@ -231,6 +231,31 @@ thereafter, cap 4); spawn window 15→40 days at 22%→15%; growth 25→45
 days/level; cleared protection 40→60 days; local map step & harvest cost
 0.5→0.25 days.
 
+## Loop closures ✅ SHIPPED (July 2026, post-Phase 4)
+
+- **Sprite tileset live**: Kenney Roguelike/RPG pack (CC0) at
+  `assets/sprites/roguelike-sheet.png`, atlas in `map-renderer.js`
+  (16px + 1px spacing; `T(col,row)` helper). Both map layers render sprites;
+  emoji/color fallback remains if the image fails.
+- **Named settlers**: roster in `settlement.settlers` (name + trait), synced
+  to the population counters (`syncSettlerRoster`, self-healing). Wanderers
+  arrive as named people. Heirs are chosen FROM the roster; the heir's trait
+  grants +1 to its mapped stat on succession. Roster feeds future militia/
+  foremen (siege workshop prerequisite).
+- **Live morale**: events push it (starvation −5, succession −15, nest cleared
+  +10, claim +5), drifts 0.5/day toward baseline 75. Multiplies settlement
+  production (0.63 + morale/200) and wanderer arrivals (×morale/100).
+- **Chronicle**: Character → Chronicle sub-tab renders the dynasty from
+  `dynasty.pastCharacters` + per-generation deeds (`Succession.recordDeed`:
+  regionsDiscovered, nestsCleared, outpostsFounded, gravesHonored,
+  settlersJoined).
+- **Gear demand curve**: nest chieftain defense +2/level, with a "your weapon
+  can barely scratch" warning when the player's damage won't bite.
+- **Trade caravans**: `js/settlement/trade.js` — arrivals every ~30 days,
+  down to ~12 as roads wear in (the organic-road payoff); stays 6 days with
+  3 one-shot barter offers (resources ↔ resources/items); Settlement → Trade
+  tab with the in-place render pattern.
+
 ## Integration notes (existing systems reused)
 
 - **TimeSystem** drives all lazy simulation (`lastSimDay` anchors).

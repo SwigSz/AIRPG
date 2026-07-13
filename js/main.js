@@ -13,6 +13,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize stats tracker
     if (window.StatsTracker) StatsTracker.init();
 
+    // Load the sprite tileset (falls back to colored tiles on failure)
+    if (window.MapRenderer) {
+        try {
+            await MapRenderer.loadDefaultTileset();
+        } catch (err) {
+            console.warn('MapRenderer: tileset failed to load, using color fallback', err);
+        }
+    }
+
     // Initialize data systems (load from JSON)
     if (window.ItemFactory) await ItemFactory.init();
     if (window.EnemyDatabase) await EnemyDatabase.init();
