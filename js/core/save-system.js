@@ -7,7 +7,15 @@ const SaveSystem = (() => {
     let autosaveInterval = null;
     let isAutosaveEnabled = true;
 
-    function save(isAutosave = false) {
+    // Throttling: save() is called on every move step / harvest / UI action,
+    // and serializing the whole state that often causes jank. Writes are
+    // coalesced to at most one every SAVE_THROTTLE_MS, with a trailing write
+    // so nothing is lost. flush() forces an immediate write (page unload).
+    const SAVE_THROTTLE_MS = 2000;
+    let lastWriteTime = 0;
+    let trailingSaveTimer = null;
+
+    function writeSave(isAutosave = false) {
         try {
             const state = GameState.getState();
 
@@ -27,12 +35,44 @@ const SaveSystem = (() => {
                 state: state
             };
             localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+            lastWriteTime = Date.now();
             // Game saved (silently to reduce console bloat)
             return true;
         } catch (error) {
             console.error('Failed to save game:', error);
             return false;
         }
+    }
+
+    function save(isAutosave = false) {
+        const now = Date.now();
+        if (now - lastWriteTime >= SAVE_THROTTLE_MS) {
+            if (trailingSaveTimer) {
+                clearTimeout(trailingSaveTimer);
+                trailingSaveTimer = null;
+            }
+            return writeSave(isAutosave);
+        }
+
+        // Too soon — schedule a single trailing write
+        if (!trailingSaveTimer) {
+            trailingSaveTimer = setTimeout(() => {
+                trailingSaveTimer = null;
+                writeSave(true);
+            }, SAVE_THROTTLE_MS - (now - lastWriteTime));
+        }
+        return true;
+    }
+
+    /**
+     * Force an immediate synchronous write (page unload, imports, wipes).
+     */
+    function flush() {
+        if (trailingSaveTimer) {
+            clearTimeout(trailingSaveTimer);
+            trailingSaveTimer = null;
+        }
+        return writeSave(false);
     }
 
     function load() {
@@ -250,6 +290,11 @@ const SaveSystem = (() => {
 
     function wipeData() {
         try {
+            // Cancel any pending trailing save so it can't resurrect the data
+            if (trailingSaveTimer) {
+                clearTimeout(trailingSaveTimer);
+                trailingSaveTimer = null;
+            }
             // Clear localStorage completely
             localStorage.removeItem(SAVE_KEY);
             // Legacy cleanup (these should no longer be used but clean them anyway)
@@ -302,6 +347,7 @@ const SaveSystem = (() => {
 
     return {
         save,
+        flush,
         load,
         deleteSave,
         hasSave,

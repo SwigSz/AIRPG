@@ -343,10 +343,15 @@ const Settlement = (() => {
             popEl.textContent = popText;
         }
 
-        const moraleText = `${s.morale}%`;
+        const moraleText = `${Math.round(s.morale)}%`;
         const moraleEl = document.getElementById('settlement-header-morale');
         if (moraleEl && moraleEl.textContent !== moraleText) {
             moraleEl.textContent = moraleText;
+            // Explain what morale actually does
+            const mult = getMoraleProductionMultiplier();
+            moraleEl.title = `Morale ${moraleText} — production ×${mult.toFixed(2)}, `
+                + `wanderer arrivals ×${(s.morale / 100).toFixed(2)}. `
+                + `Victories and growth raise it; hunger and grief lower it.`;
         }
 
         const dayEl = document.getElementById('settlement-header-day');

@@ -233,6 +233,27 @@ const CombatManager = (() => {
         // Basic attack
         performAttack(enemy, target);
 
+        // Defeat is death now (dynasty rules) — make sure the player knows
+        // they're one bad turn from the grave. Warn once per combat.
+        const playerC = combatState.combatants.find(c => c.isPlayer);
+        if (playerC && playerC.isAlive && !combatState.lowHpWarned
+            && playerC.hp / playerC.maxHp <= 0.25) {
+            combatState.lowHpWarned = true;
+            if (window.ActivityLog) {
+                ActivityLog.addMessage('You are gravely wounded — flee, or fall forever.', 'warning');
+            }
+            if (window.NotificationManager) {
+                NotificationManager.showNotification({
+                    type: 'warning',
+                    icon: '💀',
+                    title: 'Gravely Wounded',
+                    message: 'Defeat means death',
+                    description: 'Flee while you still can.',
+                    stackKey: 'low-hp'
+                });
+            }
+        }
+
         // Unlock turn processing before calling nextTurn
         isProcessingTurn = false;
 

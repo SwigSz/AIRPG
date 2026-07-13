@@ -85,9 +85,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Save on page close/reload so state is always current
+    // (flush bypasses the write throttle — this must land synchronously)
     window.addEventListener('beforeunload', () => {
         if (window.SaveSystem && window.GameState?.getState()?.character) {
-            SaveSystem.save(true);
+            SaveSystem.flush();
         }
     });
 
@@ -478,7 +479,13 @@ function updateTopBar(character) {
     const levelEl = document.querySelector('.level');
 
     if (nameEl) nameEl.textContent = character.name;
-    if (genEl) genEl.textContent = `Gen: ${character.generation || 1}`;
+    if (genEl) {
+        const heir = window.Succession ? Succession.getHeir() : null;
+        genEl.textContent = `Gen: ${character.generation || 1}${heir ? ' 👑' : ''}`;
+        genEl.title = heir
+            ? `Heir: ${heir.name} — the line is secure`
+            : 'No heir anointed! If you die, the run ends. (Settlement → Population)';
+    }
     if (ageEl) {
         let ageText = `Age: ${Math.floor(character.age || 0)}`;
         // Show the shadow of mortality once it looms

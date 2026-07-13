@@ -93,6 +93,11 @@ const WorldMap = (() => {
     // Keyboard handler reference for cleanup
     let keydownHandler = null;
 
+    // Click-to-path travel (parity with the local map)
+    let activePath = null;   // remaining steps [{x,y}, ...]
+    let pathTimer = null;
+    const PATH_STEP_MS = 260; // slower than local — each step costs a day+
+
     // ─── Initialization ───────────────────────────────────────────────────────
 
     /**
@@ -390,6 +395,137 @@ const WorldMap = (() => {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
         return parseInt(weapon.damage) || null;
+    }
+
+    // ─── Click-to-path travel ─────────────────────────────────────────────────
+
+    /**
+     * A* over walkable, revealed overworld tiles (4-directional).
+     * Returns steps excluding the start tile, or null.
+     */
+    function findPath(from, to) {
+        const key = (x, y) => `${x},${y}`;
+        const isPassable = (x, y) => {
+            if (x < 0 || x >= WORLD_WIDTH || y < 0 || y >= WORLD_HEIGHT) return false;
+            if (!regionGrid[y][x].walkable) return false;
+            if (!isTileRevealed(x, y)) return false;
+            return true;
+        };
+        if (!isPassable(to.x, to.y)) return null;
+
+        const open = [{ x: from.x, y: from.y, f: 0 }];
+        const cameFrom = {};
+        const gScore = { [key(from.x, from.y)]: 0 };
+        const closed = new Set();
+        const h = (x, y) => Math.abs(x - to.x) + Math.abs(y - to.y);
+
+        while (open.length > 0) {
+            let best = 0;
+            for (let i = 1; i < open.length; i++) if (open[i].f < open[best].f) best = i;
+            const current = open.splice(best, 1)[0];
+            const cKey = key(current.x, current.y);
+
+            if (current.x === to.x && current.y === to.y) {
+                const path = [];
+                let k = cKey;
+                while (cameFrom[k] !== undefined) {
+                    const [px, py] = k.split(',').map(Number);
+                    path.unshift({ x: px, y: py });
+                    k = cameFrom[k];
+                }
+                return path;
+            }
+            if (closed.has(cKey)) continue;
+            closed.add(cKey);
+
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const nx = current.x + dx, ny = current.y + dy;
+                if (!isPassable(nx, ny)) continue;
+                const nKey = key(nx, ny);
+                if (closed.has(nKey)) continue;
+                const g = gScore[cKey] + 1;
+                if (gScore[nKey] === undefined || g < gScore[nKey]) {
+                    gScore[nKey] = g;
+                    cameFrom[nKey] = cKey;
+                    open.push({ x: nx, y: ny, f: g + h(nx, ny) });
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Auto-travel a path. Each step goes through movePlayer, so travel cost,
+     * road wear, journey encounters, and threat sim all apply. Stops on
+     * combat, pause, or manual input.
+     */
+    function startWalking(path) {
+        stopWalking(false);
+        activePath = path;
+
+        pathTimer = setInterval(() => {
+            if (!activePath || activePath.length === 0) { stopWalking(); return; }
+            if (window.TimeSystem?.isPaused) { stopWalking(); return; }
+            if (window.CombatManager?.getCombatState()?.isActive) { stopWalking(); return; }
+            const character = window.GameState?.getState()?.character;
+            if (character?.inSettlement) { stopWalking(); return; }
+
+            const next = activePath.shift();
+            const ok = movePlayer(next.x, next.y);
+            if (!ok) { stopWalking(); return; }
+            // Ambushed mid-journey? Hold position and fight.
+            if (window.CombatManager?.getCombatState()?.isActive) { stopWalking(); return; }
+            if (activePath && activePath.length === 0) stopWalking();
+        }, PATH_STEP_MS);
+    }
+
+    function stopWalking(rerender = true) {
+        if (pathTimer) { clearInterval(pathTimer); pathTimer = null; }
+        activePath = null;
+        if (rerender && ctx && canvas && isActive) render();
+    }
+
+    function handleTileClick(gx, gy) {
+        if (gx < 0 || gx >= WORLD_WIDTH || gy < 0 || gy >= WORLD_HEIGHT) return;
+
+        // Clicking your own tile enters the region (or the camp prompt)
+        if (gx === playerPos.x && gy === playerPos.y) {
+            stopWalking(false);
+            enterRegion();
+            return;
+        }
+
+        if (!isTileRevealed(gx, gy)) {
+            if (window.ActivityLog) ActivityLog.addMessage("You haven't scouted that far yet.", 'info');
+            return;
+        }
+        if (!regionGrid[gy][gx].walkable) {
+            showBlockedFeedback();
+            return;
+        }
+
+        const path = findPath(playerPos, { x: gx, y: gy });
+        if (!path || path.length === 0) {
+            if (window.ActivityLog) ActivityLog.addMessage('No route to that region.', 'info');
+            return;
+        }
+        startWalking(path);
+        render(); // show the route immediately
+    }
+
+    function drawPath() {
+        if (!activePath || activePath.length === 0) return;
+        ctx.save();
+        ctx.fillStyle = 'rgba(244, 196, 48, 0.55)';
+        for (const step of activePath) {
+            const vx = step.x - camera.x;
+            const vy = step.y - camera.y;
+            if (vx < 0 || vx >= VIEWPORT_W || vy < 0 || vy >= VIEWPORT_H) continue;
+            ctx.beginPath();
+            ctx.arc(vx * tileSize + tileSize / 2, vy * tileSize + tileSize / 2, Math.max(tileSize * 0.12, 3), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
     }
 
     // ─── Enter / Exit Region ─────────────────────────────────────────────────
@@ -933,7 +1069,7 @@ const WorldMap = (() => {
         ctx = canvas.getContext('2d');
         resizeCanvas();
 
-        // Click + cursor handlers for canvas-drawn buttons (e.g. Leave Camp)
+        // Click handler: canvas-drawn buttons (Leave Camp) + click-to-path travel
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width  / rect.width;
@@ -943,7 +1079,20 @@ const WorldMap = (() => {
             const btn = canvas._leaveCampBtn;
             if (btn && cx >= btn.x && cx <= btn.x + btn.w && cy >= btn.y && cy <= btn.y + btn.h) {
                 leaveOverworldCamp();
+                return;
             }
+
+            // Click-to-path travel
+            if (!isActive) return;
+            if (window.TimeSystem?.isPaused) { showPausedFeedback(); return; }
+            const character = window.GameState?.getState()?.character;
+            if (character?.inSettlement) return;
+            const combatOverlay = document.querySelector('.combat-overlay');
+            if (combatOverlay && combatOverlay.classList.contains('active')) return;
+
+            const gx = camera.x + Math.floor(cx / tileSize);
+            const gy = camera.y + Math.floor(cy / tileSize);
+            handleTileClick(gx, gy);
         });
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
@@ -1019,6 +1168,7 @@ const WorldMap = (() => {
         drawTiles();
         drawGridLines();
         drawSettlement();
+        drawPath();
         drawPlayer();
 
         // Dim the map and draw Leave Camp button when in camp
@@ -1256,6 +1406,7 @@ const WorldMap = (() => {
             }
 
             e.preventDefault();
+            stopWalking(false); // manual input cancels click-to-path travel
             movePlayer(playerPos.x + dx, playerPos.y + dy);
         };
 
@@ -1343,6 +1494,23 @@ const WorldMap = (() => {
     }
 
     /**
+     * Teleport the player to an overworld tile (no time cost, no encounters).
+     * Used by succession (the heir starts at the settlement) and debug tools.
+     */
+    function setPlayerPosition(x, y) {
+        if (x < 0 || x >= WORLD_WIDTH || y < 0 || y >= WORLD_HEIGHT) return;
+        playerPos = { x, y };
+        revealAroundPlayer();
+        centerCameraOnPlayer();
+        saveToGameState({ playerPos });
+        render();
+        const tile = regionGrid[y]?.[x];
+        if (tile) updateInfoPanel(tile);
+        updateTerritoryButtons();
+        updateExploreButton();
+    }
+
+    /**
      * Get the seed used for this world.
      */
     function getSeed() {
@@ -1386,6 +1554,7 @@ const WorldMap = (() => {
         placeSettlement,
         getRegionBiome,
         getPlayerPosition,
+        setPlayerPosition,
         getSeed,
         getIsActive,
         render,

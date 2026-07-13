@@ -166,6 +166,22 @@ const Succession = (() => {
                     'warning'
                 );
             }
+
+            // Impossible-to-miss milestones: entering old age, and the final years
+            if (window.NotificationManager
+                && (yearsLeft === ELDERLY_YEARS_BEFORE_END || yearsLeft === 3)) {
+                const heir = getHeir();
+                NotificationManager.showNotification({
+                    type: 'warning',
+                    icon: '⌛',
+                    title: yearsLeft === 3 ? 'The Final Years' : 'Age Sets In',
+                    message: `${character.name} is ${character.age}`,
+                    description: heir
+                        ? `${heir.name} stands ready to inherit.`
+                        : 'NO HEIR ANOINTED — the line will end!',
+                    stackKey: 'aging'
+                });
+            }
         }
 
         if (window.updateTopBar) updateTopBar(character);
@@ -425,8 +441,12 @@ const Succession = (() => {
 
         // Stand at the settlement (heirs come from there; founders arrive there)
         const home = state.world?.overworldSettlement;
-        if (home && state.world) {
-            state.world.overworldPos = { x: home.x, y: home.y };
+        if (home) {
+            if (window.WorldMap?.setPlayerPosition) {
+                WorldMap.setPlayerPosition(home.x, home.y);
+            } else if (state.world) {
+                state.world.overworldPos = { x: home.x, y: home.y };
+            }
         }
     }
 

@@ -103,7 +103,8 @@ const Trade = (() => {
                     icon: '🐫',
                     title: 'Caravan Arrived',
                     message: 'Merchants at the gates',
-                    description: `Trading for ${STAY_DAYS} days`
+                    description: `Trading for ${STAY_DAYS} days`,
+                    stackKey: 'caravan-arrival' // never stack duplicate arrivals
                 });
             }
         }
@@ -222,9 +223,15 @@ const Trade = (() => {
                 if (countdownEl.textContent !== text) countdownEl.textContent = text;
             }
             if (caravan) {
+                const resources = window.GameState?.getState()?.settlement?.resources || {};
                 container.querySelectorAll('.caravan-trade-btn').forEach((btn, i) => {
                     const offer = caravan.offers[i];
                     if (offer) btn.disabled = offer.used || !canAfford(offer);
+                });
+                container.querySelectorAll('.offer-stock').forEach(el => {
+                    const id = el.dataset.resource;
+                    const text = `(have ${Math.floor(resources[id]?.current || 0)})`;
+                    if (el.textContent !== text) el.textContent = text;
                 });
             }
             return;
@@ -252,11 +259,15 @@ const Trade = (() => {
                 </div>
                 <div class="caravan-offers">
             `;
+            const resources = window.GameState?.getState()?.settlement?.resources || {};
             caravan.offers.forEach((offer, i) => {
                 const { gave, got } = describeSide(offer);
+                // Show current stock of the primary cost resource
+                const costId = Object.keys(offer.give)[0];
+                const stock = Math.floor(resources[costId]?.current || 0);
                 html += `
                     <div class="caravan-offer${offer.used ? ' offer-done' : ''}">
-                        <span>${gave} → <strong>${got}</strong></span>
+                        <span>${gave} <span class="offer-stock" data-resource="${costId}">(have ${stock})</span> → <strong>${got}</strong></span>
                         <button class="caravan-trade-btn" data-offer="${i}" ${offer.used || !canAfford(offer) ? 'disabled' : ''}>
                             ${offer.used ? 'Traded' : 'Trade'}
                         </button>
