@@ -21,6 +21,7 @@ const LocalMap = (() => {
             name: 'Forest',
             color: '#2d5016',
             sprite: 'terrain/forest',
+            tint: 'rgba(20, 70, 20, 0.28)',
             walkable: true,
             description: 'Dense woodland with tall trees'
         },
@@ -48,7 +49,8 @@ const LocalMap = (() => {
         swamp: {
             name: 'Swamp',
             color: '#4a5f4a',
-            sprite: 'terrain/swamp' /* bog */,
+            sprite: 'terrain/swamp',
+            tint: 'rgba(30, 60, 40, 0.30)',
             walkable: true,
             description: 'Murky wetlands with thick vegetation'
         },
@@ -63,6 +65,8 @@ const LocalMap = (() => {
             name: 'Mountain',
             color: '#4a4a4a',
             sprite: 'terrain/mountain',
+            tint: 'rgba(80, 80, 90, 0.45)',
+            iconSprite: 'node/stone',
             walkable: false,
             description: 'Rocky peaks, too steep to climb'
         }
@@ -1833,6 +1837,11 @@ const LocalMap = (() => {
                 const tile = grid[gy][gx];
                 const biomeConfig = BIOMES[tile.biome] || BIOMES.plains;
                 MapRenderer.drawTerrain(ctx, px, py, tileSize, biomeConfig);
+
+                // Terrain feature icon (e.g. rock pile on mountains)
+                if (biomeConfig.iconSprite && MapRenderer.isUsingTileset()) {
+                    MapRenderer.drawIcon(ctx, px, py, tileSize, { sprite: biomeConfig.iconSprite }, 0.6);
+                }
             }
         }
     }
@@ -1861,6 +1870,10 @@ const LocalMap = (() => {
      * Draw grid lines
      */
     function drawGridLines() {
+        // With the sprite tileset active the terrain art carries the layout —
+        // hard grid lines chop it into slabs. Keep them for the color fallback.
+        if (MapRenderer.isUsingTileset()) return;
+
         const { cols, rows } = getViewportTiles();
         ctx.strokeStyle = GRID_LINE_COLOR;
         ctx.lineWidth = GRID_LINE_WIDTH;

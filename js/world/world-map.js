@@ -47,11 +47,11 @@ const WorldMap = (() => {
     // Biome visual config
     const BIOME_CONFIG = {
         plains:   { name: 'Plains',   color: '#6b8e23', icon: '🌿', sprite: 'terrain/plains' },
-        forest:   { name: 'Forest',   color: '#2d5016', icon: '🌲', sprite: 'terrain/forest', iconSprite: 'node/tree' },
+        forest:   { name: 'Forest',   color: '#2d5016', icon: '🌲', sprite: 'terrain/forest', tint: 'rgba(20, 70, 20, 0.28)', iconSprite: 'node/tree' },
         desert:   { name: 'Desert',   color: '#c8a45a', icon: '🏜️', sprite: 'terrain/desert' },
         tundra:   { name: 'Tundra',   color: '#a8bdd1', icon: '❄️', sprite: 'terrain/tundra' },
-        swamp:    { name: 'Swamp',    color: '#3d5c3d', icon: '🌫️', sprite: 'terrain/swamp' /* bog */ },
-        mountain: { name: 'Mountain', color: '#5a5a5a', icon: '⛰️', sprite: 'terrain/mountain' },
+        swamp:    { name: 'Swamp',    color: '#3d5c3d', icon: '🌫️', sprite: 'terrain/swamp', tint: 'rgba(30, 60, 40, 0.30)' },
+        mountain: { name: 'Mountain', color: '#5a5a5a', icon: '⛰️', sprite: 'terrain/mountain', tint: 'rgba(80, 80, 90, 0.45)', iconSprite: 'node/stone' },
         water:    { name: 'Water',    color: '#1a3a6b', icon: '🌊', sprite: 'terrain/water' }
     };
 
@@ -1152,6 +1152,9 @@ const WorldMap = (() => {
     }
 
     function drawGridLines() {
+        // Sprite terrain meshes better without hard grid lines
+        if (MapRenderer.isUsingTileset()) return;
+
         ctx.strokeStyle = 'rgba(0,0,0,0.25)';
         ctx.lineWidth = 0.5;
 

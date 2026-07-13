@@ -25,14 +25,16 @@ const MapRenderer = (() => {
 
     const DEFAULT_TILESET_URL = 'assets/sprites/roguelike-sheet.png';
     const DEFAULT_ATLAS = {
-        // Terrain bases
-        'terrain/plains':   T(5, 0),    // light grass
-        'terrain/forest':   T(20, 25),  // deeper green
-        'terrain/desert':   T(2, 26),   // sand
-        'terrain/tundra':   T(45, 26),  // snow
-        'terrain/swamp':    T(6, 0),    // muddy bog
-        'terrain/water':    T(16, 28),  // water
-        'terrain/mountain': T(16, 12),  // grey stone
+        // Terrain bases — only SEAMLESS fill tiles here. Distinct biomes are
+        // made with tints + icons over seamless ground, never "slab" tiles
+        // with baked-in edges (those plaid badly when tiled).
+        'terrain/plains':   T(5, 0),    // light grass (seamless)
+        'terrain/forest':   T(5, 0),    // grass base; tint + trees make the forest
+        'terrain/desert':   T(2, 26),   // sand (seamless)
+        'terrain/tundra':   T(45, 26),  // snow (seamless)
+        'terrain/swamp':    T(6, 0),    // muddy bog (seamless)
+        'terrain/water':    T(16, 28),  // water (seamless)
+        'terrain/mountain': T(6, 0),    // dirt base; grey tint + rock pile icon
 
         // Resource nodes
         'node/tree':        T(16, 9),   // pine
@@ -79,13 +81,20 @@ const MapRenderer = (() => {
     }
 
     /**
-     * Draw a terrain tile (full square).
+     * Draw a terrain tile (full square). A visual may carry a `tint`
+     * (rgba string) drawn over the sprite — used to differentiate biomes
+     * that share a seamless base tile.
      */
     function drawTerrain(ctx, px, py, size, visual) {
         if (hasSprite(visual)) {
             const s = tileset.atlas[visual.sprite];
             ctx.imageSmoothingEnabled = false; // crisp pixel art
-            ctx.drawImage(tileset.image, s.x, s.y, s.w, s.h, px, py, size, size);
+            // +0.5 overdraw hides sub-pixel seams between scaled tiles
+            ctx.drawImage(tileset.image, s.x, s.y, s.w, s.h, px, py, size + 0.5, size + 0.5);
+            if (visual.tint) {
+                ctx.fillStyle = visual.tint;
+                ctx.fillRect(px, py, size + 0.5, size + 0.5);
+            }
             return;
         }
         ctx.fillStyle = (visual && visual.color) || '#000000';
