@@ -12,6 +12,17 @@ const QuickSlots = (() => {
 
     function setupKeyBindings() {
         document.addEventListener('keydown', (e) => {
+            // Never trigger while the player is typing in a text field
+            const target = e.target;
+            if (target && (
+                target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.tagName === 'SELECT' ||
+                target.isContentEditable
+            )) {
+                return;
+            }
+
             // Number keys 1-6
             if (e.key >= '1' && e.key <= '6') {
                 const slotIndex = parseInt(e.key) - 1;

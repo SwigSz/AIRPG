@@ -146,3 +146,63 @@
 .log-content::-webkit-scrollbar-thumb:hover {
     background: #64748b;
 }
+
+/* ============================================
+   Map Activity Log Overlay (collapsible)
+   Shows the activity feed on the full-bleed map tab.
+   ============================================ */
+.map-log-overlay {
+    position: absolute;
+    top: 56px;             /* clear the local-map header / set-camp button */
+    right: 16px;
+    z-index: 30;           /* above map UI (z10-20), below combat overlay (z100) */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 340px;
+    pointer-events: none;  /* only children capture clicks */
+}
+
+.map-log-toggle {
+    pointer-events: auto;
+    padding: 6px 12px;
+    background-color: rgba(15, 23, 42, 0.85);
+    color: #cbd5e1;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.map-log-toggle:hover {
+    background-color: rgba(30, 41, 59, 0.95);
+    border-color: #64748b;
+}
+
+.map-log-panel {
+    pointer-events: auto;
+    margin-top: 6px;
+    width: 340px;
+    max-height: 45vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: rgba(15, 23, 42, 0.88);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.6rem;
+    backdrop-filter: blur(2px);
+}
+
+.map-log-overlay.collapsed .map-log-panel {
+    display: none;
+}
+
+/* Slightly tighter items inside the overlay */
+.map-log-panel .activity-item {
+    padding: 0.35rem 0.5rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+    background-color: rgba(30, 41, 59, 0.85);
+}

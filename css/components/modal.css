@@ -354,3 +354,52 @@
     justify-content: center;
     gap: 1rem;
 }
+
+/* ============================================
+   Succession Modal (Living Frontier Phase 4)
+   ============================================ */
+.succession-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.succession-modal-box {
+    background-color: #1e293b;
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 520px;
+    width: 90%;
+    text-align: center;
+}
+
+.succession-modal-box h2 {
+    color: #fcd34d;
+    margin-bottom: 1rem;
+}
+
+.succession-modal-box p {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.9rem;
+}
+
+.succession-modal-btn {
+    margin-top: 0.5rem;
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: 2px solid #b45309;
+    background-color: #92400e;
+    color: #fde68a;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.succession-modal-btn:hover { background-color: #b45309; }

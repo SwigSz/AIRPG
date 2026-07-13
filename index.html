@@ -336,6 +336,9 @@
                             <div class="overworld-actions">
                                 <button id="overworld-camp-btn" class="overworld-btn overworld-btn-camp">⛺ Place Settlement</button>
                                 <button id="overworld-explore-btn" class="overworld-btn overworld-btn-explore">🗺️ Explore Region</button>
+                                <button id="overworld-claim-btn" class="overworld-btn overworld-btn-claim" style="display:none;">🏕️ Build Outpost</button>
+                                <button id="overworld-collect-btn" class="overworld-btn overworld-btn-collect" style="display:none;">📦 Collect Stockpile</button>
+                                <button id="overworld-fast-travel-btn" class="overworld-btn overworld-btn-travel" style="display:none;">🐎 Fast Travel</button>
                                 <button id="overworld-leave-camp-btn" class="overworld-btn overworld-btn-leave" style="display:none;">🚪 Leave Camp</button>
                             </div>
                             <div class="overworld-seed-display" id="overworld-seed-display">
@@ -398,6 +401,16 @@
                         <div class="combat-actions">
                             <div class="action-message">Waiting for combat to start...</div>
                         </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Activity Log Overlay (collapsible) -->
+                    <div id="map-log-overlay" class="map-log-overlay collapsed">
+                        <button id="map-log-toggle" class="map-log-toggle" title="Toggle activity log">📜 Log</button>
+                        <div class="map-log-panel">
+                            <div class="map-log-feed" id="map-log-feed">
+                                <p class="log-placeholder">No messages yet</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1093,10 +1106,12 @@
     <script src="js/character/abilities.js"></script>
     <script src="js/character/power-manager.js"></script>
     <script src="js/character/skill-manager.js"></script>
+    <script src="js/core/succession.js"></script>
     <script src="js/inventory/item-factory.js"></script>
     <script src="js/inventory/equipment.js"></script>
     <script src="js/inventory/inventory.js"></script>
     <script src="js/inventory/consumable-manager.js"></script>
+    <script src="js/ui/scroll-memory.js"></script>
     <script src="js/ui/sub-tab-manager.js"></script>
     <script src="js/ui/tab-manager.js"></script>
     <script src="js/ui/tooltip-manager.js"></script>
@@ -1119,6 +1134,8 @@
     <script src="js/settlement/research.js"></script>
     <script src="js/settlement/training.js"></script>
     <script src="js/world/noise.js"></script>
+    <script src="js/world/map-renderer.js"></script>
+    <script src="js/world/region-manager.js"></script>
     <script src="js/world/world-map.js"></script>
     <script src="js/world/map.js"></script>
     <script src="js/combat/enemy.js"></script>

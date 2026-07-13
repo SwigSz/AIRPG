@@ -125,6 +125,9 @@ const WorldMap = (() => {
         // Find/create canvas
         setupCanvas();
 
+        // Territory action buttons (claim / collect / fast travel)
+        setupTerritoryButtons();
+
         // Keyboard controls
         setupKeyboardControls();
 
@@ -264,10 +267,26 @@ const WorldMap = (() => {
         // Reveal surrounding tiles
         revealAroundPlayer();
 
-        // Advance time by travel cost
-        const cost = tile.travelCost || 1;
+        // Advance time by travel cost — worn roads are faster
+        const roadMult = window.RegionManager
+            ? RegionManager.getTravelCostMultiplier(newX, newY)
+            : 1;
+        const cost = Math.round((tile.travelCost || 1) * roadMult * 10) / 10;
         if (window.TimeSystem) {
             TimeSystem.advanceDays(cost);
+        }
+
+        // This pass wears the road in a little more
+        if (window.RegionManager) {
+            RegionManager.addRoadWear(newX, newY, tile.biome);
+        }
+
+        // Fast-forward the living world and report threat changes
+        if (window.RegionManager) {
+            const threatNews = RegionManager.simulateAll();
+            if (window.ActivityLog) {
+                threatNews.slice(0, 3).forEach(msg => ActivityLog.addMessage(msg, 'warning'));
+            }
         }
 
         // Check for random journey encounter
@@ -282,8 +301,9 @@ const WorldMap = (() => {
         // Re-render
         render();
 
-        // Update info panel
+        // Update info panel + territory action buttons
         updateInfoPanel(tile);
+        updateTerritoryButtons();
 
         // Log to activity
         if (window.ActivityLog) {
@@ -393,9 +413,9 @@ const WorldMap = (() => {
             ActivityLog.addMessage(`Exploring ${biome.name} region at (${playerPos.x}, ${playerPos.y})...`, 'info');
         }
 
-        // Tell Map (local map system) which region we're entering
-        if (window.Map) {
-            Map.enterRegion(playerPos.x, playerPos.y, tile.biome, lastMoveDir);
+        // Tell LocalMap (local map system) which region we're entering
+        if (window.LocalMap) {
+            LocalMap.enterRegion(playerPos.x, playerPos.y, tile.biome, lastMoveDir);
         }
 
         // Hide overworld, show local map
@@ -511,9 +531,14 @@ const WorldMap = (() => {
 
         settlementPos = { x: playerPos.x, y: playerPos.y };
 
-        // Also set camp in the legacy Map system so settlement tab works
-        if (window.Map) {
-            Map.setOverworldCamp(settlementPos);
+        // Settling a region certainly counts as exploring it
+        if (window.RegionManager) {
+            RegionManager.visitRegion(settlementPos.x, settlementPos.y, tile.biome);
+        }
+
+        // Also set camp in the legacy LocalMap system so settlement tab works
+        if (window.LocalMap) {
+            LocalMap.setOverworldCamp(settlementPos);
         }
 
         saveToGameState({ settlementPos });
@@ -540,6 +565,19 @@ const WorldMap = (() => {
         // Update buttons
         updateCampButtonVisibility();
         updateExploreButton();
+
+        // Fast-forward the living world (returning from a region / settlement)
+        if (window.RegionManager) {
+            const threatNews = RegionManager.simulateAll();
+            if (window.ActivityLog) {
+                threatNews.slice(0, 3).forEach(msg => ActivityLog.addMessage(msg, 'warning'));
+            }
+        }
+
+        // Refresh info panel + territory buttons for the current tile
+        const currentTile = regionGrid[playerPos.y]?.[playerPos.x];
+        if (currentTile) updateInfoPanel(currentTile);
+        updateTerritoryButtons();
 
         // Resize + render
         setTimeout(() => {
@@ -582,17 +620,237 @@ const WorldMap = (() => {
         }
     }
 
+    // ─── Territory actions (Living Frontier Phase 3) ─────────────────────────
+
+    /**
+     * Show/hide the claim, collect, and fast-travel buttons based on the
+     * tile the player is standing on.
+     */
+    function updateTerritoryButtons() {
+        const claimBtn   = document.getElementById('overworld-claim-btn');
+        const collectBtn = document.getElementById('overworld-collect-btn');
+        const travelBtn  = document.getElementById('overworld-fast-travel-btn');
+        if (!window.RegionManager) return;
+
+        const record = RegionManager.peekRegion(playerPos.x, playerPos.y);
+        const isSettlementTile = settlementPos && playerPos.x === settlementPos.x && playerPos.y === settlementPos.y;
+
+        if (claimBtn) {
+            const canClaim = record && record.state === 'cleared' && !record.outpost && settlementPos;
+            claimBtn.style.display = canClaim ? 'block' : 'none';
+        }
+        if (collectBtn) {
+            const hasStock = record?.outpost && Object.keys(record.outpost.stockpile || {})
+                .some(id => (record.outpost.stockpile[id] || 0) >= 1);
+            collectBtn.style.display = hasStock ? 'block' : 'none';
+        }
+        if (travelBtn) {
+            // Fast travel from any domain tile, if there's somewhere else to go
+            const onDomainTile = isSettlementTile || !!record?.outpost;
+            const destinations = getFastTravelDestinations();
+            travelBtn.style.display = (onDomainTile && destinations.length > 0) ? 'block' : 'none';
+        }
+    }
+
+    function claimCurrentRegion() {
+        if (!window.RegionManager) return;
+        const result = RegionManager.claimRegion(playerPos.x, playerPos.y);
+        if (result.ok) {
+            const record = RegionManager.peekRegion(playerPos.x, playerPos.y);
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(`Outpost established in ${record.name}! Assign settlers on the Settlement → Territory tab.`, 'success');
+            }
+            if (window.NotificationManager) {
+                NotificationManager.showNotification({
+                    type: 'success',
+                    icon: '🏕️',
+                    title: 'Region Claimed!',
+                    message: record.name,
+                    description: 'Your domain grows — and so does the world\'s attention.'
+                });
+            }
+            if (window.Settlement) Settlement.updateUI();
+            if (window.SaveSystem) SaveSystem.save();
+        } else if (window.ActivityLog) {
+            ActivityLog.addMessage(`Cannot claim: ${result.reason}`, 'warning');
+        }
+        render();
+        updateTerritoryButtons();
+        const tile = regionGrid[playerPos.y]?.[playerPos.x];
+        if (tile) updateInfoPanel(tile);
+    }
+
+    function collectCurrentStockpile() {
+        if (!window.RegionManager) return;
+        const result = RegionManager.collectStockpile(playerPos.x, playerPos.y);
+        if (result.ok) {
+            const parts = Object.keys(result.collected).map(id => `+${result.collected[id]} ${id}`);
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(parts.length > 0
+                    ? `Hauled stockpile home: ${parts.join(', ')}`
+                    : 'Stockpile collected (settlement storage is full).', 'loot');
+            }
+            if (window.Settlement) Settlement.updateUI();
+            if (window.SaveSystem) SaveSystem.save();
+        }
+        updateTerritoryButtons();
+        const tile = regionGrid[playerPos.y]?.[playerPos.x];
+        if (tile) updateInfoPanel(tile);
+    }
+
+    /**
+     * Domain tiles the player can fast-travel to (excluding where they stand).
+     */
+    function getFastTravelDestinations() {
+        if (!window.RegionManager) return [];
+        const destinations = [];
+
+        if (settlementPos && !(playerPos.x === settlementPos.x && playerPos.y === settlementPos.y)) {
+            const s = window.GameState?.getState()?.settlement;
+            destinations.push({ x: settlementPos.x, y: settlementPos.y, name: `⛺ ${s?.name || 'Settlement'}` });
+        }
+        for (const rec of RegionManager.getClaimedRegions()) {
+            if (rec.x === playerPos.x && rec.y === playerPos.y) continue;
+            const tierIcon = RegionManager.getOutpostTiers()[rec.outpost.tier].icon;
+            destinations.push({ x: rec.x, y: rec.y, name: `${tierIcon} ${rec.name}` });
+        }
+        return destinations;
+    }
+
+    /**
+     * Fast travel between domain tiles: half travel time along known roads,
+     * no random encounters.
+     */
+    function showFastTravelMenu() {
+        if (window.TimeSystem?.isPaused) { showPausedFeedback(); return; }
+        const destinations = getFastTravelDestinations();
+        if (destinations.length === 0) return;
+
+        // Remove any existing menu
+        document.getElementById('fast-travel-menu')?.remove();
+
+        const menu = document.createElement('div');
+        menu.id = 'fast-travel-menu';
+        menu.className = 'fast-travel-menu';
+
+        const title = document.createElement('div');
+        title.className = 'fast-travel-title';
+        title.textContent = '🐎 Fast Travel';
+        menu.appendChild(title);
+
+        destinations.forEach(dest => {
+            const dist = Math.max(Math.abs(dest.x - playerPos.x), Math.abs(dest.y - playerPos.y));
+            const days = Math.round(dist * 0.5 * 10) / 10;
+            const btn = document.createElement('button');
+            btn.className = 'fast-travel-option';
+            btn.textContent = `${dest.name} — ${days} day${days !== 1 ? 's' : ''}`;
+            btn.addEventListener('click', () => {
+                menu.remove();
+                fastTravelTo(dest, days);
+            });
+            menu.appendChild(btn);
+        });
+
+        const cancel = document.createElement('button');
+        cancel.className = 'fast-travel-option fast-travel-cancel';
+        cancel.textContent = 'Cancel';
+        cancel.addEventListener('click', () => menu.remove());
+        menu.appendChild(cancel);
+
+        const container = document.getElementById('overworld-view');
+        (container || document.body).appendChild(menu);
+    }
+
+    function fastTravelTo(dest, days) {
+        playerPos = { x: dest.x, y: dest.y };
+        revealAroundPlayer();
+        if (window.TimeSystem) TimeSystem.advanceDays(days);
+        if (window.RegionManager) {
+            const threatNews = RegionManager.simulateAll();
+            if (window.ActivityLog) {
+                threatNews.slice(0, 3).forEach(msg => ActivityLog.addMessage(msg, 'warning'));
+            }
+        }
+        centerCameraOnPlayer();
+        saveToGameState({ playerPos });
+        render();
+        const tile = regionGrid[playerPos.y]?.[playerPos.x];
+        if (tile) updateInfoPanel(tile);
+        updateTerritoryButtons();
+        updateExploreButton();
+        if (window.ActivityLog) {
+            ActivityLog.addMessage(`Fast traveled to ${dest.name} (${days} days).`, 'info');
+        }
+    }
+
     function updateInfoPanel(tile) {
         const panel = document.getElementById('overworld-info');
         if (!panel) return;
 
         const biome = BIOME_CONFIG[tile.biome] || BIOME_CONFIG.plains;
-        const cost  = tile.travelCost ? `${tile.travelCost} day${tile.travelCost !== 1 ? 's' : ''}` : 'Impassable';
+
+        // Worn roads lower the effective travel cost
+        let cost = 'Impassable';
+        if (tile.travelCost) {
+            const mult = window.RegionManager ? RegionManager.getTravelCostMultiplier(tile.x, tile.y) : 1;
+            const effective = Math.round(tile.travelCost * mult * 10) / 10;
+            cost = `${effective} day${effective !== 1 ? 's' : ''}`;
+            if (mult < 1) cost += ' 🛤️';
+        }
 
         const isSettlement = settlementPos && tile.x === settlementPos.x && tile.y === settlementPos.y;
 
+        // Living Frontier region info (name/richness/state once explored)
+        let regionHtml = '';
+        if (tile.walkable && window.RegionManager) {
+            const info = RegionManager.getRegionInfo(tile.x, tile.y);
+            if (info) {
+                const stars = '★'.repeat(info.richness) + '☆'.repeat(5 - info.richness);
+                const visitText = info.daysSinceVisit === 0
+                    ? 'visited today'
+                    : `visited ${info.daysSinceVisit} day${info.daysSinceVisit !== 1 ? 's' : ''} ago`;
+
+                let threatHtml = '';
+                if (info.nestLevel > 0) {
+                    threatHtml = `<span class="overworld-info-threat">💀 Raider nest (Lv ${info.nestLevel})</span>`;
+                } else if (info.state === 'cleared') {
+                    threatHtml = '<span class="overworld-info-cleared">🛡 Cleared — claim it before the wild returns</span>';
+                }
+
+                let outpostHtml = '';
+                if (info.outpost) {
+                    const stock = Object.keys(info.outpost.stockpile)
+                        .map(id => `${Math.floor(info.outpost.stockpile[id])} ${id}`)
+                        .filter(s => !s.startsWith('0 '))
+                        .join(', ');
+                    outpostHtml = `<span class="overworld-info-outpost">${info.outpost.icon} ${info.outpost.tierName} — ${info.outpost.workers}/${info.outpost.workerCap} workers${stock ? ` | 📦 ${stock}` : ''}</span>`;
+                }
+
+                regionHtml = `
+                    <span class="overworld-info-name">${info.name}</span>
+                    <span class="overworld-info-richness" title="Resource richness">${stars}</span>
+                    ${outpostHtml}
+                    ${threatHtml}
+                    <span class="overworld-info-visited">${visitText}</span>
+                `;
+            } else {
+                regionHtml = '<span class="overworld-info-name overworld-info-uncharted">Uncharted</span>';
+            }
+        }
+
+        // Looming-threat banner: a maxed nest near the domain
+        let bannerHtml = '';
+        if (window.RegionManager) {
+            const looming = RegionManager.getLoomingThreat();
+            if (looming) {
+                bannerHtml = `<span class="overworld-threat-banner">⚠️ A raider nest festers in ${looming.name} — clear it before it grows bolder!</span>`;
+            }
+        }
+
         panel.innerHTML = `
+            ${bannerHtml}
             <span class="overworld-info-biome">${biome.icon} ${biome.name}</span>
+            ${regionHtml}
             <span class="overworld-info-coords">(${tile.x}, ${tile.y})</span>
             ${isSettlement ? '<span class="overworld-info-tag">⛺ Settlement</span>' : ''}
             <span class="overworld-info-cost">Travel cost: ${cost}</span>
@@ -698,6 +956,16 @@ const WorldMap = (() => {
         });
     }
 
+    function setupTerritoryButtons() {
+        const claimBtn   = document.getElementById('overworld-claim-btn');
+        const collectBtn = document.getElementById('overworld-collect-btn');
+        const travelBtn  = document.getElementById('overworld-fast-travel-btn');
+
+        if (claimBtn)   claimBtn.addEventListener('click', claimCurrentRegion);
+        if (collectBtn) collectBtn.addEventListener('click', collectCurrentStockpile);
+        if (travelBtn)  travelBtn.addEventListener('click', showFastTravelMenu);
+    }
+
     function setupResizeHandler() {
         const container = document.getElementById('overworld-view');
         if (!container) return;
@@ -708,6 +976,12 @@ const WorldMap = (() => {
             resizeTimeout = setTimeout(() => {
                 resizeCanvas();
                 render();
+                // Returning to the map tab resizes the container — refresh the
+                // context-sensitive UI too (stockpiles may have grown, regions
+                // may have been claimed from the settlement tab, etc.)
+                updateTerritoryButtons();
+                const tile = regionGrid[playerPos.y]?.[playerPos.x];
+                if (tile) updateInfoPanel(tile);
             }, 80);
         });
         observer.observe(container);
@@ -797,22 +1071,66 @@ const WorldMap = (() => {
 
                 if (!revealed) {
                     // Unrevealed — draw dark tile
-                    ctx.fillStyle = '#0a0a0a';
-                    ctx.fillRect(px, py, tileSize, tileSize);
+                    MapRenderer.drawFog(ctx, px, py, tileSize);
                     continue;
                 }
 
-                // Draw biome color
-                ctx.fillStyle = biome.color;
-                ctx.fillRect(px, py, tileSize, tileSize);
+                // Draw biome terrain
+                MapRenderer.drawTerrain(ctx, px, py, tileSize, biome);
 
                 // Draw biome icon if tile is large enough
                 if (tileSize >= 20) {
-                    const iconSize = Math.max(tileSize * 0.55, 12);
-                    ctx.font = `${iconSize}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(biome.icon, px + tileSize / 2, py + tileSize / 2);
+                    MapRenderer.drawIcon(ctx, px, py, tileSize, biome, 0.55);
+                }
+
+                // Region state markers (Living Frontier)
+                if (tile.walkable && window.RegionManager) {
+                    const record = RegionManager.peekRegion(wx, wy);
+
+                    // Worn road marker (faint track dot), even on pass-through tiles
+                    if (record && (record.roadWear || 0) >= 5 && !record.outpost) {
+                        ctx.fillStyle = `rgba(160, 120, 70, ${Math.min(0.75, 0.25 + record.roadWear * 0.02)})`;
+                        const rw = Math.max(tileSize * 0.16, 4);
+                        ctx.fillRect(px + (tileSize - rw) / 2, py + (tileSize - rw) / 2, rw, rw);
+                    }
+
+                    // Claimed region: outpost icon + golden domain border
+                    if (record && record.outpost) {
+                        const tierDef = RegionManager.getOutpostTiers()[record.outpost.tier];
+                        if (tileSize >= 16) {
+                            MapRenderer.drawIcon(ctx, px, py, tileSize, { icon: tierDef.icon }, 0.6);
+                        }
+                        ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(px + 1, py + 1, tileSize - 2, tileSize - 2);
+                    }
+
+                    if (record && record.state !== 'wild') {
+                        // Explored: small white dot / Cleared: green dot (top-right)
+                        ctx.fillStyle = record.state === 'cleared'
+                            ? 'rgba(74, 222, 128, 0.9)'
+                            : 'rgba(255, 255, 255, 0.75)';
+                        const r = Math.max(tileSize * 0.08, 2);
+                        ctx.beginPath();
+                        ctx.arc(px + tileSize - r * 2, py + r * 2, r, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Nest threat pips: red squares along the bottom edge,
+                        // one per nest level
+                        const nestLevel = record.threat?.nestLevel || 0;
+                        if (nestLevel > 0) {
+                            const pip = Math.max(tileSize * 0.14, 3);
+                            ctx.fillStyle = '#ef4444';
+                            ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+                            ctx.lineWidth = 1;
+                            for (let i = 0; i < nestLevel; i++) {
+                                const pipX = px + 2 + i * (pip + 2);
+                                const pipY = py + tileSize - pip - 2;
+                                ctx.fillRect(pipX, pipY, pip, pip);
+                                ctx.strokeRect(pipX, pipY, pip, pip);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -851,9 +1169,12 @@ const WorldMap = (() => {
         const px = tx + tileSize / 2;
         const py = ty + tileSize / 2;
 
-        // Grey background
+        // Grey background + golden domain border
         ctx.fillStyle = '#6b7280';
         ctx.fillRect(tx, ty, tileSize, tileSize);
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(tx + 1, ty + 1, tileSize - 2, tileSize - 2);
 
         const iconSize = Math.max(tileSize * 0.7, 14);
         ctx.font = `${iconSize}px Arial`;

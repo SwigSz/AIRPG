@@ -287,6 +287,8 @@ const Settlement = (() => {
             updatePopulationTab();
         } else if (tabName === 'training') {
             updateTrainingTab();
+        } else if (tabName === 'territory') {
+            updateTerritoryTab();
         }
     }
 
@@ -314,6 +316,8 @@ const Settlement = (() => {
             updatePopulationTab();
         } else if (currentTab === 'training') {
             updateTrainingTab();
+        } else if (currentTab === 'territory') {
+            updateTerritoryTab();
         }
     }
 
@@ -322,7 +326,7 @@ const Settlement = (() => {
 
         // Only update if the value has changed (prevents flashing)
         const civNameEl = document.getElementById('settlement-civ-name');
-        if (civNameEl.textContent !== s.name) {
+        if (civNameEl && civNameEl.textContent !== s.name) {
             civNameEl.textContent = s.name;
         }
 
@@ -331,18 +335,18 @@ const Settlement = (() => {
             ? `${s.population.total}/${s.population.max}`
             : s.population || 0;
         const popEl = document.getElementById('settlement-header-pop');
-        if (popEl.textContent !== popText) {
+        if (popEl && popEl.textContent !== popText) {
             popEl.textContent = popText;
         }
 
         const moraleText = `${s.morale}%`;
         const moraleEl = document.getElementById('settlement-header-morale');
-        if (moraleEl.textContent !== moraleText) {
+        if (moraleEl && moraleEl.textContent !== moraleText) {
             moraleEl.textContent = moraleText;
         }
 
         const dayEl = document.getElementById('settlement-header-day');
-        if (dayEl.textContent !== s.day.toString()) {
+        if (dayEl && dayEl.textContent !== s.day.toString()) {
             dayEl.textContent = s.day;
         }
 
@@ -402,58 +406,85 @@ const Settlement = (() => {
         // Calculate capacity bonuses from buildings
         const capacityBonuses = calculateResourceCapacityBonuses();
 
-        // Clear and re-render all resources dynamically in compact table format
-        resourceContainer.innerHTML = '';
+        // Format large numbers (K for thousands)
+        const formatNumber = (num) => {
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        };
 
-        state.resourcesData.forEach(resourceDef => {
+        // Rebuild rows only when the set of resources changes; otherwise
+        // update values in place. This runs every 50ms time tick, so a full
+        // innerHTML rebuild here caused constant DOM churn.
+        const visibleResources = state.resourcesData.filter(r => state.settlement.resources[r.id]);
+        const fingerprint = visibleResources.map(r => r.id).join(',');
+
+        if (resourceContainer.dataset.resourceFingerprint !== fingerprint) {
+            // FULL REBUILD (first render, or a resource was added/removed)
+            resourceContainer.innerHTML = '';
+            visibleResources.forEach(resourceDef => {
+                const resourceRow = document.createElement('div');
+                resourceRow.className = 'resource-row';
+                resourceRow.dataset.resourceId = resourceDef.id;
+                resourceRow.innerHTML = `
+                    <div class="resource-name-col">${resourceDef.name}</div>
+                    <div class="resource-amount-col"></div>
+                    <div class="resource-rate-col"></div>
+                `;
+                resourceContainer.appendChild(resourceRow);
+            });
+            resourceContainer.dataset.resourceFingerprint = fingerprint;
+        }
+
+        // IN-PLACE VALUE UPDATE (every tick)
+        visibleResources.forEach(resourceDef => {
             const resourceData = state.settlement.resources[resourceDef.id];
             const rate = currentRates[resourceDef.id] || 0;
 
-            if (resourceData) {
-                const resourceRow = document.createElement('div');
-                resourceRow.className = 'resource-row';
+            const row = resourceContainer.querySelector(`.resource-row[data-resource-id="${resourceDef.id}"]`);
+            if (!row) return;
 
-                const current = Math.floor(resourceData.current);
-                const baseMax = resourceData.max;
-                const bonus = capacityBonuses[resourceDef.id] || 0;
-                const max = baseMax + bonus; // Total capacity = base + bonus
-                const rateText = rate.toFixed(2);
+            const current = Math.floor(resourceData.current);
+            const baseMax = resourceData.max;
+            const bonus = capacityBonuses[resourceDef.id] || 0;
+            const max = baseMax + bonus; // Total capacity = base + bonus
 
-                // Format large numbers (K for thousands)
-                const formatNumber = (num) => {
-                    if (num >= 1000) {
-                        return (num / 1000).toFixed(1) + 'K';
-                    }
-                    return num.toString();
-                };
+            const amountText = `${formatNumber(current)} / ${formatNumber(max)}`;
 
-                const currentFormatted = formatNumber(current);
-                const maxFormatted = formatNumber(max);
+            // Color code based on capacity
+            const percentFull = (current / max) * 100;
+            let amountClass = '';
+            if (percentFull >= 90) {
+                amountClass = 'resource-full';
+            } else if (percentFull >= 70) {
+                amountClass = 'resource-high';
+            }
 
-                // Color code based on capacity
-                const percentFull = (current / max) * 100;
-                let amountClass = '';
-                if (percentFull >= 90) {
-                    amountClass = 'resource-full';
-                } else if (percentFull >= 70) {
-                    amountClass = 'resource-high';
-                }
+            const amountCol = row.querySelector('.resource-amount-col');
+            if (amountCol) {
+                if (amountCol.textContent !== amountText) amountCol.textContent = amountText;
+                amountCol.classList.toggle('resource-full', amountClass === 'resource-full');
+                amountCol.classList.toggle('resource-high', amountClass === 'resource-high');
+            }
 
-                // Format rate display with color coding
-                let rateDisplay = '';
+            // Format rate display with color coding
+            const rateCol = row.querySelector('.resource-rate-col');
+            if (rateCol) {
                 if (rate !== 0) {
                     const sign = rate > 0 ? '+' : '';
+                    const rateText = `${sign}${rate.toFixed(2)} /d`;
                     const rateColor = rate > 0 ? '#22c55e' : '#ef4444'; // Green for positive, red for negative
-                    rateDisplay = `<span style="color: ${rateColor}">${sign}${rateText} /d</span>`;
+                    let rateSpan = rateCol.firstElementChild;
+                    if (!rateSpan) {
+                        rateSpan = document.createElement('span');
+                        rateCol.appendChild(rateSpan);
+                    }
+                    if (rateSpan.textContent !== rateText) rateSpan.textContent = rateText;
+                    if (rateSpan.style.color !== rateColor) rateSpan.style.color = rateColor;
+                } else if (rateCol.firstElementChild) {
+                    rateCol.innerHTML = '';
                 }
-
-                resourceRow.innerHTML = `
-                    <div class="resource-name-col">${resourceDef.name}</div>
-                    <div class="resource-amount-col ${amountClass}">${currentFormatted} / ${maxFormatted}</div>
-                    <div class="resource-rate-col">${rateDisplay}</div>
-                `;
-
-                resourceContainer.appendChild(resourceRow);
             }
         });
     }
@@ -881,7 +912,9 @@ const Settlement = (() => {
     }
 
     /**
-     * Calculate population cap based on housing buildings
+     * Calculate population cap based on housing buildings + domain size.
+     * Each claimed outpost region extends the cap (+2) — a larger safe
+     * domain attracts more settlers (Living Frontier Phase 3).
      */
     function updatePopulationCap() {
         const baseCap = 20;
@@ -893,7 +926,173 @@ const Settlement = (() => {
             bonusCap = housingCount * housingData.populationCapBonus;
         }
 
+        // Domain bonus: +2 per claimed region beyond the settlement itself
+        if (window.RegionManager) {
+            const domainBonus = Math.max(0, RegionManager.getDomainSize() - 1) * 2;
+            bonusCap += domainBonus;
+        }
+
         state.settlement.population.max = baseCap + bonusCap;
+    }
+
+    // ============================================
+    // TERRITORY TAB (Living Frontier Phase 3)
+    // ============================================
+
+    function updateTerritoryTab() {
+        const container = document.querySelector('#settlement-territory-content .territory-map');
+        if (!container) return;
+        if (container.offsetParent === null) return; // hidden — renders on reveal
+        if (!window.RegionManager) return;
+
+        const claimed = RegionManager.getClaimedRegions();
+        const pop = state.settlement.population;
+        const tiers = RegionManager.getOutpostTiers();
+
+        // Structure fingerprint: outpost set + tiers (values update in place)
+        const fingerprint = claimed.map(r => `${r.x},${r.y}:${r.outpost.tier}`).join('|');
+
+        if (container.dataset.territoryFingerprint === fingerprint && container.querySelector('.territory-summary')) {
+            // IN-PLACE UPDATE
+            const setText = (selector, text) => {
+                const el = container.querySelector(selector);
+                if (el && el.textContent !== text) el.textContent = text;
+            };
+            setText('#territory-domain-size', `${RegionManager.getDomainSize()}`);
+            setText('#territory-idle-workers', `${pop.idle}`);
+            setText('#territory-threat-cap', `Lv ${RegionManager.getThreatCap()}`);
+
+            claimed.forEach(rec => {
+                RegionManager.simulate(rec); // keep stockpiles current while watching
+                const card = container.querySelector(`.outpost-card[data-region="${rec.x},${rec.y}"]`);
+                if (!card) return;
+                const tierDef = tiers[rec.outpost.tier];
+
+                const workersText = `${rec.outpost.workers} / ${tierDef.workerCap}`;
+                const workersEl = card.querySelector('.outpost-workers-value');
+                if (workersEl && workersEl.textContent !== workersText) workersEl.textContent = workersText;
+
+                const stockEl = card.querySelector('.outpost-stockpile-value');
+                const stockText = formatStockpile(rec.outpost.stockpile);
+                if (stockEl && stockEl.textContent !== stockText) stockEl.textContent = stockText;
+
+                const minus = card.querySelector('.outpost-worker-unassign');
+                if (minus) minus.disabled = rec.outpost.workers <= 0;
+                const plus = card.querySelector('.outpost-worker-assign');
+                if (plus) plus.disabled = rec.outpost.workers >= tierDef.workerCap || pop.idle <= 0;
+
+                const upgradeBtn = card.querySelector('.outpost-upgrade-btn');
+                if (upgradeBtn) {
+                    const nextTier = tiers[rec.outpost.tier + 1];
+                    if (nextTier) {
+                        const affordable = Object.keys(nextTier.cost).every(id =>
+                            (state.settlement.resources[id]?.current || 0) >= nextTier.cost[id]);
+                        upgradeBtn.disabled = !affordable;
+                    }
+                }
+            });
+            return;
+        }
+
+        // FULL REBUILD
+        let html = `
+            <h3>Territory</h3>
+            <div class="territory-summary">
+                <div class="stat-row"><span class="stat-label">Domain size:</span> <span class="stat-value" id="territory-domain-size">${RegionManager.getDomainSize()}</span></div>
+                <div class="stat-row"><span class="stat-label">Idle settlers:</span> <span class="stat-value" id="territory-idle-workers">${pop.idle}</span></div>
+                <div class="stat-row"><span class="stat-label">World attention (max nest level):</span> <span class="stat-value" id="territory-threat-cap">Lv ${RegionManager.getThreatCap()}</span></div>
+            </div>
+            <p class="help-text">Clear regions of raider nests, then build outposts there from the world map. Camps need a visit to haul their stockpile home; Waystations haul automatically along worn roads; Holdfasts keep nearby regions nest-free.</p>
+            <div class="outpost-list">
+        `;
+
+        if (claimed.length === 0) {
+            html += '<p class="empty-message">No outposts yet. Clear a region of threats, then use "🏕️ Build Outpost" while standing on it.</p>';
+        } else {
+            claimed.forEach(rec => {
+                const tierDef = tiers[rec.outpost.tier];
+                const nextTier = tiers[rec.outpost.tier + 1];
+                const stars = '★'.repeat(rec.richness) + '☆'.repeat(5 - rec.richness);
+
+                let upgradeHtml = '';
+                if (nextTier) {
+                    const costText = Object.keys(nextTier.cost).map(id => `${nextTier.cost[id]} ${id}`).join(', ');
+                    const affordable = Object.keys(nextTier.cost).every(id =>
+                        (state.settlement.resources[id]?.current || 0) >= nextTier.cost[id]);
+                    upgradeHtml = `<button class="outpost-upgrade-btn" data-region="${rec.x},${rec.y}" ${affordable ? '' : 'disabled'}>
+                        Upgrade to ${nextTier.icon} ${nextTier.name} (${costText})</button>`;
+                } else {
+                    upgradeHtml = '<span class="outpost-max-tier">Max tier</span>';
+                }
+
+                html += `
+                    <div class="outpost-card" data-region="${rec.x},${rec.y}">
+                        <div class="outpost-card-header">
+                            <span class="outpost-card-name">${tierDef.icon} ${rec.name}</span>
+                            <span class="outpost-card-meta">${tierDef.name} · ${stars} · (${rec.x}, ${rec.y})</span>
+                        </div>
+                        <div class="outpost-card-row">
+                            <span>Workers: <strong class="outpost-workers-value">${rec.outpost.workers} / ${tierDef.workerCap}</strong></span>
+                            <span class="outpost-worker-buttons">
+                                <button class="worker-btn outpost-worker-unassign" data-region="${rec.x},${rec.y}" ${rec.outpost.workers <= 0 ? 'disabled' : ''}>-</button>
+                                <button class="worker-btn outpost-worker-assign" data-region="${rec.x},${rec.y}" ${rec.outpost.workers >= tierDef.workerCap || pop.idle <= 0 ? 'disabled' : ''}>+</button>
+                            </span>
+                        </div>
+                        <div class="outpost-card-row">
+                            <span>📦 Stockpile: <span class="outpost-stockpile-value">${formatStockpile(rec.outpost.stockpile)}</span></span>
+                        </div>
+                        <div class="outpost-card-row">${upgradeHtml}</div>
+                    </div>
+                `;
+            });
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+        container.dataset.territoryFingerprint = fingerprint;
+
+        // Wire buttons
+        container.querySelectorAll('.outpost-worker-assign').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const [x, y] = btn.dataset.region.split(',').map(Number);
+                const result = RegionManager.assignOutpostWorker(x, y);
+                if (!result.ok) alert(result.reason);
+                updateUI();
+                if (window.SaveSystem) SaveSystem.save();
+            });
+        });
+        container.querySelectorAll('.outpost-worker-unassign').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const [x, y] = btn.dataset.region.split(',').map(Number);
+                const result = RegionManager.unassignOutpostWorker(x, y);
+                if (!result.ok) alert(result.reason);
+                updateUI();
+                if (window.SaveSystem) SaveSystem.save();
+            });
+        });
+        container.querySelectorAll('.outpost-upgrade-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const [x, y] = btn.dataset.region.split(',').map(Number);
+                const result = RegionManager.upgradeOutpost(x, y);
+                if (result.ok) {
+                    if (window.ActivityLog) ActivityLog.addMessage(`Outpost upgraded to ${result.tierName}!`, 'success');
+                } else {
+                    alert(result.reason);
+                }
+                updateUI();
+                if (window.WorldMap) WorldMap.render();
+                if (window.SaveSystem) SaveSystem.save();
+            });
+        });
+    }
+
+    function formatStockpile(stockpile) {
+        if (!stockpile) return 'empty';
+        const parts = Object.keys(stockpile)
+            .map(id => ({ id, amount: Math.floor(stockpile[id]) }))
+            .filter(e => e.amount > 0)
+            .map(e => `${e.amount} ${e.id}`);
+        return parts.length > 0 ? parts.join(', ') : 'empty';
     }
 
     /**
@@ -1015,24 +1214,78 @@ const Settlement = (() => {
         const container = document.querySelector('#settlement-population-content .population-management');
         if (!container) return;
 
+        // Skip rendering while hidden — the tab re-renders on reveal
+        // (TabManager/SubTabManager call updateUI when switching here)
+        if (container.offsetParent === null) return;
+
         const pop = state.settlement.population;
         const spawnChance = (getWandererSpawnChance() * 100).toFixed(1);
 
+        // Production buildings that can have workers assigned
+        const productionBuildings = state.buildingsData.filter(
+            b => b.category === 'resource_production' && b.production
+        );
+
+        // Fingerprint of the rendered structure — rebuild only when it changes.
+        // Values (counts, idle workers) are updated in place every tick so the
+        // DOM is never destroyed mid-click (a 50ms full rebuild used to eat
+        // +/- button presses).
+        const heir = window.Succession ? Succession.getHeir() : null;
+        const fingerprint = productionBuildings.map(b => b.id).join(',')
+            + `|heir:${heir ? heir.name : 'none'}`;
+
+        if (container.dataset.buildingFingerprint === fingerprint && container.querySelector('.worker-list')) {
+            // IN-PLACE UPDATE — no DOM rebuild
+            const setText = (selector, text) => {
+                const el = container.querySelector(selector);
+                if (el && el.textContent !== text) el.textContent = text;
+            };
+            setText('#pop-total-value', `${pop.total} / ${pop.max}`);
+            setText('#pop-idle-value', `${pop.idle}`);
+            setText('#pop-spawn-value', `${spawnChance}% per day`);
+
+            productionBuildings.forEach(buildingData => {
+                const row = container.querySelector(`.worker-allocation-row[data-building="${buildingData.id}"]`);
+                if (!row) return;
+
+                const buildingCount = state.settlement.buildings[buildingData.id]?.count || 0;
+                const workersAssigned = pop.assigned[buildingData.id] || 0;
+
+                const countEl = row.querySelector('.workers-assigned');
+                const countText = `${workersAssigned} / ${buildingCount}`;
+                if (countEl && countEl.textContent !== countText) countEl.textContent = countText;
+
+                const unassignBtn = row.querySelector('.unassign-btn');
+                if (unassignBtn) unassignBtn.disabled = workersAssigned === 0;
+
+                const assignBtn = row.querySelector('.assign-btn');
+                if (assignBtn) assignBtn.disabled = workersAssigned >= buildingCount || pop.idle === 0;
+            });
+            return;
+        }
+
+        // FULL REBUILD (first render, or building list changed)
         let html = `
             <div class="population-header">
                 <h3>Population Management</h3>
                 <div class="population-stats">
                     <div class="stat-row">
                         <span class="stat-label">Total Population:</span>
-                        <span class="stat-value">${pop.total} / ${pop.max}</span>
+                        <span class="stat-value" id="pop-total-value">${pop.total} / ${pop.max}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Idle Workers:</span>
-                        <span class="stat-value">${pop.idle}</span>
+                        <span class="stat-value" id="pop-idle-value">${pop.idle}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Wanderer Spawn Chance:</span>
-                        <span class="stat-value">${spawnChance}% per day</span>
+                        <span class="stat-value" id="pop-spawn-value">${spawnChance}% per day</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Heir:</span>
+                        <span class="stat-value">${heir
+                            ? `👑 ${heir.name}`
+                            : '<button class="worker-btn" id="anoint-heir-btn" title="Designate a settler to continue your line">👑 Anoint an Heir</button>'}</span>
                     </div>
                 </div>
             </div>
@@ -1044,27 +1297,25 @@ const Settlement = (() => {
         `;
 
         // Show all building types that can have workers (production buildings)
-        state.buildingsData.forEach(buildingData => {
-            if (buildingData.category === 'resource_production' && buildingData.production) {
-                const buildingCount = state.settlement.buildings[buildingData.id]?.count || 0;
-                const workersAssigned = pop.assigned[buildingData.id] || 0;
+        productionBuildings.forEach(buildingData => {
+            const buildingCount = state.settlement.buildings[buildingData.id]?.count || 0;
+            const workersAssigned = pop.assigned[buildingData.id] || 0;
 
-                html += `
-                    <div class="worker-allocation-row">
-                        <div class="building-info-col">
-                            <span class="building-icon">${buildingData.icon}</span>
-                            <span class="building-name">${buildingData.name}</span>
-                        </div>
-                        <div class="worker-count-col">
-                            <span class="workers-assigned">${workersAssigned} / ${buildingCount}</span>
-                        </div>
-                        <div class="worker-buttons-col">
-                            <button class="worker-btn unassign-btn" data-building="${buildingData.id}" ${workersAssigned === 0 ? 'disabled' : ''}>-</button>
-                            <button class="worker-btn assign-btn" data-building="${buildingData.id}" ${workersAssigned >= buildingCount || pop.idle === 0 ? 'disabled' : ''}>+</button>
-                        </div>
+            html += `
+                <div class="worker-allocation-row" data-building="${buildingData.id}">
+                    <div class="building-info-col">
+                        <span class="building-icon">${buildingData.icon}</span>
+                        <span class="building-name">${buildingData.name}</span>
                     </div>
-                `;
-            }
+                    <div class="worker-count-col">
+                        <span class="workers-assigned">${workersAssigned} / ${buildingCount}</span>
+                    </div>
+                    <div class="worker-buttons-col">
+                        <button class="worker-btn unassign-btn" data-building="${buildingData.id}" ${workersAssigned === 0 ? 'disabled' : ''}>-</button>
+                        <button class="worker-btn assign-btn" data-building="${buildingData.id}" ${workersAssigned >= buildingCount || pop.idle === 0 ? 'disabled' : ''}>+</button>
+                    </div>
+                </div>
+            `;
         });
 
         html += `
@@ -1073,6 +1324,7 @@ const Settlement = (() => {
         `;
 
         container.innerHTML = html;
+        container.dataset.buildingFingerprint = fingerprint;
 
         // Add event listeners for worker buttons
         container.querySelectorAll('.assign-btn').forEach(btn => {
@@ -1088,6 +1340,22 @@ const Settlement = (() => {
                 unassignWorker(buildingType);
             });
         });
+
+        // Anoint heir button (Living Frontier Phase 4)
+        const anointBtn = container.querySelector('#anoint-heir-btn');
+        if (anointBtn) {
+            anointBtn.addEventListener('click', () => {
+                if (!window.Succession) return;
+                const suggested = Succession.suggestHeirName();
+                const name = prompt('Name your heir (a settler who will continue your line):', suggested);
+                if (name === null) return; // cancelled
+                const result = Succession.anointHeir(name || suggested);
+                if (!result.ok) {
+                    alert(result.reason);
+                }
+                updateUI();
+            });
+        }
     }
 
     // ============================================

@@ -61,6 +61,10 @@ const Research = (() => {
 
     function startAnimationLoop() {
         setInterval(() => {
+            // Skip the (expensive) canvas redraw when the research tree isn't
+            // visible — it re-renders when the tab is shown again
+            if (!canvas || canvas.offsetParent === null) return;
+
             const state = window.GameState ? window.GameState.getState() : null;
             // Always render if there's active research (paused or not) to show current state
             // This ensures the completion state shows immediately

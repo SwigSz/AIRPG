@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.Research) await Research.init();
 
     // Initialize local map system (canvas setup only — world is restored after save load)
-    if (window.Map) Map.init();
+    if (window.LocalMap) LocalMap.init();
 
     // Initialize save/load button event listeners
     initializeSaveLoadControls();
@@ -127,8 +127,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Restore local map state (player position and resources)
-            if (window.Map && window.Map.restoreState) {
-                Map.restoreState();
+            if (window.LocalMap && window.LocalMap.restoreState) {
+                LocalMap.restoreState();
             }
 
             // Restore combat if it was active
@@ -405,6 +405,19 @@ function displayCharacterData() {
         InventoryUI.setupInventoryControls(inventoryGrid, character, handleItemAction);
     }
 
+    // Restore + persist the "confirm before discarding" toggle
+    setupConfirmTossToggle();
+
+    // Restore the map log overlay expanded/collapsed preference
+    if (window.ActivityLog && ActivityLog.applySavedMapLogState) {
+        ActivityLog.applySavedMapLogState();
+    }
+
+    // Initialize the dynasty system (aging backfill, run-ended check)
+    if (window.Succession) {
+        Succession.init();
+    }
+
     // Render character UI if available (handles all character tab rendering)
     if (window.CharacterUI) {
         CharacterUI.render();
@@ -422,6 +435,31 @@ function displayCharacterData() {
     }
 }
 
+// Restore and persist the "confirm before discarding" checkbox state
+function setupConfirmTossToggle() {
+    const confirmToggle = document.getElementById('confirm-toss-toggle');
+    if (!confirmToggle) return;
+
+    const state = GameState.getState();
+
+    // Restore saved state (defaults to checked)
+    if (state?.ui && typeof state.ui.confirmToss === 'boolean') {
+        confirmToggle.checked = state.ui.confirmToss;
+    }
+
+    // Bind persistence once
+    if (confirmToggle.dataset.bound !== '1') {
+        confirmToggle.dataset.bound = '1';
+        confirmToggle.addEventListener('change', () => {
+            const s = GameState.getState();
+            if (!s) return;
+            if (!s.ui) s.ui = { activeTab: 'character', subTabs: {} };
+            s.ui.confirmToss = confirmToggle.checked;
+            SaveSystem.save();
+        });
+    }
+}
+
 // Update Top Bar with Character Info
 function updateTopBar(character) {
     // Update character name and meta info
@@ -431,8 +469,15 @@ function updateTopBar(character) {
     const levelEl = document.querySelector('.level');
 
     if (nameEl) nameEl.textContent = character.name;
-    if (genEl) genEl.textContent = `Gen: --`;
-    if (ageEl) ageEl.textContent = `Age: --`;
+    if (genEl) genEl.textContent = `Gen: ${character.generation || 1}`;
+    if (ageEl) {
+        let ageText = `Age: ${Math.floor(character.age || 0)}`;
+        // Show the shadow of mortality once it looms
+        if (character.lifespan && character.lifespan - character.age <= 10) {
+            ageText += ' ⌛';
+        }
+        ageEl.textContent = ageText;
+    }
     if (levelEl) levelEl.textContent = `Lvl: ${character.level}`;
 
     // Initialize HP/Mana if they don't exist (for old saves)

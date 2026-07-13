@@ -7,7 +7,9 @@
 // This module provides reusable UI rendering functions for inventory display
 // across different contexts (main inventory, crafting, combat, etc.)
 //
-// Preserve JavaScript's built-in Map constructor before game's Map class overwrites it
+// Alias for JavaScript's built-in Map constructor.
+// (Historical: the world map module used to overwrite window.Map — it's now
+// exposed as window.LocalMap, so the built-in is safe again.)
 const JavaScriptMap = Map;
 //
 // ============================================
@@ -606,21 +608,67 @@ const InventoryUI = (() => {
             return;
         }
 
+        // Persist current control state to GameState (saved with the game)
+        const persistControlState = () => {
+            const state = window.GameState?.getState();
+            if (!state) return;
+            if (!state.ui) state.ui = { activeTab: 'character', subTabs: {} };
+            state.ui.inventoryControls = {
+                filter: currentFilter,
+                sort: currentSort,
+                search: searchQuery
+            };
+        };
+
+        // Restore persisted control state (from save data)
+        const saved = window.GameState?.getState()?.ui?.inventoryControls;
+        if (saved) {
+            currentFilter = saved.filter || 'all';
+            currentSort = saved.sort || 'default';
+            searchQuery = saved.search || '';
+
+            searchInput.value = searchQuery;
+            filterSelect.value = currentFilter;
+            sortSelect.value = currentSort;
+
+            // Fall back to defaults if a saved option no longer exists
+            if (filterSelect.value !== currentFilter) {
+                currentFilter = 'all';
+                filterSelect.value = 'all';
+            }
+            if (sortSelect.value !== currentSort) {
+                currentSort = 'default';
+                sortSelect.value = 'default';
+            }
+
+            renderInventoryGrid(container, character, onItemAction);
+        }
+
+        // Bind listeners only once (setup can be called again after save import)
+        if (searchInput.dataset.controlsBound === '1') {
+            updateInventoryCount(character);
+            return;
+        }
+        searchInput.dataset.controlsBound = '1';
+
         // Search input
         searchInput.addEventListener('input', (e) => {
             searchQuery = e.target.value;
+            persistControlState();
             renderInventoryGrid(container, character, onItemAction);
         });
 
         // Filter dropdown
         filterSelect.addEventListener('change', (e) => {
             currentFilter = e.target.value;
+            persistControlState();
             renderInventoryGrid(container, character, onItemAction);
         });
 
         // Sort dropdown
         sortSelect.addEventListener('change', (e) => {
             currentSort = e.target.value;
+            persistControlState();
             renderInventoryGrid(container, character, onItemAction);
         });
 

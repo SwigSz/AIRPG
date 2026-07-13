@@ -2,7 +2,7 @@
 // Map Display & Navigation
 // ============================================
 
-const Map = (() => {
+const LocalMap = (() => {
     // ── Mode ────────────────────────────────────────────────────────────────
     // TEST_MODE = true  → old hardcoded map, used for testing
     // TEST_MODE = false → map generates per-region from overworld seed
@@ -76,16 +76,27 @@ const Map = (() => {
             requiredToolTier: 1
         },
         rock: {
-            name: 'Rock',
+            name: 'Rock Quarry',
             color: '#666666',
-            icon: '🪨',
+            icon: '⛰️',
             defaultAmount: 5,
-            description: 'A large stone deposit containing valuable rocks',
+            description: 'A large stone deposit that must be mined',
             itemId: 'rock',
             itemName: 'Rock',
             gatherVerb: 'mined',
             requiredTool: 'mining',  // Requires mining tool
             requiredToolTier: 1
+        },
+        stone: {
+            name: 'Loose Stones',
+            color: '#8a8a8a',
+            icon: '🪨',
+            defaultAmount: 2,
+            description: 'Small stones scattered on the ground',
+            itemId: 'rock',
+            itemName: 'Rock',
+            gatherVerb: 'picked up'
+            // No tool required
         },
         copper_ore: {
             name: 'Copper Ore Vein',
@@ -145,6 +156,20 @@ const Map = (() => {
         }
     };
 
+    // Nest Configuration (Living Frontier Phase 2)
+    const NEST = {
+        color: '#3b0d0d',
+        icon: '🏴',
+        guardColor: '#5c1010',
+        // Loot granted per nest level on destruction: [{itemId, quantity}]
+        lootPerLevel: [
+            { itemId: 'bone', quantity: 2 },
+            { itemId: 'leather', quantity: 1 }
+        ],
+        bossHpMultPerLevel: 0.5,   // +50% boss HP per nest level
+        bossXpMultPerLevel: 0.75   // +75% boss XP per nest level
+    };
+
     const GRID_LINE_COLOR = '#000000';
     const GRID_LINE_WIDTH = 0.5;
     const PLAYER_COLOR = '#f4c430';
@@ -164,6 +189,25 @@ const Map = (() => {
     // Camera: top-left tile offset for the viewport
     let cameraX = 0;
     let cameraY = 0;
+
+    // ── Living Frontier state (Phase 1) ────────────────────────────────────
+    // Local fog of war: set of "x,y" tiles the player has revealed in the
+    // CURRENT region. Persisted per-region via RegionManager.
+    let revealedLocal = new Set();
+    const LOCAL_REVEAL_RADIUS = 4;
+
+    // Snapshot of generated (pre-delta) resources for the current region:
+    // { "x,y": { type, amount } } — used to compute regrow-aware save deltas.
+    let baseResources = {};
+
+    // In-game day each node was last harvested: { "x,y": day }
+    let harvestDays = {};
+
+    // Click-to-path movement
+    let activePath = null;   // remaining steps [{x,y}, ...]
+    let pathTimer = null;
+    let pathArrivalAction = null; // 'gather' | null
+    const PATH_STEP_MS = 150;
 
     /**
      * Initialize the map module
@@ -229,6 +273,9 @@ const Map = (() => {
 
         // Set up keyboard controls
         setupKeyboardControls();
+
+        // Set up click-to-path movement
+        setupCanvasClickHandler();
 
         // Set up tab visibility handler
         setupTabVisibilityHandler();
@@ -971,6 +1018,7 @@ const Map = (() => {
             // If a movement key was pressed, attempt to move
             if (moved) {
                 event.preventDefault(); // Prevent page scrolling
+                stopWalking(false); // manual input cancels click-to-path walking
                 const success = movePlayer(newX, newY);
 
                 if (success) {
@@ -989,6 +1037,446 @@ const Map = (() => {
 
         // Add event listener
         document.addEventListener('keydown', keydownHandler);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // RAIDER NESTS (Living Frontier Phase 2)
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Place the nest heart + its guards on the freshly generated grid.
+     * Position is deterministic per region (Noise is region-seeded here).
+     */
+    function placeNest(level) {
+        // Find a deterministic interior tile for the nest heart
+        let nestTile = null;
+        for (let i = 0; i < 60 && !nestTile; i++) {
+            const rx = 4 + Math.floor(Noise.hash2D(i, 7001) * (GRID_WIDTH - 8));
+            const ry = 4 + Math.floor(Noise.hash2D(7002, i) * (GRID_HEIGHT - 8));
+            const tile = grid[ry]?.[rx];
+            if (tile && tile.walkable && !tile.combatEncounter) {
+                nestTile = tile;
+            }
+        }
+        if (!nestTile) return;
+
+        nestTile.resource = null; // the nest displaces whatever grew here
+        nestTile.nest = { level };
+
+        // Guards ring the heart: level + 1 encounters within ~3 tiles
+        const guardCount = level + 1;
+        let placed = 0;
+        for (let i = 0; i < 80 && placed < guardCount; i++) {
+            const dx = Math.floor(Noise.hash2D(i, 7100) * 7) - 3;
+            const dy = Math.floor(Noise.hash2D(7101, i) * 7) - 3;
+            if (dx === 0 && dy === 0) continue;
+            const gx = nestTile.x + dx;
+            const gy = nestTile.y + dy;
+            const tile = grid[gy]?.[gx];
+            if (!tile || !tile.walkable || tile.nest || tile.combatEncounter) continue;
+
+            tile.resource = null;
+            tile.combatEncounter = {
+                type: 'enemy',
+                biome: currentRegion ? currentRegion.biome : 'plains',
+                active: true,
+                respawnTimer: null,
+                nestGuard: true // guards do not respawn once defeated
+            };
+            placed++;
+        }
+    }
+
+    /**
+     * Draw nest hearts (fog-aware).
+     */
+    function drawNests() {
+        const { cols, rows } = getViewportTiles();
+        for (let vy = 0; vy < rows; vy++) {
+            for (let vx = 0; vx < cols; vx++) {
+                const gx = cameraX + vx;
+                const gy = cameraY + vy;
+                if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+                if (!isLocalTileRevealed(gx, gy)) continue;
+                const tile = grid[gy][gx];
+                if (tile.nest) {
+                    const px = vx * tileSize;
+                    const py = vy * tileSize;
+                    MapRenderer.drawTint(ctx, px, py, tileSize, NEST.color, 0.75);
+                    MapRenderer.drawIcon(ctx, px, py, tileSize, NEST, 0.65);
+                }
+            }
+        }
+    }
+
+    /**
+     * Draw ancestors' graves (fog-aware).
+     */
+    function drawGraves() {
+        const { cols, rows } = getViewportTiles();
+        for (let vy = 0; vy < rows; vy++) {
+            for (let vx = 0; vx < cols; vx++) {
+                const gx = cameraX + vx;
+                const gy = cameraY + vy;
+                if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+                if (!isLocalTileRevealed(gx, gy)) continue;
+                const tile = grid[gy][gx];
+                if (tile.grave) {
+                    MapRenderer.drawIcon(ctx, vx * tileSize, vy * tileSize, tileSize, { icon: '🪦' }, 0.55);
+                }
+            }
+        }
+    }
+
+    /**
+     * Start the nest-heart boss fight. Triggered by stepping onto the nest.
+     */
+    function initiateNestAssault(x, y) {
+        const tile = getTile(x, y);
+        if (!tile || !tile.nest || !currentRegion) return;
+
+        const level = tile.nest.level;
+        const biome = currentRegion.biome;
+
+        const availableEnemies = window.EnemyDatabase ? EnemyDatabase.getEnemiesByBiome(biome) : [];
+        if (!availableEnemies || availableEnemies.length === 0) {
+            console.error(`No enemies available for nest boss in biome: ${biome}`);
+            return;
+        }
+
+        const enemyId = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
+        const boss = window.EnemyFactory ? EnemyFactory.createEnemy(enemyId) : null;
+        if (!boss) return;
+
+        // Scale the boss by nest level
+        const hpMult = 1 + level * NEST.bossHpMultPerLevel;
+        boss.name = `Nest Chieftain (${boss.name})`;
+        boss.hp = Math.round(boss.hp * hpMult);
+        boss.maxHp = Math.round(boss.maxHp * hpMult);
+        boss.xpReward = Math.round((boss.xpReward || 10) * (1 + level * NEST.bossXpMultPerLevel));
+
+        const character = window.GameState?.getState()?.character;
+        if (!character) return;
+
+        if (character.hp === undefined) character.hp = 100;
+        if (character.maxHp === undefined) character.maxHp = 100;
+
+        const player = {
+            ...character,
+            isPlayer: true,
+            isAlive: character.hp > 0,
+            hp: character.hp,
+            maxHp: character.maxHp,
+            attack: (window.DamageCalculator
+                ? DamageCalculator.calculateCurrentWeaponDamage(character)
+                : null) || 5,
+            defense: character.defense || 0,
+            speed: 15,
+            initiative: 0
+        };
+
+        // Persist the assault so victory resolves even across a mid-fight reload
+        const worldState = window.GameState.getState().world || {};
+        worldState.pendingNestAssault = {
+            region: { x: currentRegion.x, y: currentRegion.y },
+            tile: { x, y },
+            level
+        };
+        window.GameState.updateProperty('world', worldState);
+
+        if (window.ActivityLog) {
+            ActivityLog.addMessage(`You storm the raider nest! The chieftain emerges...`, 'combat');
+        }
+
+        const enemy = { ...boss, speed: 10 };
+        if (window.CombatManager) {
+            CombatManager.startCombat([player], [enemy]);
+        }
+    }
+
+    /**
+     * Resolve a won nest assault: destroy the nest, mark the region Cleared,
+     * and grant scaled loot.
+     */
+    function resolveNestAssaultVictory(pending) {
+        // Destroy the nest tile if we're still in that region
+        if (currentRegion && currentRegion.x === pending.region.x && currentRegion.y === pending.region.y) {
+            const tile = getTile(pending.tile.x, pending.tile.y);
+            if (tile && tile.nest) tile.nest = null;
+        }
+
+        // Region becomes Cleared (protected, then decays back to explored)
+        let regionName = 'the region';
+        if (window.RegionManager) {
+            RegionManager.clearNest(pending.region.x, pending.region.y);
+            const rec = RegionManager.peekRegion(pending.region.x, pending.region.y);
+            if (rec) regionName = rec.name;
+        }
+
+        // Loot scales with nest level
+        if (window.LootManager) {
+            const drops = NEST.lootPerLevel.map(entry => ({
+                itemId: entry.itemId,
+                quantity: entry.quantity * pending.level
+            }));
+            LootManager.processDrops(drops);
+        }
+
+        if (window.ActivityLog) {
+            ActivityLog.addMessage(`The raider nest in ${regionName} is destroyed! The region is cleared.`, 'success');
+        }
+        if (window.NotificationManager) {
+            NotificationManager.showNotification({
+                type: 'success',
+                icon: '🏴',
+                title: 'Nest Destroyed!',
+                message: `${regionName} is now cleared`,
+                description: 'The region is safe... for a while.'
+            });
+        }
+
+        render();
+        if (window.SaveSystem) SaveSystem.save();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // LOCAL FOG OF WAR (Living Frontier Phase 1)
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Fog is active only in region mode (not the TEST_MODE debug map).
+     */
+    function fogActive() {
+        return !TEST_MODE && !!currentRegion;
+    }
+
+    function isLocalTileRevealed(x, y) {
+        if (!fogActive()) return true;
+        return revealedLocal.has(`${x},${y}`);
+    }
+
+    /**
+     * Reveal tiles in a circle around the player and persist to the region.
+     */
+    function revealAroundLocalPlayer() {
+        if (!fogActive()) return;
+        const r = LOCAL_REVEAL_RADIUS;
+        const r2 = r * r + 2; // slightly rounded circle
+        for (let dy = -r; dy <= r; dy++) {
+            for (let dx = -r; dx <= r; dx++) {
+                if (dx * dx + dy * dy > r2) continue;
+                const tx = playerPosition.x + dx;
+                const ty = playerPosition.y + dy;
+                if (tx >= 0 && tx < GRID_WIDTH && ty >= 0 && ty < GRID_HEIGHT) {
+                    revealedLocal.add(`${tx},${ty}`);
+                }
+            }
+        }
+        if (window.RegionManager && currentRegion) {
+            RegionManager.setRevealedTiles(currentRegion.x, currentRegion.y, revealedLocal);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // CLICK-TO-PATH MOVEMENT (Living Frontier Phase 1)
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * A* pathfinding over walkable, revealed tiles (4-directional).
+     * Returns an array of steps [{x,y}, ...] excluding the start tile,
+     * or null if no path exists.
+     */
+    function findPath(from, to) {
+        const key = (x, y) => `${x},${y}`;
+        const isPassable = (x, y) => {
+            if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) return false;
+            if (!grid[y][x].walkable) return false;
+            if (fogActive() && !revealedLocal.has(key(x, y))) return false;
+            return true;
+        };
+
+        if (!isPassable(to.x, to.y)) return null;
+
+        const open = [{ x: from.x, y: from.y, g: 0, f: 0 }];
+        const cameFrom = {};
+        const gScore = { [key(from.x, from.y)]: 0 };
+        const closed = new Set();
+        const h = (x, y) => Math.abs(x - to.x) + Math.abs(y - to.y);
+
+        while (open.length > 0) {
+            // Pop lowest-f node (linear scan is fine for a 40x40 grid)
+            let bestIdx = 0;
+            for (let i = 1; i < open.length; i++) {
+                if (open[i].f < open[bestIdx].f) bestIdx = i;
+            }
+            const current = open.splice(bestIdx, 1)[0];
+            const cKey = key(current.x, current.y);
+
+            if (current.x === to.x && current.y === to.y) {
+                // Reconstruct path (excluding start)
+                const path = [];
+                let k = cKey;
+                while (cameFrom[k] !== undefined) {
+                    const [px, py] = k.split(',').map(Number);
+                    path.unshift({ x: px, y: py });
+                    k = cameFrom[k];
+                }
+                return path;
+            }
+
+            if (closed.has(cKey)) continue;
+            closed.add(cKey);
+
+            const neighbors = [
+                { x: current.x + 1, y: current.y },
+                { x: current.x - 1, y: current.y },
+                { x: current.x, y: current.y + 1 },
+                { x: current.x, y: current.y - 1 }
+            ];
+
+            for (const n of neighbors) {
+                if (!isPassable(n.x, n.y)) continue;
+                const nKey = key(n.x, n.y);
+                if (closed.has(nKey)) continue;
+                const g = gScore[cKey] + 1;
+                if (gScore[nKey] === undefined || g < gScore[nKey]) {
+                    gScore[nKey] = g;
+                    cameFrom[nKey] = cKey;
+                    open.push({ x: n.x, y: n.y, g, f: g + h(n.x, n.y) });
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Begin auto-walking a path. Each step goes through movePlayer(), so time
+     * cost, encounters, saving, and edge-exit all behave exactly like manual
+     * movement. Walking stops on: combat, pause, blocked step, or arrival.
+     */
+    function startWalking(path, arrivalAction = null) {
+        stopWalking(false);
+        activePath = path;
+        pathArrivalAction = arrivalAction;
+
+        pathTimer = setInterval(() => {
+            if (!activePath || activePath.length === 0) {
+                stopWalking();
+                return;
+            }
+            if (window.TimeSystem?.isPaused) {
+                stopWalking();
+                return;
+            }
+            if (window.CombatManager?.getCombatState()?.isActive) {
+                stopWalking();
+                return;
+            }
+
+            const next = activePath.shift();
+            const ok = movePlayer(next.x, next.y);
+            if (!ok) {
+                stopWalking();
+                return;
+            }
+
+            // Stop immediately if that step triggered combat
+            if (window.CombatManager?.getCombatState()?.isActive) {
+                stopWalking();
+                return;
+            }
+
+            if (activePath && activePath.length === 0) {
+                const action = pathArrivalAction;
+                stopWalking();
+                if (action === 'gather') {
+                    gatherResourceAtPlayerPosition();
+                }
+            }
+        }, PATH_STEP_MS);
+    }
+
+    function stopWalking(rerender = true) {
+        if (pathTimer) {
+            clearInterval(pathTimer);
+            pathTimer = null;
+        }
+        activePath = null;
+        pathArrivalAction = null;
+        if (rerender && ctx && canvas) render();
+    }
+
+    /**
+     * Handle a click on a local-map tile (grid coordinates).
+     */
+    function handleTileClick(gx, gy) {
+        const tile = getTile(gx, gy);
+        if (!tile) return;
+
+        // Unexplored tiles can't be targeted
+        if (fogActive() && !isLocalTileRevealed(gx, gy)) {
+            if (window.ActivityLog) {
+                ActivityLog.addMessage("You haven't explored that area yet.", 'info');
+            }
+            return;
+        }
+
+        // Clicking your own tile: interact (enter camp / gather)
+        if (gx === playerPosition.x && gy === playerPosition.y) {
+            stopWalking(false);
+            if (isStandingOnCamp()) {
+                showEnterCampModal();
+            } else if (tile.resource) {
+                gatherResourceAtPlayerPosition();
+            }
+            return;
+        }
+
+        if (!tile.walkable) {
+            showBlockedMovementFeedback(gx, gy);
+            return;
+        }
+
+        const path = findPath(playerPosition, { x: gx, y: gy });
+        if (!path || path.length === 0) {
+            if (window.ActivityLog) {
+                ActivityLog.addMessage('No path to that location.', 'info');
+            }
+            return;
+        }
+
+        // Walking onto a resource node auto-gathers on arrival
+        startWalking(path, tile.resource ? 'gather' : null);
+        render(); // show the path preview immediately
+    }
+
+    /**
+     * Set up canvas click handling for click-to-path movement.
+     */
+    function setupCanvasClickHandler() {
+        if (!canvas) return;
+
+        canvas.addEventListener('click', (e) => {
+            // Only when the local map is actually in play
+            if (!TEST_MODE && !currentRegion) return;
+            if (window.TimeSystem?.isPaused) return;
+
+            const character = window.GameState?.getState()?.character;
+            if (character && character.inSettlement) return;
+
+            const combatOverlay = document.querySelector('.combat-overlay');
+            if (combatOverlay && combatOverlay.classList.contains('active')) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const cx = (e.clientX - rect.left) * scaleX;
+            const cy = (e.clientY - rect.top) * scaleY;
+
+            const gx = cameraX + Math.floor(cx / tileSize);
+            const gy = cameraY + Math.floor(cy / tileSize);
+            handleTileClick(gx, gy);
+        });
     }
 
     /**
@@ -1159,11 +1647,11 @@ const Map = (() => {
         // First do a full re-render
         render();
 
-        // Draw green overlay on gathered tile
+        // Draw green overlay on gathered tile (viewport coords = grid - camera)
         ctx.save();
         ctx.globalAlpha = 0.4;
         ctx.fillStyle = '#00ff00';
-        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        ctx.fillRect((x - cameraX) * tileSize, (y - cameraY) * tileSize, tileSize, tileSize);
 
         // Restore after a brief moment
         setTimeout(() => {
@@ -1197,11 +1685,11 @@ const Map = (() => {
             // First do a full re-render to ensure clean state
             render();
 
-            // Then draw red overlay on blocked tile
+            // Then draw red overlay on blocked tile (viewport coords = grid - camera)
             ctx.save(); // Save the entire canvas state
             ctx.globalAlpha = 0.5;
             ctx.fillStyle = '#ff0000';
-            ctx.fillRect(blockedX * tileSize, blockedY * tileSize, tileSize, tileSize);
+            ctx.fillRect((blockedX - cameraX) * tileSize, (blockedY - cameraY) * tileSize, tileSize, tileSize);
 
             // Restore after a brief moment
             setTimeout(() => {
@@ -1274,15 +1762,24 @@ const Map = (() => {
         // Draw combat encounters
         drawCombatEncounters();
 
+        // Draw raider nests
+        drawNests();
+
+        // Draw ancestors' graves
+        drawGraves();
+
         // Draw camp (before player so player can stand on camp)
         drawCamp();
+
+        // Draw the active click-to-path route
+        drawPath();
 
         // Draw player
         drawPlayer();
     }
 
     /**
-     * Draw all tiles
+     * Draw all tiles (fog-aware, via MapRenderer)
      */
     function drawTiles() {
         const { cols, rows } = getViewportTiles();
@@ -1291,12 +1788,40 @@ const Map = (() => {
                 const gx = cameraX + vx;
                 const gy = cameraY + vy;
                 if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+
+                const px = vx * tileSize;
+                const py = vy * tileSize;
+
+                if (!isLocalTileRevealed(gx, gy)) {
+                    MapRenderer.drawFog(ctx, px, py, tileSize);
+                    continue;
+                }
+
                 const tile = grid[gy][gx];
                 const biomeConfig = BIOMES[tile.biome] || BIOMES.plains;
-                ctx.fillStyle = biomeConfig.color;
-                ctx.fillRect(vx * tileSize, vy * tileSize, tileSize, tileSize);
+                MapRenderer.drawTerrain(ctx, px, py, tileSize, biomeConfig);
             }
         }
+    }
+
+    /**
+     * Draw the remaining click-to-path route as dots.
+     */
+    function drawPath() {
+        if (!activePath || activePath.length === 0) return;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(244, 196, 48, 0.5)';
+        for (const step of activePath) {
+            const vx = step.x - cameraX;
+            const vy = step.y - cameraY;
+            const { cols, rows } = getViewportTiles();
+            if (vx < 0 || vx >= cols || vy < 0 || vy >= rows) continue;
+            ctx.beginPath();
+            ctx.arc(vx * tileSize + tileSize / 2, vy * tileSize + tileSize / 2, Math.max(tileSize * 0.12, 3), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
     }
 
     /**
@@ -1332,32 +1857,19 @@ const Map = (() => {
                 const gx = cameraX + vx;
                 const gy = cameraY + vy;
                 if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+                if (!isLocalTileRevealed(gx, gy)) continue;
                 const tile = grid[gy][gx];
                 if (tile.resource) {
                     const resourceConfig = RESOURCES[tile.resource.type];
                     if (!resourceConfig) continue;
 
-                    ctx.fillStyle = resourceConfig.color;
-                    ctx.globalAlpha = 0.3;
-                    ctx.fillRect(vx * tileSize, vy * tileSize, tileSize, tileSize);
-                    ctx.globalAlpha = 1.0;
-
-                    const iconSize = Math.max(tileSize * 0.5, 12);
-                    ctx.font = `${iconSize}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-
-                    const centerX = vx * tileSize + tileSize / 2;
-                    const centerY = vy * tileSize + tileSize / 2;
-
-                    ctx.fillText(resourceConfig.icon, centerX, centerY);
+                    const px = vx * tileSize;
+                    const py = vy * tileSize;
+                    MapRenderer.drawTint(ctx, px, py, tileSize, resourceConfig.color, 0.3);
+                    MapRenderer.drawIcon(ctx, px, py, tileSize, resourceConfig, 0.5);
                 }
             }
         }
-
-        // Reset text alignment for other drawing operations
-        ctx.textAlign = 'start';
-        ctx.textBaseline = 'alphabetic';
     }
 
     /**
@@ -1370,32 +1882,19 @@ const Map = (() => {
                 const gx = cameraX + vx;
                 const gy = cameraY + vy;
                 if (gx < 0 || gx >= GRID_WIDTH || gy < 0 || gy >= GRID_HEIGHT) continue;
+                if (!isLocalTileRevealed(gx, gy)) continue;
                 const tile = grid[gy][gx];
                 if (tile.combatEncounter && tile.combatEncounter.active) {
                     const encounterConfig = COMBAT_ENCOUNTERS.enemy;
                     if (!encounterConfig) continue;
 
-                    ctx.fillStyle = encounterConfig.color;
-                    ctx.globalAlpha = 0.4;
-                    ctx.fillRect(vx * tileSize, vy * tileSize, tileSize, tileSize);
-                    ctx.globalAlpha = 1.0;
-
-                    const iconSize = Math.max(tileSize * 0.6, 14);
-                    ctx.font = `${iconSize}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-
-                    const centerX = vx * tileSize + tileSize / 2;
-                    const centerY = vy * tileSize + tileSize / 2;
-
-                    ctx.fillText(encounterConfig.icon, centerX, centerY);
+                    const px = vx * tileSize;
+                    const py = vy * tileSize;
+                    MapRenderer.drawTint(ctx, px, py, tileSize, encounterConfig.color, 0.4);
+                    MapRenderer.drawIcon(ctx, px, py, tileSize, encounterConfig, 0.6);
                 }
             }
         }
-
-        // Reset text alignment for other drawing operations
-        ctx.textAlign = 'start';
-        ctx.textBaseline = 'alphabetic';
     }
 
     /**
@@ -1465,12 +1964,27 @@ const Map = (() => {
         playerPosition = { x: newX, y: newY };
         updateCamera();
 
+        // Reveal fog around the new position (persists to the region record)
+        revealAroundLocalPlayer();
+
         // Save to game state
         savePlayerPosition();
 
-        // Advance time by 12 hours (0.5 days) for moving a tile
+        // Advance time by 6 hours (0.25 days) for moving a tile
         if (window.TimeSystem) {
-            TimeSystem.advanceDays(0.5);
+            TimeSystem.advanceDays(0.25);
+        }
+
+        // Standing at an ancestor's grave: Remembrance (once per generation)
+        if (targetTile.grave && window.Succession) {
+            Succession.honorGrave(targetTile.grave);
+        }
+
+        // Stepping onto a nest heart begins the assault boss fight
+        if (targetTile.nest) {
+            initiateNestAssault(newX, newY);
+            render();
+            return true;
         }
 
         // Check for combat encounter (respects debug encounter toggle)
@@ -1670,6 +2184,11 @@ const Map = (() => {
         const harvested = Math.min(amount, tile.resource.amount);
         tile.resource.amount -= harvested;
 
+        // Record the harvest day — starts/refreshes the node's regrow clock
+        if (window.RegionManager) {
+            harvestDays[`${x},${y}`] = RegionManager.getCurrentDay();
+        }
+
         // Remove resource node if depleted
         if (tile.resource.amount <= 0) {
             tile.resource = null;
@@ -1678,12 +2197,16 @@ const Map = (() => {
         // Re-render to update visuals
         render();
 
-        // Save state
-        saveGridState();
+        // Save state (region deltas in overworld mode, legacy grid in test mode)
+        if (!TEST_MODE && currentRegion) {
+            saveRegionState(currentRegion.x, currentRegion.y);
+        } else {
+            saveGridState();
+        }
 
-        // Advance time by 0.5 days for harvesting
+        // Advance time by 0.25 days for harvesting
         if (window.TimeSystem) {
-            TimeSystem.advanceDays(0.5);
+            TimeSystem.advanceDays(0.25);
         }
 
         return {
@@ -1793,7 +2316,18 @@ const Map = (() => {
      */
     function handleCombatVictory() {
         const worldState = window.GameState?.getState()?.world;
-        if (!worldState || !worldState.lastEncounterLocation) {
+        if (!worldState) return;
+
+        // Nest assault victory takes priority over regular encounters
+        if (worldState.pendingNestAssault) {
+            const pending = worldState.pendingNestAssault;
+            worldState.pendingNestAssault = null;
+            window.GameState.updateProperty('world', worldState);
+            resolveNestAssaultVictory(pending);
+            return;
+        }
+
+        if (!worldState.lastEncounterLocation) {
             return;
         }
 
@@ -1804,20 +2338,28 @@ const Map = (() => {
             // Deactivate the encounter
             tile.combatEncounter.active = false;
 
-            // Start respawn timer
-            const respawnTime = COMBAT_ENCOUNTERS.enemy.respawnTime;
-            tile.combatEncounter.respawnTimer = setTimeout(() => {
-                respawnCombatEncounter(x, y);
-            }, respawnTime);
+            if (tile.combatEncounter.nestGuard) {
+                // Nest guards do not respawn — the way to the heart stays open
+                render();
+                if (window.ActivityLog) {
+                    ActivityLog.addMessage('Nest guard defeated! The heart of the nest is closer.', 'combat');
+                }
+            } else {
+                // Start respawn timer
+                const respawnTime = COMBAT_ENCOUNTERS.enemy.respawnTime;
+                tile.combatEncounter.respawnTimer = setTimeout(() => {
+                    respawnCombatEncounter(x, y);
+                }, respawnTime);
 
-            // Save grid state
-            saveGridState();
+                // Save grid state
+                saveGridState();
 
-            // Re-render to remove the encounter icon
-            render();
+                // Re-render to remove the encounter icon
+                render();
 
-            if (window.ActivityLog) {
-                ActivityLog.addMessage(`Enemy defeated! It will respawn in ${respawnTime / 1000} seconds.`, 'info');
+                if (window.ActivityLog) {
+                    ActivityLog.addMessage(`Enemy defeated! It will respawn in ${respawnTime / 1000} seconds.`, 'info');
+                }
             }
         }
 
@@ -1834,6 +2376,8 @@ const Map = (() => {
 
         // Move player back to origin
         playerPosition = { ...origin };
+        updateCamera();
+        revealAroundLocalPlayer(); // don't strand the player in unrevealed fog
         savePlayerPosition();
 
         // Re-render map
@@ -1843,10 +2387,17 @@ const Map = (() => {
             ActivityLog.addMessage(`Returned to safe location at (${origin.x}, ${origin.y})`, 'info');
         }
 
-        // Clear the last encounter location
+        // Clear the last encounter location and any pending nest assault
+        // (fleeing the chieftain leaves the nest standing)
         const worldState = window.GameState?.getState()?.world;
         if (worldState) {
             worldState.lastEncounterLocation = null;
+            if (worldState.pendingNestAssault) {
+                worldState.pendingNestAssault = null;
+                if (window.ActivityLog) {
+                    ActivityLog.addMessage('The nest still stands...', 'warning');
+                }
+            }
             window.GameState.updateProperty('world', worldState);
         }
     }
@@ -1887,6 +2438,21 @@ const Map = (() => {
     function enterRegion(regionX, regionY, biome, fromDir) {
         currentRegion = { x: regionX, y: regionY, biome };
 
+        // Stop any in-progress auto-walk from a previous region
+        stopWalking(false);
+
+        // Visit the region record: creates/migrates it, runs the lazy sim
+        // (regrowth), marks it explored, and reports first discovery.
+        let regionRecord = null;
+        if (!TEST_MODE && window.RegionManager) {
+            const visit = RegionManager.visitRegion(regionX, regionY, biome);
+            regionRecord = visit.record;
+            if (visit.firstVisit && regionRecord && window.ActivityLog) {
+                const stars = '★'.repeat(regionRecord.richness) + '☆'.repeat(5 - regionRecord.richness);
+                ActivityLog.addMessage(`Discovered ${regionRecord.name}! Richness: ${stars}`, 'success');
+            }
+        }
+
         if (TEST_MODE) {
             // In test mode just re-init the hardcoded map
             generateGrid();
@@ -1901,8 +2467,34 @@ const Map = (() => {
             generateRegionGrid(biome);
         }
 
-        // Load saved resource deltas for this region
-        loadRegionState(regionX, regionY);
+        // Snapshot the freshly generated (pre-delta) resources so leaving the
+        // region can compute sparse, regrow-aware deltas.
+        snapshotBaseResources();
+
+        // Apply saved resource deltas (post-lazy-sim, so regrown nodes return)
+        applyRegionDeltas(regionRecord);
+
+        // Place the raider nest if this region is infested
+        if (regionRecord?.threat?.nestLevel > 0) {
+            placeNest(regionRecord.threat.nestLevel);
+            if (window.ActivityLog) {
+                ActivityLog.addMessage(
+                    `A raider nest (Lv ${regionRecord.threat.nestLevel}) festers somewhere in this region!`,
+                    'warning'
+                );
+            }
+        }
+
+        // Place ancestors' graves (references — honoring mutates the record)
+        if (regionRecord?.graves) {
+            regionRecord.graves.forEach(grave => {
+                const tile = grid[grave.y]?.[grave.x];
+                if (tile) tile.grave = grave;
+            });
+        }
+
+        // Restore this region's fog of war
+        revealedLocal = new Set(regionRecord?.revealedTiles || []);
 
         // Update the region label in the UI
         const label = document.getElementById('local-map-region-label');
@@ -1937,6 +2529,9 @@ const Map = (() => {
             else                          playerPosition = { x: midX, y: midY };
             savePlayerPosition();
         }
+
+        // Reveal fog around the entry position
+        revealAroundLocalPlayer();
 
         resizeCanvas();
         render();
@@ -1990,42 +2585,61 @@ const Map = (() => {
      */
     function placeRegionResources(biome) {
         // Resource pools per biome
+        // Weighted pools: repeat entries to bias selection
+        // Weighted pools: repeat entries to bias selection.
+        // 'stone' = loose rock pickup (no tool). 'rock' = quarry (needs pickaxe).
+        // Stones are uncommon: present in most biomes but outweighed by staples.
         const BIOME_RESOURCES = {
-            forest:  ['tree', 'stick_bush', 'berry_bush', 'fiber_plant'],
-            plains:  ['stick_bush', 'berry_bush', 'fiber_plant', 'rock'],
-            desert:  ['rock', 'copper_ore'],
-            tundra:  ['rock', 'stick_bush'],
-            swamp:   ['fiber_plant', 'berry_bush', 'stick_bush'],
-            mountain: ['rock', 'copper_ore'],
+            forest:  ['tree', 'tree', 'tree', 'tree', 'tree', 'tree', 'tree', 'stick_bush', 'berry_bush', 'fiber_plant', 'stone', 'rock'],
+            plains:  ['stick_bush', 'stick_bush', 'berry_bush', 'berry_bush', 'fiber_plant', 'fiber_plant', 'stone', 'rock'],
+            desert:  ['rock', 'rock', 'rock', 'copper_ore', 'stone'],
+            tundra:  ['rock', 'rock', 'stick_bush', 'stick_bush', 'stone'],
+            swamp:   ['fiber_plant', 'fiber_plant', 'berry_bush', 'stick_bush', 'stone'],
+            mountain: ['rock', 'rock', 'rock', 'rock', 'copper_ore', 'copper_ore', 'stone'],
             water:   []
         };
 
         const pool = BIOME_RESOURCES[biome] || BIOME_RESOURCES.plains;
         if (pool.length === 0) return;
 
-        // Place ~8 resource nodes, seeded via Noise RNG
-        const targetCount = 8;
-        let placed = 0;
-        let attempts = 0;
+        // Coverage % of walkable tiles that become resource nodes per biome
+        const BIOME_COVERAGE = {
+            forest:   0.40,
+            plains:   0.12,
+            swamp:    0.20,
+            tundra:   0.10,
+            desert:   0.08,
+            mountain: 0.15
+        };
 
-        while (placed < targetCount && attempts < 200) {
-            attempts++;
-            // Use noise to get a pseudo-random position
-            const n1 = window.Noise ? Noise.noise2D(attempts * 3.1, 0.5) : Math.random() * 2 - 1;
-            const n2 = window.Noise ? Noise.noise2D(0.5, attempts * 2.7) : Math.random() * 2 - 1;
-            const rx = Math.floor(((n1 + 1) / 2) * (GRID_WIDTH  - 2)) + 1;
-            const ry = Math.floor(((n2 + 1) / 2) * (GRID_HEIGHT - 2)) + 1;
+        const coverage = BIOME_COVERAGE[biome] ?? 0.10;
 
-            const tile = grid[ry]?.[rx];
-            if (!tile || !tile.walkable || tile.resource) continue;
+        // Iterate every walkable tile and roll per-tile placement.
+        // Uses Noise.hash2D (uniform, seeded, independent per tile) — NOT
+        // noise2D, which is smooth Perlin noise clustered around 0.5 and made
+        // coverage thresholds hit a tiny fraction of the intended rate
+        // (forests came out nearly empty, deserts/plains got ~nothing).
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                const tile = grid[y][x];
+                if (!tile || !tile.walkable || tile.resource) continue;
 
-            // Pick a resource type from the pool (seeded)
-            const n3 = window.Noise ? Noise.noise2D(attempts * 1.3, attempts * 0.9) : 0;
-            const idx = Math.floor(((n3 + 1) / 2) * pool.length);
-            const resourceType = pool[Math.min(idx, pool.length - 1)];
+                // Place roll: unique uniform roll per (x,y), deterministic per region seed
+                const placeRoll = window.Noise
+                    ? Noise.hash2D(x, y)
+                    : Math.random();
+                if (placeRoll > coverage) continue;
 
-            addResource(rx, ry, resourceType);
-            placed++;
+                // Pool pick: separate uniform roll per tile (offset coords so it
+                // doesn't correlate with the place roll)
+                const pickRoll = window.Noise
+                    ? Noise.hash2D(x + 1013, y + 2027)
+                    : Math.random();
+                const idx = Math.min(pool.length - 1, Math.floor(pickRoll * pool.length));
+                const resourceType = pool[idx];
+
+                addResource(x, y, resourceType);
+            }
         }
     }
 
@@ -2049,10 +2663,12 @@ const Map = (() => {
 
         while (placed < count && attempts < 100) {
             attempts++;
-            const n1 = window.Noise ? Noise.noise2D(attempts * 4.1, 99.5) : Math.random() * 2 - 1;
-            const n2 = window.Noise ? Noise.noise2D(99.5, attempts * 3.3) : Math.random() * 2 - 1;
-            const rx = Math.floor(((n1 + 1) / 2) * (GRID_WIDTH  - 2)) + 1;
-            const ry = Math.floor(((n2 + 1) / 2) * (GRID_HEIGHT - 2)) + 1;
+            // Uniform seeded rolls — noise2D clusters near the middle, which
+            // biased every encounter toward the center of the region
+            const n1 = window.Noise ? Noise.hash2D(attempts, 90001) : Math.random();
+            const n2 = window.Noise ? Noise.hash2D(90002, attempts) : Math.random();
+            const rx = Math.floor(n1 * (GRID_WIDTH  - 2)) + 1;
+            const ry = Math.floor(n2 * (GRID_HEIGHT - 2)) + 1;
 
             const tile = grid[ry]?.[rx];
             if (!tile || !tile.walkable || tile.combatEncounter || tile.resource) continue;
@@ -2099,53 +2715,85 @@ const Map = (() => {
     /**
      * Save resource/encounter deltas for the current region.
      */
-    function saveRegionState(regionX, regionY) {
-        if (!window.GameState) return;
-
-        const state = GameState.getState();
-        const world = state.world || {};
-        if (!world.regions) world.regions = {};
-
-        const key = `${regionX},${regionY}`;
-        const resources = {};
-
+    /**
+     * Snapshot the generated (pre-delta) resource layout of the current grid.
+     * Deltas are computed against this when the region is saved.
+     */
+    function snapshotBaseResources() {
+        baseResources = {};
+        harvestDays = {};
         for (let y = 0; y < GRID_HEIGHT; y++) {
             for (let x = 0; x < GRID_WIDTH; x++) {
                 const tile = grid[y][x];
-                if (tile.resource && tile.resource.amount !== tile.resource.maxAmount) {
-                    resources[`${x},${y}`] = { amount: tile.resource.amount };
-                } else if (!tile.resource) {
-                    // Fully depleted
-                    resources[`${x},${y}`] = { amount: 0 };
+                if (tile.resource) {
+                    baseResources[`${x},${y}`] = {
+                        type: tile.resource.type,
+                        amount: tile.resource.amount
+                    };
                 }
             }
         }
+    }
 
-        world.regions[key] = { visited: true, resources };
-        GameState.updateProperty('world', world);
+    /**
+     * Save the current region's resource deltas + fog to its region record.
+     * Only tiles that differ from the generated base are stored — and the
+     * lazy sim removes them again once their regrow window passes.
+     */
+    function saveRegionState(regionX, regionY) {
+        if (!window.RegionManager) return;
+
+        const today = RegionManager.getCurrentDay();
+        const deltas = {};
+
+        for (const key of Object.keys(baseResources)) {
+            const [x, y] = key.split(',').map(Number);
+            const base = baseResources[key];
+            const current = grid[y]?.[x]?.resource;
+
+            if (!current) {
+                // Fully depleted node
+                deltas[key] = {
+                    type: base.type,
+                    amount: 0,
+                    harvestedOnDay: harvestDays[key] ?? today
+                };
+            } else if (current.amount < base.amount) {
+                // Partially harvested node
+                deltas[key] = {
+                    type: base.type,
+                    amount: current.amount,
+                    harvestedOnDay: harvestDays[key] ?? today
+                };
+            }
+        }
+
+        RegionManager.setResourceDeltas(regionX, regionY, deltas);
+        RegionManager.setRevealedTiles(regionX, regionY, revealedLocal);
         if (window.SaveSystem) SaveSystem.save();
     }
 
     /**
-     * Load resource deltas for a region and apply them over the generated grid.
+     * Apply a region record's resource deltas over the freshly generated grid.
+     * (The lazy sim has already removed any deltas that regrew.)
      */
-    function loadRegionState(regionX, regionY) {
-        const state = window.GameState?.getState();
-        if (!state?.world?.regions) return;
+    function applyRegionDeltas(regionRecord) {
+        if (!regionRecord || !regionRecord.resourceDeltas) return;
 
-        const key = `${regionX},${regionY}`;
-        const saved = state.world.regions[key];
-        if (!saved?.resources) return;
-
-        Object.entries(saved.resources).forEach(([coord, data]) => {
+        Object.entries(regionRecord.resourceDeltas).forEach(([coord, delta]) => {
             const [x, y] = coord.split(',').map(Number);
             const tile = grid[y]?.[x];
             if (!tile) return;
 
-            if (data.amount <= 0) {
+            // Remember the harvest day so re-saving preserves the regrow clock
+            if (delta.harvestedOnDay !== undefined) {
+                harvestDays[coord] = delta.harvestedOnDay;
+            }
+
+            if (delta.amount <= 0) {
                 tile.resource = null;
             } else if (tile.resource) {
-                tile.resource.amount = data.amount;
+                tile.resource.amount = delta.amount;
             }
         });
     }
@@ -2261,4 +2909,7 @@ const Map = (() => {
     };
 })();
 
-window.Map = Map;
+// Expose as LocalMap. Deliberately NOT window.Map — assigning this module to
+// window.Map used to shadow JavaScript's built-in Map constructor, breaking
+// any code that calls `new Map()` after this script loads.
+window.LocalMap = LocalMap;

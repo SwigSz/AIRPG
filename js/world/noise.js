@@ -146,10 +146,37 @@ const Noise = (() => {
         return currentSeed;
     }
 
+    /**
+     * Deterministic per-coordinate hash, uniform in [0, 1).
+     *
+     * Use this (NOT noise2D) when you need an independent uniform "dice roll"
+     * per tile — e.g. "place a resource on 40% of tiles". Perlin noise2D is
+     * smooth spatial noise whose values cluster around 0, so thresholding it
+     * against a probability massively under-places (a 0.4 threshold hits far
+     * less than 40% of tiles, and neighbouring tiles all pass/fail together).
+     *
+     * Same seed + same (x, y) always produces the same value.
+     */
+    function hash2D(x, y) {
+        if (currentSeed === null) {
+            console.warn('Noise: no seed set, using default seed 0');
+            setSeed(0);
+        }
+        let h = (typeof currentSeed === 'number' ? currentSeed : 0) >>> 0;
+        h = Math.imul(h ^ (x | 0), 0x9E3779B1);
+        h = (h << 13) | (h >>> 19);
+        h = Math.imul(h ^ (y | 0), 0x85EBCA6B);
+        h ^= h >>> 16;
+        h = Math.imul(h, 0xC2B2AE35);
+        h ^= h >>> 13;
+        return (h >>> 0) / 4294967296;
+    }
+
     return {
         setSeed,
         getSeed,
         noise2D,
+        hash2D,
         fbm,
         fbm01
     };

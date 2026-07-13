@@ -611,12 +611,18 @@ const CombatManager = (() => {
             }
 
             // Handle map encounter based on combat result
-            if (window.Map) {
+            if (window.LocalMap) {
                 if (result === 'victory') {
-                    window.Map.handleCombatVictory();
+                    window.LocalMap.handleCombatVictory();
                 } else if (result === 'flee' || result === 'defeat') {
-                    window.Map.handleCombatFleeOrDefeat();
+                    window.LocalMap.handleCombatFleeOrDefeat();
                 }
+            }
+
+            // Defeat is death — the dynasty system takes over from here
+            // (heir succession, or the end of the line)
+            if (result === 'defeat' && window.Succession) {
+                Succession.die('been slain in battle');
             }
 
             // Auto-save after combat
@@ -1502,8 +1508,10 @@ const CombatManager = (() => {
             if (current && current.isPlayer && current.isAlive) {
                 // Player's turn - show action menu
                 renderCombatUI();
-            } else if (current && !current.isPlayer && current.isAlive) {
-                // Enemy's turn - process AI action
+            } else if (current) {
+                // Enemy's turn OR a dead combatant's slot — processCurrentTurn
+                // handles both (it advances past dead combatants). Previously a
+                // dead current combatant left combat soft-locked after reload.
                 processCurrentTurn();
             }
         }

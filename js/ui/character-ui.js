@@ -223,6 +223,9 @@ const CharacterUI = (() => {
         renderSkillList();
     }
 
+    // Remember which skill is selected so re-renders don't reset the panel
+    let selectedSkillId = null;
+
     // Render skill list
     function renderSkillList() {
         const skillListContainer = document.getElementById('skill-list');
@@ -264,6 +267,8 @@ const CharacterUI = (() => {
                 document.querySelectorAll('.skill-row').forEach(row => row.classList.remove('active'));
                 // Add active class to clicked row
                 skillRow.classList.add('active');
+                // Remember selection so re-renders keep it
+                selectedSkillId = skill.id;
                 // Render details for this skill
                 renderSkillDetails(skill, skillData);
             });
@@ -271,11 +276,12 @@ const CharacterUI = (() => {
             skillListContainer.appendChild(skillRow);
         });
 
-        // Auto-select first skill if available
+        // Restore previous selection if it still exists; otherwise select the first skill
         if (unlockedSkills.length > 0) {
-            const firstSkillRow = skillListContainer.querySelector('.skill-row');
-            if (firstSkillRow) {
-                firstSkillRow.click();
+            const rowToSelect = (selectedSkillId && skillListContainer.querySelector(`.skill-row[data-skill-id="${selectedSkillId}"]`))
+                || skillListContainer.querySelector('.skill-row');
+            if (rowToSelect) {
+                rowToSelect.click();
             }
         }
     }

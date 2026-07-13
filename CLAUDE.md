@@ -61,6 +61,7 @@ When you need to edit specific functionality, look in these locations:
 ### Core Systems
 - **Main entry point**: `js/main.js` - Game initialization, character creation, main game loop
 - **Character data**: `js/character/character.js` - Character object creation and management
+- **Succession/dynasty**: `js/core/succession.js` - Aging (hooked from TimeSystem), heirs, death (combat defeat = death), generational succession (world+gear only), graves, New Founder. Dynasty state in `GameState.dynasty`
 - **Character stats**: `js/character/stats.js` - Stat calculations and derived attributes
 - **Combat stats**: `js/character/combat-stats.js` - Combat-specific stat calculations
 - **Game state**: `js/core/game-state.js` - Global game state management
@@ -85,7 +86,11 @@ When you need to edit specific functionality, look in these locations:
 - **Spells**: `data/spells.json` - Spell definitions
 
 ### World & Map
-- **Map system**: `js/world/map.js` - World map, movement, encounters
+**The map is being rebuilt as the "Living Frontier" — read `docs/MAP-DESIGN.md` before map work.**
+- **Map system**: `js/world/map.js` - Local region map, movement (WASD + click-to-path A*), fog of war, encounters. Exposed globally as `window.LocalMap` (NOT `window.Map` — that would shadow JavaScript's built-in `Map` constructor and break any `new Map()` call)
+- **Region state**: `js/world/region-manager.js` - Living Frontier region records (seeded names, richness, lifecycle state, lazy simulation, resource regrowth, fog persistence). All per-region persistent state goes through RegionManager — do not write `world.regions` directly
+- **Map renderer**: `js/world/map-renderer.js` - ALL tile/icon drawing goes through MapRenderer (drawTerrain/drawIcon/drawFog/drawTint). It renders color+emoji fallbacks today and switches to a sprite tileset via `setTileset()` with no game-logic changes — never fillRect terrain directly in map code
+- **Noise/RNG**: `js/world/noise.js` - Seeded Perlin noise. Use `Noise.noise2D`/`fbm` for smooth terrain, but `Noise.hash2D(x, y)` for per-tile "dice rolls" (uniform distribution; thresholding Perlin noise against a probability massively under-places). For values that must not depend on Noise's mutable seed (it's re-seeded per region!), use `RegionManager`'s internal world-seed hash pattern
 - **Settlements**: `js/settlement/settlement.js` - Settlement management and resources
 - **Settlement resources**: `data/resources.json` - All settlement resource definitions (data-driven)
 - **Settlement buildings**: `data/buildings.json` - Building definitions and resource costs/production
@@ -102,7 +107,17 @@ When you need to edit specific functionality, look in these locations:
 - **UI Manager**: `js/ui/ui-manager.js` - UI panel management
 - **Inventory UI**: `js/ui/inventory-ui.js` - Centralized inventory rendering
 - **Modal system**: `js/ui/modal.js` - Modal dialogs
+- **Scroll memory**: `js/ui/scroll-memory.js` - Remembers scroll positions of all scrollable containers and restores them on tab/sub-tab switches (TabManager and SubTabManager call `ScrollMemory.restore()`). Session-only by design
 - **Debug menu**: `js/debug-menu.js` - Debug tools and cheats
+
+### UI Update Pattern for Per-Tick Renders (IMPORTANT)
+Anything re-rendered from the 50ms settlement time tick MUST update the DOM
+in place instead of rebuilding with `innerHTML` — a full rebuild between
+mousedown and mouseup eats button clicks and churns the GC. Pattern used by
+the buildings grid, population tab, resources sidebar, and training tab:
+1. Compute a structural fingerprint (e.g. list of ids) and store it on the container's `dataset`
+2. If unchanged, update `textContent`/`disabled`/classes on existing nodes only
+3. Rebuild (and re-attach listeners) only when the fingerprint changes
 
 ### Skills & Progression
 - **Skills system**: `js/skills/skills.js` - Skill leveling and management

@@ -76,6 +76,11 @@ const SubTabManager = (() => {
         if (onTabChange && typeof onTabChange === 'function') {
             onTabChange(tabName);
         }
+
+        // Restore remembered scroll positions for the newly shown sub-tab
+        if (window.ScrollMemory) {
+            ScrollMemory.restore();
+        }
     }
 
     /**

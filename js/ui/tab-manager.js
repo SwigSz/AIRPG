@@ -91,6 +91,11 @@ const TabManager = (() => {
                 Crafting.updateValidationMessage();
             }
         }
+
+        // Restore remembered scroll positions for the newly shown tab
+        if (window.ScrollMemory) {
+            ScrollMemory.restore();
+        }
     }
 
     function toggleRightSidebarContent(tabName) {

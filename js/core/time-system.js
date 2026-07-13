@@ -124,6 +124,11 @@ const TimeSystem = {
             window.Training.onTimeAdvance(daysAdvanced);
         }
 
+        // Age the character (Living Frontier Phase 4 — age is the clock)
+        if (window.Succession && window.Succession.onTimeAdvance) {
+            window.Succession.onTimeAdvance(hours / this.HOURS_PER_DAY);
+        }
+
         // Trigger UI update
         this.updateUI();
     },

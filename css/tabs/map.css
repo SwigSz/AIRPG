@@ -191,6 +191,53 @@
     color: #7dd3fc;
 }
 
+/* Living Frontier region identity */
+.overworld-info-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fcd34d;
+}
+
+.overworld-info-uncharted {
+    color: #64748b;
+    font-style: italic;
+    font-weight: 500;
+}
+
+.overworld-info-richness {
+    font-size: 12px;
+    color: #f59e0b;
+    letter-spacing: 1px;
+}
+
+.overworld-info-visited {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.overworld-info-threat {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ef4444;
+}
+
+.overworld-info-cleared {
+    font-size: 12px;
+    color: #4ade80;
+}
+
+.overworld-threat-banner {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fecaca;
+    background-color: rgba(127, 29, 29, 0.85);
+    border: 1px solid #ef4444;
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-bottom: 4px;
+    display: inline-block;
+}
+
 /* Action buttons */
 .overworld-actions {
     display: flex;
@@ -287,4 +334,71 @@
     font-weight: 600;
     color: #cbd5e1;
     flex: 1;
+}
+
+/* Territory action buttons */
+.overworld-btn-claim {
+    background-color: #b45309;
+    color: #ffffff;
+}
+.overworld-btn-claim:hover { background-color: #d97706; }
+
+.overworld-btn-collect {
+    background-color: #0e7490;
+    color: #ffffff;
+}
+.overworld-btn-collect:hover { background-color: #0891b2; }
+
+.overworld-btn-travel {
+    background-color: #6d28d9;
+    color: #ffffff;
+}
+.overworld-btn-travel:hover { background-color: #7c3aed; }
+
+.overworld-info-outpost {
+    font-size: 12px;
+    color: #fbbf24;
+}
+
+/* Fast travel menu */
+.fast-travel-menu {
+    position: absolute;
+    right: 16px;
+    bottom: 90px;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background-color: rgba(15, 23, 42, 0.95);
+    border: 1px solid #6d28d9;
+    border-radius: 10px;
+    padding: 12px;
+    min-width: 260px;
+    pointer-events: all;
+}
+
+.fast-travel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #c4b5fd;
+    margin-bottom: 4px;
+}
+
+.fast-travel-option {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background-color: #1e293b;
+    color: #e2e8f0;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.fast-travel-option:hover { background-color: #334155; }
+
+.fast-travel-cancel {
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 4px;
 }
